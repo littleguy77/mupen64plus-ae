@@ -126,6 +126,13 @@
             android:key="gles2Glide64Frameskip"
             android:summary="@string/selectedValue"
             android:title="@string/gles2Glide64Frameskip_title" />
+        <paulscode.android.mupen64plusae.persistent.SeekBarPreference
+            android:defaultValue="50"
+            android:key="gles2Glide64Brightness"
+            android:title="@string/gles2Glide64Brightness_title"
+            mupen64:maximumValue="100"
+            mupen64:stepSize="1"
+            mupen64:units="%" />
     </PreferenceCategory>
 
 </PreferenceScreen>

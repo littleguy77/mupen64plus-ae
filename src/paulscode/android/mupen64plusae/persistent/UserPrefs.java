@@ -328,6 +328,9 @@ public class UserPrefs
     
     /** The maximum frameskip in the gles2glide64 library. */
     public final int gles2Glide64MaxFrameskip;
+
+    /** The brightness in the gles2glide64 library. */
+    public final int gles2Glide64Brightness;
     
     /** True if auto-frameskip is enabled in the gles2glide64 library. */
     public final boolean isGles2Glide64AutoFrameskipEnabled;
@@ -508,6 +511,7 @@ public class UserPrefs
         maxFrameskip = getSafeInt( mPreferences, "gles2Glide64Frameskip", 0 );
         isGles2Glide64AutoFrameskipEnabled = maxFrameskip < 0;
         gles2Glide64MaxFrameskip = Math.abs( maxFrameskip );
+        gles2Glide64Brightness = mPreferences.getInt( "gles2Glide64Brightness", 50 );
         
         // Audio prefs
         audioSwapChannels = mPreferences.getBoolean( "audioSwapChannels", false );

@@ -167,6 +167,7 @@ extern int tex0_width, tex0_height, tex1_width, tex1_height;
 extern float texture_env_color[4];
 extern int fog_enabled;
 extern float lambda;
+extern float brightness;
 extern int need_lambda[2];
 extern float lambda_color[2][4];
 extern int inverted_culling;
@@ -195,6 +196,7 @@ void reloadTexture();
 void free_combiners();
 void compile_shader();
 void set_lambda();
+void set_brightness();
 void set_copy_shader();
 void disable_textureSizes();
 

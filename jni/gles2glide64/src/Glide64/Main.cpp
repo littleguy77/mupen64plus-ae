@@ -130,6 +130,7 @@ int exception = FALSE;
 
 int evoodoo = 0;
 int ev_fullscreen = 0;
+float brightness;
 
 #ifdef __WINDOWS__
 #define WINPROC_OVERRIDE
@@ -601,6 +602,8 @@ void ReadSpecialSettings (const char * name)
     ini->Read(_T("aspect"), &(settings.aspectmode));
     ini->Read(_T("lodmode"), &(settings.lodmode));
 #ifdef PAULSCODE
+    ini->Read(_T("brightness"), &(settings.brightness));
+    brightness = ((float)settings.brightness - 50.f) / 100.f;
     ini->Read(_T("autoframeskip"), &(settings.autoframeskip));
     ini->Read(_T("maxframeskip"), &(settings.maxframeskip));
     if( settings.autoframeskip )

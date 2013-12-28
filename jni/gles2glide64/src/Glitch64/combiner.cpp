@@ -103,6 +103,7 @@ SHADER_HEADER
 "uniform vec4 ccolor1;             \n"
 "uniform vec4 chroma_color;        \n"
 "uniform float lambda;             \n"
+"uniform float brightness;         \n"
 "uniform vec3 fogColor;            \n"
 "uniform float alphaRef;           \n"
 SHADER_VARYING
@@ -160,9 +161,10 @@ static const char* fragment_shader_fog =
 ;
 
 static const char* fragment_shader_end =
-"if(gl_FragColor.a <= alphaRef) {discard;}   \n"
-"                                \n"
-"}                               \n"
+"gl_FragColor.rgb = gl_FragColor.rgb + vec3(brightness, brightness, brightness);    \n"
+"if(gl_FragColor.a <= alphaRef) {discard;}                                          \n"
+"                                                                                   \n"
+"}                                                                                  \n"
 ;
 
 static const char* vertex_shader =
@@ -470,6 +472,7 @@ void update_uniforms(shader_program_key prog)
       }
 
       set_lambda();
+      set_brightness();
 }
 
 void disable_textureSizes() 
@@ -635,6 +638,12 @@ void set_lambda()
 {
   int lambda_location = glGetUniformLocation(program_object, "lambda");
   glUniform1f(lambda_location, lambda);
+}
+
+void set_brightness()
+{
+  int brightness_location = glGetUniformLocation(program_object, "brightness");
+  glUniform1f(brightness_location, brightness);
 }
 
 FX_ENTRY void FX_CALL 

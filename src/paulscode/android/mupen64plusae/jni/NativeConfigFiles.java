@@ -51,6 +51,7 @@ public class NativeConfigFiles
         gles2glide64_conf.put( "DEFAULT", "aspect", "2" );                                                                  // Stretch to GameSurface, Java will manage aspect ratio
         gles2glide64_conf.put( "DEFAULT", "autoframeskip", boolToNum( user.isGles2Glide64AutoFrameskipEnabled ) );
         gles2glide64_conf.put( "DEFAULT", "maxframeskip", String.valueOf( user.gles2Glide64MaxFrameskip ) );
+        gles2glide64_conf.put( "DEFAULT", "brightness", String.valueOf( user.gles2Glide64Brightness ) );
         
         // Core and GLES2RICE config file
         ConfigFile mupen64plus_cfg = new ConfigFile( user.mupen64plus_cfg );
