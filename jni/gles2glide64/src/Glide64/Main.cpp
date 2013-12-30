@@ -130,7 +130,7 @@ int exception = FALSE;
 
 int evoodoo = 0;
 int ev_fullscreen = 0;
-float brightness;
+float brightness = 0;
 
 #ifdef __WINDOWS__
 #define WINPROC_OVERRIDE
