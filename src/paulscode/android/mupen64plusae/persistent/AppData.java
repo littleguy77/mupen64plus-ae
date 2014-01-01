@@ -29,9 +29,11 @@ import org.acra.ErrorReporter;
 
 import paulscode.android.mupen64plusae.util.DeviceUtil;
 import paulscode.android.mupen64plusae.util.FileUtil;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Environment;
@@ -176,6 +178,9 @@ public class AppData
     /** Whether the installation is valid. */
     public final boolean isValidInstallation;
     
+    /** Whether the device has a touchscreen (e.g. OUYA, GameStick, M.O.J.O do not). */
+    public final boolean hasTouchscreen;
+    
     /** The object used to persist the settings. */
     private final SharedPreferences mPreferences;
     
@@ -195,6 +200,7 @@ public class AppData
      * 
      * @param context The application context.
      */
+    @SuppressLint( "InlinedApi" )
     public AppData( Context context )
     {
         hardwareInfo = new HardwareInfo();
@@ -262,6 +268,10 @@ public class AppData
                 libraryExists( "SDL2" )             &&
                 libraryExists( "xperia-touchpad" );
         // @formatter:on
+        
+        // Determine whether touchscreen exists (pre-Froyo presumed true)
+        PackageManager pm = context.getPackageManager();
+        hasTouchscreen = !IS_FROYO || pm.hasSystemFeature( PackageManager.FEATURE_TOUCHSCREEN );
         
         // Preference object for persisting app data
         String appDataFilename = packageName + "_appdata";
