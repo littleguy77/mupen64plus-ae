@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;

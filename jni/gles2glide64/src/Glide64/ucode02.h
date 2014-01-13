@@ -39,6 +39,8 @@
 
 static void calc_point_light (VERTEX *v, float * vpos)
 {
+Check_FrameSkip;
+
   float light_intensity = 0.0f;
   register float color[3] = {rdp.light[rdp.num_lights].r, rdp.light[rdp.num_lights].g, rdp.light[rdp.num_lights].b};
   for (wxUint32 l=0; l<rdp.num_lights; l++)
@@ -84,6 +86,8 @@ static void uc6_obj_rectangle();
 
 static void uc2_vertex ()
 {
+Check_FrameSkip;
+
   if (!(rdp.cmd0 & 0x00FFFFFF))
   {
     uc6_obj_rectangle();
@@ -131,6 +135,14 @@ static void uc2_vertex ()
     if (((short*)gfx.RDRAM)[(((addr) >> 1) + 4)^1] || ((short*)gfx.RDRAM)[(((addr) >> 1) + 5)^1])
       rdp.geom_mode ^= 0x40000;
   }
+  #ifdef __ARM_NEON__
+  float32x4_t comb0, comb1, comb2, comb3;
+  float32x4_t v_xyzw;
+  comb0 = vld1q_f32(rdp.combined[0]);
+  comb1 = vld1q_f32(rdp.combined[1]);
+  comb2 = vld1q_f32(rdp.combined[2]);
+  comb3 = vld1q_f32(rdp.combined[3]);
+  #endif
   for (i=0; i < (n<<4); i+=16)
   {
     VERTEX *v = &rdp.vtx[v0 + (i>>4)];
@@ -143,21 +155,38 @@ static void uc2_vertex ()
     v->uv_scaled = 0;
     v->a    = ((wxUint8*)gfx.RDRAM)[(addr+i + 15)^3];
 
+	#ifdef __ARM_NEON__
+	v_xyzw = x*comb0+y*comb1+z*comb2+comb3;
+	//vst1q_f32((float*)v, v_xyzw);
+	v->x=v_xyzw[0];
+	v->y=v_xyzw[1];
+	v->z=v_xyzw[2];
+	v->w=v_xyzw[3];
+	#else
     v->x = x*rdp.combined[0][0] + y*rdp.combined[1][0] + z*rdp.combined[2][0] + rdp.combined[3][0];
     v->y = x*rdp.combined[0][1] + y*rdp.combined[1][1] + z*rdp.combined[2][1] + rdp.combined[3][1];
     v->z = x*rdp.combined[0][2] + y*rdp.combined[1][2] + z*rdp.combined[2][2] + rdp.combined[3][2];
     v->w = x*rdp.combined[0][3] + y*rdp.combined[1][3] + z*rdp.combined[2][3] + rdp.combined[3][3];
-
-    if (fabs(v->w) < 0.001) v->w = 0.001f;
-    v->oow = 1.0f / v->w;
-    v->x_w = v->x * v->oow;
-    v->y_w = v->y * v->oow;
-    v->z_w = v->z * v->oow;
-    CalculateFog (v);
+	#endif
 
     v->uv_calculated = 0xFFFFFFFF;
     v->screen_translated = 0;
     v->shade_mod = 0;
+
+    if (fabs(v->w) < 0.001) v->w = 0.001f;
+    v->oow = 1.0f / v->w;
+	#ifdef __ARM_NEON__
+	v_xyzw *= v->oow;
+	v->x_w=v_xyzw[0];
+	v->y_w=v_xyzw[1];
+	v->z_w=v_xyzw[2];
+	#else
+    v->x_w = v->x * v->oow;
+    v->y_w = v->y * v->oow;
+    v->z_w = v->z * v->oow;
+	#endif
+    CalculateFog (v);
+
 
     v->scr_off = 0;
     if (v->x < -v->w) v->scr_off |= 1;
@@ -219,6 +248,8 @@ static void uc2_vertex ()
 
 static void uc2_modifyvtx ()
 {
+Check_FrameSkip;
+
   wxUint8 where = (wxUint8)((rdp.cmd0 >> 16) & 0xFF);
   wxUint16 vtx = (wxUint16)((rdp.cmd0 >> 1) & 0xFFFF);
 
@@ -271,6 +302,8 @@ static void uc6_obj_loadtxtr ();
 
 static void uc2_tri1()
 {
+Check_FrameSkip;
+
   if ((rdp.cmd0 & 0x00FFFFFF) == 0x17)
   {
     uc6_obj_loadtxtr ();
@@ -301,6 +334,8 @@ static void uc6_obj_ldtx_rect ();
 
 static void uc2_quad ()
 {
+Check_FrameSkip;
+
   if ((rdp.cmd0 & 0x00FFFFFF) == 0x2F)
   {
     wxUint32 command = rdp.cmd0>>24;
@@ -348,6 +383,8 @@ static void uc6_ldtx_rect_r ();
 
 static void uc2_line3d ()
 {
+Check_FrameSkip;
+
   if ( (rdp.cmd0&0xFF) == 0x2F )
     uc6_ldtx_rect_r ();
   else

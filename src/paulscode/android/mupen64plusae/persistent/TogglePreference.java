@@ -1,6 +1,6 @@
 package paulscode.android.mupen64plusae.persistent;
 
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.preference.Preference;

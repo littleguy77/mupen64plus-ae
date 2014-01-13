@@ -27,7 +27,7 @@ import java.util.List;
 
 import com.bda.controller.Controller;
 
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import paulscode.android.mupen64plusae.input.map.InputMap;
 import paulscode.android.mupen64plusae.input.provider.AbstractProvider;
 import paulscode.android.mupen64plusae.input.provider.AbstractProvider.OnInputListener;

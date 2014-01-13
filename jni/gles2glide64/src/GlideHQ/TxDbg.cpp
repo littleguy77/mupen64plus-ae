@@ -28,6 +28,8 @@
 #include <stdarg.h>
 #include <string>
 
+#define _GLIBCXX_HAVE_BROKEN_VSWPRINTF	1
+
 TxDbg::TxDbg()
 {
   _level = DBG_LEVEL;

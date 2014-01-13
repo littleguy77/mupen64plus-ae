@@ -46,6 +46,8 @@ float uc8_coord_mod[16];
 
 static void uc8_vertex ()
 {
+Check_FrameSkip;
+
 	if (rdp.update & UPDATE_MULT_MAT)
 	{
 		rdp.update ^= UPDATE_MULT_MAT;
@@ -84,6 +86,26 @@ static void uc8_vertex ()
 		}
 	}
 	//*/
+    #ifdef __ARM_NEON__
+    float32x4_t comb0, comb1, comb2, comb3;
+    float32x4_t v_xyzw;
+    comb0 = vld1q_f32(rdp.combined[0]);
+    comb1 = vld1q_f32(rdp.combined[1]);
+    comb2 = vld1q_f32(rdp.combined[2]);
+    comb3 = vld1q_f32(rdp.combined[3]);
+	
+	float32x4_t uc8_8_11, uc8_12_15;
+	uc8_8_11 = vld1q_f32(uc8_coord_mod+8);
+	uc8_12_15 = vld1q_f32(uc8_coord_mod+12);
+	float32x4_t unite={1.0f, 1.0f, 1.0f, 1.0f};
+	
+	float32x4_t rdplight[12], rdpcolor[12];
+	for (i=0; i<rdp.num_lights; i++) {
+		rdplight[i] = vld1q_f32(&rdp.light[i].x);
+		rdpcolor[i] = vld1q_f32(&rdp.light[i].r);
+	}
+	
+    #endif
 	for (i=0; i < (n<<4); i+=16)
 	{
 		VERTEX *v = &rdp.vtx[v0 + (i>>4)];
@@ -99,24 +121,46 @@ static void uc8_vertex ()
 #ifdef EXTREME_LOGGING
 		FRDP ("before v%d - x: %f, y: %f, z: %f\n", i>>4, x, y, z);
 #endif
+		#ifdef __ARM_NEON__
+		v_xyzw = x*comb0+y*comb1+z*comb2+comb3;
+		//vst1q_f32((float*)v, v_xyzw);
+		#else
 		v->x = x*rdp.combined[0][0] + y*rdp.combined[1][0] + z*rdp.combined[2][0] + rdp.combined[3][0];
 		v->y = x*rdp.combined[0][1] + y*rdp.combined[1][1] + z*rdp.combined[2][1] + rdp.combined[3][1];
 		v->z = x*rdp.combined[0][2] + y*rdp.combined[1][2] + z*rdp.combined[2][2] + rdp.combined[3][2];
 		v->w = x*rdp.combined[0][3] + y*rdp.combined[1][3] + z*rdp.combined[2][3] + rdp.combined[3][3];
+		#endif
 
 #ifdef EXTREME_LOGGING
 		FRDP ("v%d - x: %f, y: %f, z: %f, w: %f, u: %f, v: %f, flags: %d\n", i>>4, v->x, v->y, v->z, v->w, v->ou, v->ov, v->flags);
 #endif
-
-        if (fabs(v->w) < 0.001) v->w = 0.001f;
-		v->oow = 1.0f / v->w;
-		v->x_w = v->x * v->oow;
-		v->y_w = v->y * v->oow;
-		v->z_w = v->z * v->oow;
-
 		v->uv_calculated = 0xFFFFFFFF;
 		v->screen_translated = 0;
 		v->shade_mod = 0;
+		#ifdef __ARM_NEON__
+		v->x=v_xyzw[0];
+		v->y=v_xyzw[1];
+		v->z=v_xyzw[2];
+		v->w=v_xyzw[3];
+		#endif
+
+		///*
+		v->r = ((wxUint8*)gfx.RDRAM)[(addr+i + 12)^3];
+		v->g = ((wxUint8*)gfx.RDRAM)[(addr+i + 13)^3];
+		v->b = ((wxUint8*)gfx.RDRAM)[(addr+i + 14)^3];
+
+        if (fabs(v->w) < 0.001) v->w = 0.001f;
+		v->oow = 1.0f / v->w;
+		#ifdef __ARM_NEON__
+		v_xyzw *= v->oow;
+		v->x_w=v_xyzw[0];
+		v->y_w=v_xyzw[1];
+		v->z_w=v_xyzw[2];
+		#else
+		v->x_w = v->x * v->oow;
+		v->y_w = v->y * v->oow;
+		v->z_w = v->z * v->oow;
+		#endif
 
 		v->scr_off = 0;
 		if (v->x < -v->w) v->scr_off |= 1;
@@ -124,10 +168,6 @@ static void uc8_vertex ()
 		if (v->y < -v->w) v->scr_off |= 4;
 		if (v->y > v->w) v->scr_off |= 8;
 		if (v->w < 0.1f) v->scr_off |= 16;
-		///*
-		v->r = ((wxUint8*)gfx.RDRAM)[(addr+i + 12)^3];
-		v->g = ((wxUint8*)gfx.RDRAM)[(addr+i + 13)^3];
-		v->b = ((wxUint8*)gfx.RDRAM)[(addr+i + 14)^3];
 #ifdef EXTREME_LOGGING
 		FRDP ("r: %02lx, g: %02lx, b: %02lx, a: %02lx\n", v->r, v->g, v->b, v->a);
 #endif
@@ -155,7 +195,11 @@ static void uc8_vertex ()
   			}
 			//     FRDP("calc light. r: 0x%02lx, g: 0x%02lx, b: 0x%02lx, nx: %.3f, ny: %.3f, nz: %.3f\n", v->r, v->g, v->b, v->vec[0], v->vec[1], v->vec[2]);
 			FRDP("v[%d] calc light. r: 0x%02lx, g: 0x%02lx, b: 0x%02lx\n", i>>4, v->r, v->g, v->b);
+			#ifdef __ARM_NEON__
+			float32x4_t color = {rdp.light[rdp.num_lights].r, rdp.light[rdp.num_lights].g, rdp.light[rdp.num_lights].b, 1.0f};
+			#else
 			float color[3] = {rdp.light[rdp.num_lights].r, rdp.light[rdp.num_lights].g, rdp.light[rdp.num_lights].b};
+			#endif
 			FRDP("ambient light. r: %f, g: %f, b: %f\n", color[0], color[1], color[2]);
 			float light_intensity = 0.0f;
 			wxUint32 l;
@@ -173,29 +217,48 @@ static void uc8_vertex ()
           //*
           if (rdp.light[l].ca > 0.0f)
           {
+			#ifdef __ARM_NEON__
+			float32x4_t vxyzw = (v_xyzw + uc8_8_11)*uc8_12_15 - rdplight[l];
+			vxyzw = vxyzw*vxyzw;
+			float invlen = 65536.0f/(vxyzw[0]+vxyzw[1]+vxyzw[2]+vxyzw[3]);
+            float p_i = rdp.light[l].ca * invlen;
+			#else
             float vx = (v->x + uc8_coord_mod[8])*uc8_coord_mod[12] - rdp.light[l].x;
             float vy = (v->y + uc8_coord_mod[9])*uc8_coord_mod[13] - rdp.light[l].y;
             float vz = (v->z + uc8_coord_mod[10])*uc8_coord_mod[14] - rdp.light[l].z;
             float vw = (v->w + uc8_coord_mod[11])*uc8_coord_mod[15] - rdp.light[l].w;
             float len = (vx*vx+vy*vy+vz*vz+vw*vw)/65536.0f;
             float p_i = rdp.light[l].ca / len;
+			#endif
             if (p_i > 1.0f) p_i = 1.0f;
             light_intensity *= p_i;
+			#if __ARM_NEON__
+            FRDP("light %d, 1/len: %f, p_intensity : %f\n", l, invlen, p_i);
+			#else
             FRDP("light %d, len: %f, p_intensity : %f\n", l, len, p_i);
+			#endif
           }
           //*/
+		  #ifdef __ARM_NEON__
+		  color += rdpcolor[l] * light_intensity;
+		  #else
           color[0] += rdp.light[l].r * light_intensity;
           color[1] += rdp.light[l].g * light_intensity;
           color[2] += rdp.light[l].b * light_intensity;
+		  #endif
           FRDP("light %d r: %f, g: %f, b: %f\n", l, color[0], color[1], color[2]);
         }
         light_intensity = DotProduct (rdp.light_vector[l], v->vec);
         FRDP("light %d, intensity : %f\n", l, light_intensity);
         if (light_intensity > 0.0f)
         {
+		  #ifdef __ARM_NEON__
+		  color += rdpcolor[l] * light_intensity;
+		  #else
           color[0] += rdp.light[l].r * light_intensity;
           color[1] += rdp.light[l].g * light_intensity;
           color[2] += rdp.light[l].b * light_intensity;
+		  #endif
         }
         FRDP("light %d r: %f, g: %f, b: %f\n", l, color[0], color[1], color[2]);
       }
@@ -205,24 +268,39 @@ static void uc8_vertex ()
 				{
 					if (rdp.light[l].nonblack && rdp.light[l].nonzero)
 					{
+						#ifdef __ARM_NEON__
+						float32x4_t vxyzw = (v_xyzw + uc8_8_11)*uc8_12_15 - rdplight[l];
+						vxyzw = vxyzw*vxyzw;
+						float invlen = 65536.0f/(vxyzw[0]+vxyzw[1]+vxyzw[2]+vxyzw[3]);
+						light_intensity = rdp.light[l].ca * invlen;
+						#else
 						float vx = (v->x + uc8_coord_mod[8])*uc8_coord_mod[12] - rdp.light[l].x;
 						float vy = (v->y + uc8_coord_mod[9])*uc8_coord_mod[13] - rdp.light[l].y;
 						float vz = (v->z + uc8_coord_mod[10])*uc8_coord_mod[14] - rdp.light[l].z;
 						float vw = (v->w + uc8_coord_mod[11])*uc8_coord_mod[15] - rdp.light[l].w;
 						float len = (vx*vx+vy*vy+vz*vz+vw*vw)/65536.0f;
 						light_intensity = rdp.light[l].ca / len;
+						#endif
 						if (light_intensity > 1.0f) light_intensity = 1.0f;
 						FRDP("light %d, p_intensity : %f\n", l, light_intensity);
+					    #ifdef __ARM_NEON__
+						color += rdpcolor[l] * light_intensity;
+						#else
 						color[0] += rdp.light[l].r * light_intensity;
 						color[1] += rdp.light[l].g * light_intensity;
 						color[2] += rdp.light[l].b * light_intensity;
+						#endif
 						//FRDP("light %d r: %f, g: %f, b: %f\n", l, color[0], color[1], color[2]);
 					}
 				}
 			}
+			#ifdef __ARM_NEON__
+			color = vminq_f32(color, unite);
+			#else
 			if (color[0] > 1.0f) color[0] = 1.0f;
 			if (color[1] > 1.0f) color[1] = 1.0f;
 			if (color[2] > 1.0f) color[2] = 1.0f;
+			#endif
 			v->r = (wxUint8)(((float)v->r)*color[0]);
 			v->g = (wxUint8)(((float)v->g)*color[1]);
 			v->b = (wxUint8)(((float)v->b)*color[2]);
@@ -452,6 +530,8 @@ static void uc8_movemem ()
 
 static void uc8_tri4() //by Gugaman Apr 19 2002
 {
+Check_FrameSkip;
+
     if (rdp.skip_drawing)
     {
 		LRDP("uc8:tri4. skipped\n");

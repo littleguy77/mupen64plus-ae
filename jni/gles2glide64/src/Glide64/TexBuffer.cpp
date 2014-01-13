@@ -46,6 +46,8 @@
 #include "TexBuffer.h"
 #include "CRC.h"
 
+//#include "ticks.h"
+
 static TBUFF_COLOR_IMAGE * AllocateTextureBuffer(COLOR_IMAGE & cimage)
 {
   TBUFF_COLOR_IMAGE texbuf;
@@ -209,6 +211,8 @@ static TBUFF_COLOR_IMAGE * AllocateTextureBuffer(COLOR_IMAGE & cimage)
 
 int OpenTextureBuffer(COLOR_IMAGE & cimage)
 {
+//printf("OpenTextureBuffer. cur_tex_buf: %d, addr: %08lx, width: %d, height: %d\n", rdp.cur_tex_buf, cimage.addr, cimage.width, cimage.height);
+//unsigned int ticks = ticksGetTicks();
   FRDP("OpenTextureBuffer. cur_tex_buf: %d, addr: %08lx, width: %d, height: %d", rdp.cur_tex_buf, cimage.addr, cimage.width, cimage.height);
   if (!fullscreen) return FALSE;
 
@@ -231,7 +235,7 @@ int OpenTextureBuffer(COLOR_IMAGE & cimage)
       rdp.cur_tex_buf = rdp.acc_tex_buf;
       FRDP("\nread_whole_frame. last allocated bank: %d\n", rdp.acc_tex_buf);
     }
-    else
+//    else
     {
       if (!rdp.texbufs[0].clear_allowed || !rdp.texbufs[1].clear_allowed)
       {
@@ -258,8 +262,10 @@ int OpenTextureBuffer(COLOR_IMAGE & cimage)
   }
   if (search)
   {
+//printf("search ! (%i) : ", voodoo.num_tmu);
     for (int i = 0; (i < voodoo.num_tmu) && !found; i++)
     {
+//printf("[%i] ", rdp.texbufs[i].count);
       for (int j = 0; (j < rdp.texbufs[i].count) && !found; j++)
       {
         texbuf = &(rdp.texbufs[i].images[j]);
@@ -284,7 +290,7 @@ int OpenTextureBuffer(COLOR_IMAGE & cimage)
         {
           if (!((end_addr <= texbuf->addr) || (addr >= texbuf->end_addr))) //intersected, remove
           {
-            grRenderBuffer( GR_BUFFER_TEXTUREBUFFER_EXT );
+			grRenderBuffer( GR_BUFFER_TEXTUREBUFFER_EXT );
             grTextureBufferExt( texbuf->tmu, texbuf->tex_addr, texbuf->info.smallLodLog2, texbuf->info.largeLodLog2,
               texbuf->info.aspectRatioLog2, texbuf->info.format, GR_MIPMAPLEVELMASK_BOTH );
             grDepthMask (FXFALSE);
@@ -308,10 +314,12 @@ int OpenTextureBuffer(COLOR_IMAGE & cimage)
   {
     LRDP("  not found");
     texbuf = AllocateTextureBuffer(cimage);
+//printf("  not found\n");
   }
   else
   {
     LRDP("  found");
+//printf("  found\n");
   }
 
   if (!texbuf)
@@ -320,12 +328,14 @@ int OpenTextureBuffer(COLOR_IMAGE & cimage)
     return FALSE;
   }
 
+//unsigned int tticks=ticksGetTicks();
   rdp.acc_tex_buf = rdp.cur_tex_buf;
   rdp.cur_image = texbuf;
   grRenderBuffer( GR_BUFFER_TEXTUREBUFFER_EXT );
   grTextureBufferExt( rdp.cur_image->tmu, rdp.cur_image->tex_addr, rdp.cur_image->info.smallLodLog2, rdp.cur_image->info.largeLodLog2,
     rdp.cur_image->info.aspectRatioLog2, rdp.cur_image->info.format, GR_MIPMAPLEVELMASK_BOTH );
   ///*
+//printf("mesured %u ms\n", ticksGetTicks()-tticks);
   if (rdp.cur_image->clear && (settings.frame_buffer&fb_hwfbe_buf_clear) && cimage.changed)
   {
     rdp.cur_image->clear = FALSE;
@@ -333,9 +343,11 @@ int OpenTextureBuffer(COLOR_IMAGE & cimage)
     grBufferClear (0, 0, 0xFFFF);
     grDepthMask (FXTRUE);
   }
+
   //*/
   //  memset(gfx.RDRAM+cimage.addr, 0, cimage.width*cimage.height*cimage.size);
   FRDP("  texaddr: %08lx, tex_width: %d, tex_height: %d, cur_tex_buf: %d, texformat: %d, motionblur: %d\n", rdp.cur_image->tex_addr, rdp.cur_image->tex_width, rdp.cur_image->tex_height, rdp.cur_tex_buf, rdp.cur_image->info.format, rdp.motionblur);
+//printf("  time = %u ms, texaddr: %08x, tex_width: %d, tex_height: %d, cur_tex_buf: %d, texformat: %d, motionblur: %d\n", ticksGetTicks()-ticks,  rdp.cur_image->tex_addr, rdp.cur_image->tex_width, rdp.cur_image->tex_height, rdp.cur_tex_buf, rdp.cur_image->info.format, rdp.motionblur);
   if (!rdp.offset_x_bak)
   {
     rdp.offset_x_bak = rdp.offset_x;
@@ -347,6 +359,7 @@ int OpenTextureBuffer(COLOR_IMAGE & cimage)
     rdp.offset_y = 0;
   }
   rdp.update |= UPDATE_VIEWPORT | UPDATE_SCISSOR;
+ 
   return TRUE;
 }
 

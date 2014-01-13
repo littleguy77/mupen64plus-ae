@@ -78,6 +78,13 @@ void vbo_draw()
   }
 }
 
+#ifdef PAULSCODE
+void vbo_resetcount()
+{
+	vertex_buffer_count = 0;
+}
+#endif
+
 //Buffer vertices instead of glDrawArrays(...)
 void vbo_buffer(GLenum mode,GLint first,GLsizei count,void* pointers)
 {
@@ -340,6 +347,9 @@ void FindBestDepthBias()
 #ifdef PAULSCODE
   int hardwareType = Android_JNI_GetHardwareType();
   Android_JNI_GetPolygonOffset(hardwareType, 1, &polygonOffsetFactor, &polygonOffsetUnits);
+//  glPolygonOffset(0.2f, 0.2f);
+//	polygonOffsetFactor=0.2f;
+//	polygonOffsetUnits=0.2f;
 #else
   float f, bestz = 0.25f;
   int x;
@@ -387,6 +397,10 @@ grDepthBiasLevel( FxI32 level )
   {
     #ifdef PAULSCODE
     glPolygonOffset(polygonOffsetFactor, polygonOffsetUnits);
+/*    if(w_buffer_mode)
+      glPolygonOffset(1.0f, -(float)level*polygonOffsetUnits);
+    else
+      glPolygonOffset(0, (float)level*3.0f);*/
     #else
     if(w_buffer_mode)
       glPolygonOffset(1.0f, -(float)level*zscale/255.0f);
@@ -408,13 +422,13 @@ FX_ENTRY void FX_CALL
 grDrawTriangle( const void *a, const void *b, const void *c )
 {
   LOG("grDrawTriangle()\r\n\t");
-  
+/*  
   if(nvidia_viewport_hack && !render_to_texture)
   {
     glViewport(0, viewport_offset, viewport_width, viewport_height);
     nvidia_viewport_hack = 0;
   }
-
+*/
   reloadTexture();
 
   if(need_to_compile) compile_shader();
@@ -588,13 +602,13 @@ grDrawVertexArray(FxU32 mode, FxU32 Count, void *pointers2)
 {
   void **pointers = (void**)pointers2;
   LOG("grDrawVertexArray(%d,%d)\r\n", mode, Count);
-
+/*
   if(nvidia_viewport_hack && !render_to_texture)
   {
     glViewport(0, viewport_offset, viewport_width, viewport_height);
     nvidia_viewport_hack = 0;
   }
-
+*/
   reloadTexture();
 
   if(need_to_compile) compile_shader();
@@ -612,13 +626,13 @@ FX_ENTRY void FX_CALL
 grDrawVertexArrayContiguous(FxU32 mode, FxU32 Count, void *pointers, FxU32 stride)
 {
   LOG("grDrawVertexArrayContiguous(%d,%d,%d)\r\n", mode, Count, stride);
-
+/*
   if(nvidia_viewport_hack && !render_to_texture)
   {
     glViewport(0, viewport_offset, viewport_width, viewport_height);
     nvidia_viewport_hack = 0;
   }
-
+*/
   if(stride != 156)
   {
 	  LOGINFO("Incompatible stride\n");

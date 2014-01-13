@@ -43,6 +43,8 @@
 
 static void uc3_vertex()
 {
+Check_FrameSkip;
+
   int v0 = ((rdp.cmd0 >> 16) & 0xFF)/5;      // Current vertex
   int n = (wxUint16)((rdp.cmd0&0xFFFF) + 1)/0x210;    // Number to copy
 
@@ -61,6 +63,8 @@ static void uc3_vertex()
 
 static void uc3_tri1()
 {
+Check_FrameSkip;
+
   FRDP("uc3:tri1 #%d - %d, %d, %d - %08lx - %08lx\n", rdp.tri_n,
     ((rdp.cmd1 >> 16) & 0xFF)/5,
     ((rdp.cmd1 >> 8) & 0xFF)/5,
@@ -77,6 +81,8 @@ static void uc3_tri1()
 
 static void uc3_tri2 ()
 {
+Check_FrameSkip;
+
   FRDP("uc3:tri2 #%d, #%d - %d, %d, %d - %d, %d, %d\n", rdp.tri_n, rdp.tri_n+1,
     ((rdp.cmd0 >> 16) & 0xFF)/5,
     ((rdp.cmd0 >>  8) & 0xFF)/5,
@@ -99,6 +105,8 @@ static void uc3_tri2 ()
 
 static void uc3_quad3d()
 {
+Check_FrameSkip;
+
   FRDP("uc3:quad3d #%d, #%d\n", rdp.tri_n, rdp.tri_n+1);
 
   VERTEX *v[6] = {

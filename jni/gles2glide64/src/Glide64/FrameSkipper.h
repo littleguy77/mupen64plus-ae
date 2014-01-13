@@ -34,19 +34,28 @@ public:
 	void setTargetFPS(int fps) {
 		targetFPS = fps;
 	}
-
 	bool willSkipNext() {
 		return (skipCounter > 0);
 	}
-
+	
+#if 0
+	bool hasSkipped();
+#else
+	bool hasSkipped() {
+		return (oldSkip > 0);
+	}
+	void newFrame();
+#endif
 	void start();
 	void update();
 
 private:
 	int skipType;
+	int	oldSkip;
 	int maxSkips;
 	int targetFPS;
 	int skipCounter;
+	int	countVI;
 	unsigned int initialTicks;
 	unsigned int virtualCount;
 };

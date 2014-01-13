@@ -29,6 +29,8 @@
 #include "glide.h"
 #include "main.h"
 
+#define GLchar	char
+
 void vbo_draw();
 
 static int fct[4], source0[4], operand0[4], source1[4], operand1[4], source2[4], operand2[4];
@@ -117,10 +119,11 @@ SHADER_VARYING
 // using gl_FragCoord is terribly slow on ATI and varying variables don't work for some unknown
 // reason, so we use the unused components of the texture2 coordinates
 static const char* fragment_shader_dither =
-"  float dithx = (gl_TexCoord[2].b + 1.0)*0.5*1000.0; \n"
+" \n"
+/*"  float dithx = (gl_TexCoord[2].b + 1.0)*0.5*1000.0; \n"
 "  float dithy = (gl_TexCoord[2].a + 1.0)*0.5*1000.0; \n"
 "  if(texture2D(ditherTex, vec2((dithx-32.0*floor(dithx/32.0))/32.0, \n"
-"                               (dithy-32.0*floor(dithy/32.0))/32.0)).a > 0.5) discard; \n"
+"                               (dithy-32.0*floor(dithy/32.0))/32.0)).a > 0.5) discard; \n"*/
 ;
 
 static const char* fragment_shader_default =
@@ -165,11 +168,16 @@ static const char* fragment_shader_end =
 "}                               \n"
 ;
 
+static const char* fragment_shader_alt_end =
+"                                \n"
+"}                               \n"
+;
+
 static const char* vertex_shader =
 SHADER_HEADER
 "#define Z_MAX 65536.0                                          \n"
 "attribute highp vec4 aVertex;                                  \n"
-"attribute highp vec4 aColor;                                   \n"
+"attribute mediump vec4 aColor;                                   \n"	//*SEB* highp -> lowp
 "attribute highp vec4 aMultiTexCoord0;                          \n"
 "attribute highp vec4 aMultiTexCoord1;                          \n"
 "attribute float aFog;                                          \n"
@@ -245,7 +253,7 @@ void init_combiner()
 
   // creating a fake texture
   glBindTexture(GL_TEXTURE_2D, default_texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, 3, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -258,7 +266,7 @@ void init_combiner()
   char *fragment_shader;
   int log_length;
 
-#ifndef ANDROID
+//#ifndef ANDROID
   // depth shader
   fragment_depth_shader_object = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -276,17 +284,17 @@ void init_combiner()
 
   glCompileShader(fragment_depth_shader_object);
   check_compile(fragment_depth_shader_object);
-#endif
+//#endif
 
   // default shader
   fragment_shader_object = glCreateShader(GL_FRAGMENT_SHADER);
 
   fragment_shader = (char*)malloc(strlen(fragment_shader_header)+
     strlen(fragment_shader_default)+
-    strlen(fragment_shader_end)+1);
+    strlen(fragment_shader_alt_end)+1);
   strcpy(fragment_shader, fragment_shader_header);
   strcat(fragment_shader, fragment_shader_default);
-  strcat(fragment_shader, fragment_shader_end);
+  strcat(fragment_shader, fragment_shader_alt_end);	/*SEB*/
   glShaderSource(fragment_shader_object, 1, (const GLchar**)&fragment_shader, NULL);
   free(fragment_shader);
 
@@ -408,6 +416,7 @@ typedef struct _shader_program_key
   int dither_enabled;
   int blackandwhite0;
   int blackandwhite1;
+  int alpha_test;			//*SEB*
   GLuint fragment_shader_object;
   GLuint program_object;
   int texture0_location;
@@ -489,6 +498,8 @@ void compile_shader()
   int i;
   int chroma_color_location;
   int log_length;
+  
+  int noalpha;
 
   need_to_compile = 0;
 
@@ -502,6 +513,7 @@ void compile_shader()
       prog.texture0_combinera == texture0_combinera_key &&
       prog.texture1_combinera == texture1_combinera_key &&
       prog.fog_enabled == fog_enabled &&
+	  prog.alpha_test == alpha_test &&				//*SEB*
       prog.chroma_enabled == chroma_enabled &&
       prog.dither_enabled == dither_enabled &&
       prog.blackandwhite0 == blackandwhite0 &&
@@ -514,11 +526,13 @@ void compile_shader()
     }
   }
 
-  if(shader_programs != NULL)
-    shader_programs = (shader_program_key*)realloc(shader_programs, (number_of_programs+1)*sizeof(shader_program_key));
+  if(shader_programs != NULL) {
+	if ((number_of_programs+1)>1024)
+		shader_programs = (shader_program_key*)realloc(shader_programs, (number_of_programs+1)*sizeof(shader_program_key));
+  }
   else
-    shader_programs = (shader_program_key*)malloc(sizeof(shader_program_key));
-  //printf("number of shaders %d\n", number_of_programs);
+    shader_programs = (shader_program_key*)malloc(sizeof(shader_program_key)*1024);
+	//printf("number of shaders %d\n", number_of_programs);
 
   shader_programs[number_of_programs].color_combiner = color_combiner_key;
   shader_programs[number_of_programs].alpha_combiner = alpha_combiner_key;
@@ -531,6 +545,7 @@ void compile_shader()
   shader_programs[number_of_programs].dither_enabled = dither_enabled;
   shader_programs[number_of_programs].blackandwhite0 = blackandwhite0;
   shader_programs[number_of_programs].blackandwhite1 = blackandwhite1;
+  shader_programs[number_of_programs].alpha_test = alpha_test;		//*SEB*
 
   if(chroma_enabled)
   {
@@ -557,7 +572,10 @@ void compile_shader()
   strcat(fragment_shader, fragment_shader_color_combiner);
   strcat(fragment_shader, fragment_shader_alpha_combiner);
   if(fog_enabled) strcat(fragment_shader, fragment_shader_fog);
-  strcat(fragment_shader, fragment_shader_end);
+  if (alpha_test)
+		strcat(fragment_shader, fragment_shader_end);
+  else
+		strcat(fragment_shader, fragment_shader_alt_end);		//*SEB*
   if(chroma_enabled) strcat(fragment_shader, fragment_shader_chroma);
 
   shader_programs[number_of_programs].fragment_shader_object = glCreateShader(GL_FRAGMENT_SHADER);
@@ -1719,7 +1737,7 @@ static void setPattern()
   glActiveTexture(GL_TEXTURE2);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, 33*1024*1024);
-  glTexImage2D(GL_TEXTURE_2D, 0, 4, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glDisable(GL_TEXTURE_2D);

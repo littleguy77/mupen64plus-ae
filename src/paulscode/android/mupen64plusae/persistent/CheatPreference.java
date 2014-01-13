@@ -20,7 +20,7 @@
  */
 package paulscode.android.mupen64plusae.persistent;
 
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import paulscode.android.mupen64plusae.persistent.OptionDialog.Listener;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;

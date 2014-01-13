@@ -106,6 +106,8 @@ static void uc5_matrix ()
 
 static void uc5_vertex ()
 {
+Check_FrameSkip;
+
   wxUint32 addr = dma_offset_vtx + (segoffset(rdp.cmd1) & BMASK);
 
   // | cccc cccc 1111 1??? 0000 0002 2222 2222 | cmd1 = address |
@@ -189,6 +191,8 @@ static void uc5_vertex ()
 
 static void uc5_tridma ()
 {
+Check_FrameSkip;
+
   vtx_last = 0;    // we've drawn something, so the vertex index needs resetting
   if (rdp.skip_drawing)
     return;

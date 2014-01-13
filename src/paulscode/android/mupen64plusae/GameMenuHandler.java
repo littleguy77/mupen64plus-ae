@@ -25,6 +25,7 @@ import java.io.File;
 import paulscode.android.mupen64plusae.CoreInterface.OnStateCallbackListener;
 import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import paulscode.android.mupen64plusae.util.Notifier;
 import paulscode.android.mupen64plusae.util.Prompt;
 import paulscode.android.mupen64plusae.util.Prompt.PromptConfirmListener;

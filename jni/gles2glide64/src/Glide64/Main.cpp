@@ -173,6 +173,7 @@ float      pal_percent = 0.0f;
 #include "ae_bridge.h"
 #include "FrameSkipper.h"
 FrameSkipper frameSkipper;
+void vbo_resetcount();
 #endif
 
 unsigned long BMASK = 0x7FFFFF;
@@ -600,7 +601,7 @@ void ReadSpecialSettings (const char * name)
 #ifdef PAULSCODE
     ini->Read(_T("autoframeskip"), &(settings.autoframeskip));
     ini->Read(_T("maxframeskip"), &(settings.maxframeskip));
-    if( settings.autoframeskip )
+    if( settings.autoframeskip == 1 )
       frameSkipper.setSkips( FrameSkipper::AUTO, settings.maxframeskip );
     else
       frameSkipper.setSkips( FrameSkipper::MANUAL, settings.maxframeskip );
@@ -1768,12 +1769,13 @@ output:   none
 EXPORT void CALL RomClosed (void)
 {
   VLOG ("RomClosed ()\n");
+//printf("RomClosed ()\n");
 
   CLOSE_RDP_LOG ();
   CLOSE_RDP_E_LOG ();
   rdp.window_changed = TRUE;
   romopen = FALSE;
-  if (fullscreen && evoodoo)
+//  if (fullscreen && evoodoo)//*SEB*
     ReleaseGfx ();
 }
 
@@ -1974,6 +1976,7 @@ wxUint32 update_screen_count = 0;
 EXPORT void CALL UpdateScreen (void)
 {
 #ifdef PAULSCODE
+//printf("UpdateScreen()\n");
   frameSkipper.update();
 #endif
 #ifdef LOG_KEY
@@ -2013,6 +2016,14 @@ EXPORT void CALL UpdateScreen (void)
 #endif
   //*
   wxUint32 limit = (settings.hacks&hack_Lego) ? 15 : 30;
+#ifdef PAULSCODE0
+  if (frameSkipper.willSkipNext())
+	return;
+#endif
+#ifdef PAULSCODE
+//  if (!frameSkipper.hasSkipped())
+  if (!frameSkipper.willSkipNext())
+#endif
   if ((settings.frame_buffer&fb_cpu_write_hack) && (update_screen_count > limit) && (rdp.last_bg == 0))
   {
     LRDP("DirectCPUWrite hack!\n");
@@ -2030,6 +2041,9 @@ EXPORT void CALL UpdateScreen (void)
     {
       ChangeSize ();
       LRDP("ChangeSize done\n");
+#ifdef PAULSCODE
+	  if (!frameSkipper.willSkipNext())
+#endif
       DrawFrameBuffer();
       LRDP("DrawFrameBuffer done\n");
       rdp.updatescreen = 1;
@@ -2038,6 +2052,9 @@ EXPORT void CALL UpdateScreen (void)
     return;
   }
   //*/
+#ifdef PAULSCODE0
+  if (!frameSkipper.willSkipNext())
+#endif
   if (settings.swapmode == 0)
     newSwapBuffers ();
 }
@@ -2085,8 +2102,23 @@ static void GetGammaTable()
 wxUint32 curframe = 0;
 void newSwapBuffers()
 {
-  if (!rdp.updatescreen)
+#ifdef PAULSCODE
+//frameSkipper.newFrame();
+//bool skipped = false;
+//printf("newSwapBuffers()\n");
+bool skipped = frameSkipper.willSkipNext();
+//bool skipped = frameSkipper.hasSkipped();
+#endif
+  if (!rdp.updatescreen) {
+#ifdef PAULSCODE0
+    if (skipped) {
+      if (settings.frame_buffer & fb_read_back_to_screen2)
+        DrawWholeFrameBufferToScreen();
+      frameSkipper.newFrame();
+    }
+#endif
     return;
+  }
 
   rdp.updatescreen = 0;
 
@@ -2368,6 +2400,9 @@ void newSwapBuffers()
     debug_mouse ();
   }
 
+#ifdef PAULSCODE
+  if (!skipped)
+#endif
   if (settings.frame_buffer & fb_read_back_to_screen)
     DrawWholeFrameBufferToScreen();
 
@@ -2375,8 +2410,20 @@ void newSwapBuffers()
   {
     if (fb_hwfbe_enabled && !(settings.hacks&hack_RE2) && !evoodoo)
       grAuxBufferExt( GR_BUFFER_AUXBUFFER );
-    grBufferSwap (settings.vsync);
-    fps_count ++;
+#ifdef PAULSCODE
+	if (skipped)
+	{
+		vbo_resetcount();
+	} 
+	else
+#endif
+	{
+		grBufferSwap (settings.vsync);
+		fps_count ++;
+	}
+#ifdef PAULSCODE
+    if (!skipped)
+#endif
     if (*gfx.VI_STATUS_REG&0x08) //gamma correction is used
     {
       if (!voodoo.gamma_correction)
@@ -2405,6 +2452,9 @@ void newSwapBuffers()
 
   if (fullscreen)
   {
+#ifdef PAULSCODE0
+    if (!skipped)
+#endif
     if  (debugging || settings.wireframe || settings.buff_clear || (settings.hacks&hack_PPL && settings.ucode == 6))
     {
       if (settings.hacks&hack_RE2 && fb_depth_render_enabled)
@@ -2424,10 +2474,16 @@ void newSwapBuffers()
     */
   }
 
+#ifdef PAULSCODE
+  if (!skipped)
+#endif
   if (settings.frame_buffer & fb_read_back_to_screen2)
     DrawWholeFrameBufferToScreen();
 
   frame_count ++;
+#ifdef PAULSCODE
+	frameSkipper.newFrame();
+#endif
 
   // Open/close debugger?
   if (CheckKeyPressed(G64_VK_SCROLL, 0x0001))
@@ -2592,8 +2648,8 @@ IMPLEMENT_APP_NO_MAIN(wxDLLApp)
 
 bool wxDLLApp::OnInit()
 {
-  if (mutexProcessDList == NULL)
-    mutexProcessDList = new wxMutex(wxMUTEX_DEFAULT);
+/*  if (mutexProcessDList == NULL)
+    mutexProcessDList = new wxMutex(wxMUTEX_DEFAULT);*/
   wxImage::AddHandler(new wxPNGHandler);
   wxImage::AddHandler(new wxJPEGHandler);
   return true;

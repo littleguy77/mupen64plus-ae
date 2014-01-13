@@ -32,7 +32,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.WordUtils;
 
 import paulscode.android.mupen64plusae.CoreInterface;
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import paulscode.android.mupen64plusae.input.map.InputMap;
 import paulscode.android.mupen64plusae.input.map.PlayerMap;
 import paulscode.android.mupen64plusae.util.OUYAInterface;

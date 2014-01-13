@@ -152,6 +152,8 @@ typedef struct DRAWOBJECT_t {
 
 void DrawHiresDepthImage (const DRAWIMAGE & d)
 {
+Check_FrameSkip;
+
   wxUint16 * src = (wxUint16*)(gfx.RDRAM+d.imagePtr);
   wxUint16 image[512*512];
   wxUint16 * dst = image;
@@ -247,6 +249,8 @@ void DrawHiresDepthImage (const DRAWIMAGE & d)
 
 void DrawDepthImage (const DRAWIMAGE & d)
 {
+Check_FrameSkip;
+
   if (!fullscreen || !fb_depth_render_enabled)
     return;
   if (d.imageH > d.imageW)
@@ -288,6 +292,8 @@ void DrawDepthImage (const DRAWIMAGE & d)
 
 void DrawImage (DRAWIMAGE & d)
 {
+Check_FrameSkip;
+
   if (d.imageW == 0 || d.imageH == 0 || d.frameH == 0)   return;
 
   int x_size, y_size, x_shift, y_shift, line;
@@ -607,6 +613,8 @@ void DrawImage (DRAWIMAGE & d)
 
 void DrawHiresImage(DRAWIMAGE & d, int screensize = FALSE)
 {
+Check_FrameSkip;
+
   if (!fullscreen)
     return;
   TBUFF_COLOR_IMAGE *tbuff_tex = rdp.tbuff_tex;
@@ -801,6 +809,8 @@ static void uc6_bg_copy ()
 
 static void draw_split_triangle(VERTEX **vtx)
 {
+Check_FrameSkip;
+
   vtx[0]->not_zclipped = vtx[1]->not_zclipped = vtx[2]->not_zclipped = 1;
 
   int index,i,j, min_256,max_256, cur_256,left_256,right_256;
@@ -949,6 +959,8 @@ static void draw_split_triangle(VERTEX **vtx)
 
 static void uc6_draw_polygons (VERTEX v[4])
 {
+Check_FrameSkip;
+
   AllowShadeMods (v, 4);
   for (int s = 0; s < 4; s++)
     apply_shade_mods (&(v[s]));
@@ -1052,6 +1064,8 @@ static void uc6_init_tile(const DRAWOBJECT & d)
 
 static void uc6_obj_rectangle ()
 {
+Check_FrameSkip;
+
   LRDP ("uc6:obj_rectangle ");
   DRAWOBJECT d;
   uc6_read_object_data(d);
@@ -1121,6 +1135,8 @@ static void uc6_obj_rectangle ()
 
 static void uc6_obj_sprite ()
 {
+Check_FrameSkip;
+
   LRDP ("uc6:obj_sprite ");
   DRAWOBJECT d;
   uc6_read_object_data(d);
@@ -1247,6 +1263,8 @@ static wxUint16 uc6_yuv_to_rgba(wxUint8 y, wxUint8 u, wxUint8 v)
 
 static void uc6_DrawYUVImageToFrameBuffer(wxUint16 ul_x, wxUint16 ul_y, wxUint16 lr_x, wxUint16 lr_y)
 {
+Check_FrameSkip;
+
   FRDP ("uc6:DrawYUVImageToFrameBuffer ul_x%d, ul_y%d, lr_x%d, lr_y%d\n", ul_x, ul_y, lr_x, lr_y);
   wxUint32 ci_width = rdp.ci_width;
   wxUint32 ci_height = rdp.ci_lower_bound;
@@ -1284,6 +1302,8 @@ static void uc6_DrawYUVImageToFrameBuffer(wxUint16 ul_x, wxUint16 ul_y, wxUint16
 
 static void uc6_obj_rectangle_r ()
 {
+Check_FrameSkip;
+
   LRDP ("uc6:obj_rectangle_r ");
   DRAWOBJECT d;
   uc6_read_object_data(d);
@@ -1355,6 +1375,8 @@ static void uc6_obj_rectangle_r ()
 
 static void uc6_obj_loadtxtr ()
 {
+Check_FrameSkip;
+
   LRDP("uc6:obj_loadtxtr ");
   rdp.s2dex_tex_loaded = TRUE;
   rdp.update |= UPDATE_TEXTURE;
@@ -1463,6 +1485,8 @@ static void uc6_loaducode ()
 
 void uc6_sprite2d ()
 {
+Check_FrameSkip;
+
   wxUint32 a = rdp.pc[rdp.pc_i] & BMASK;
   wxUint32 cmd0 = ((wxUint32*)gfx.RDRAM)[a>>2]; //check next command
   if ( (cmd0>>24) != 0xBE )

@@ -22,7 +22,7 @@
 package paulscode.android.mupen64plusae.util;
 
 import paulscode.android.mupen64plusae.persistent.AppData;
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import android.content.Context;
 import android.os.Bundle;
 import java.io.InputStream;

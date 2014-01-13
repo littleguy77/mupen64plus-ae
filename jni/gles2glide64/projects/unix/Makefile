@@ -114,6 +114,11 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     ARCH_DETECTED := 32BITS
     PIC ?= 1
     NO_ASM := 1
+    CFLAGS += -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -mtune=cortex-a8 -fsigned-char -fno-strict-aliasing -fno-strict-overflow -fsingle-precision-constant
+    CFLAGS += -DNOSSE -DNO_ASM -DANDROID
+	CFLAGS += -DPAULSCODE 
+#	HIRES := 0
+#    CXXFLAGS += -std=c++11
     $(warning Architecture "$(HOST_CPU)" not officially supported.')
   endif
 endif
@@ -122,7 +127,7 @@ ifeq ("$(CPU)","NONE")
 endif
 
 # base CFLAGS, LDLIBS, and LDFLAGS
-OPTFLAGS ?= -O3 -flto
+OPTFLAGS ?= -Ofast -ffast-math
 WARNFLAGS ?= -Wall
 CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/Glitch64/inc -DGCC
 CXXFLAGS += -fvisibility-inlines-hidden -std=gnu++0x
@@ -231,8 +236,10 @@ ifeq ($(origin GL_CFLAGS) $(origin GL_LDLIBS), undefined undefined)
   ifeq ($(shell $(PKG_CONFIG) --modversion gl 2>/dev/null),)
     $(error No OpenGL development libraries found!)
   endif
-  GL_CFLAGS += $(shell $(PKG_CONFIG) --cflags gl)
-  GL_LDLIBS +=  $(shell $(PKG_CONFIG) --libs gl)
+#  GL_CFLAGS += $(shell $(PKG_CONFIG) --cflags gl)
+#  GL_LDLIBS +=  $(shell $(PKG_CONFIG) --libs gl)
+  GL_CFLAGS += -I/mnt/utmp/codeblocks/usr/include/GLES2
+  GL_LDLIBS += -lGLESv2 -lrt
 endif
 CFLAGS += $(GL_CFLAGS)
 LDLIBS += $(GL_LDLIBS)
@@ -303,7 +310,7 @@ LINK.o = $(Q_LD)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(TARGET_ARCH)
 
 # set special flags for given Makefile parameters
 ifeq ($(DEBUG),1)
-  CFLAGS += -g
+  CFLAGS += -g -gdwarf-2 -pg
   INSTALL_STRIP_FLAG ?= 
 else
   ifneq ($(OS),OSX)
@@ -343,6 +350,7 @@ SOURCE = \
 	$(SRCDIR)/Glide64/CRC.cpp \
 	$(SRCDIR)/Glide64/Debugger.cpp \
 	$(SRCDIR)/Glide64/DepthBufferRender.cpp \
+    $(SRCDIR)/Glide64/FrameSkipper.cpp          \
 	$(SRCDIR)/Glide64/FBtoScreen.cpp \
 	$(SRCDIR)/Glide64/Ini.cpp \
 	$(SRCDIR)/Glide64/Keys.cpp \
@@ -350,6 +358,7 @@ SOURCE = \
 	$(SRCDIR)/Glide64/rdp.cpp \
 	$(SRCDIR)/Glide64/TexBuffer.cpp \
 	$(SRCDIR)/Glide64/TexCache.cpp \
+    $(SRCDIR)/Glide64/ticks.c                   \
 	$(SRCDIR)/Glide64/Util.cpp
 
 ifneq ($(HIRES), 0)

@@ -25,6 +25,7 @@ import java.util.List;
 
 import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;
+import paulscode.android.mupen64plusae.ptitseb.R;
 import paulscode.android.mupen64plusae.util.AssetExtractor;
 import paulscode.android.mupen64plusae.util.AssetExtractor.ExtractionFailure;
 import paulscode.android.mupen64plusae.util.AssetExtractor.OnExtractionProgressListener;
