@@ -42,7 +42,22 @@ void calc_linear (VERTEX *v);
 void calc_sphere (VERTEX *v);
 
 void math_init();
+#ifdef __ARM_NEON__
+float DotProductC(register float *v1, register float *v2);
+void NormalizeVectorC(float *v);
+void TransformVectorC(float *src, float *dst, float mat[4][4]);
+void InverseTransformVectorC (float *src, float *dst, float mat[4][4]);
+void MulMatricesC(float m1[4][4],float m2[4][4],float r[4][4]);
+void MultMatrix_neon( float m0[4][4], float m1[4][4], float dest[4][4]);
+void Normalize_neon(float v[3]);
+float DotProduct_neon( float v0[3], float v1[3] );
 
+#define MulMatrices				MultMatrix_neon		//MulMatricesC
+#define TransformVector			TransformVectorC
+#define InverseTransformVector	InverseTransformVectorC
+#define DotProduct				DotProductC			//DotProduct_neon
+#define NormalizeVector			Normalize_neon	//NormalizeVectorC
+#else
 typedef void (*MULMATRIX)(float m1[4][4],float m2[4][4],float r[4][4]); 
 extern MULMATRIX MulMatrices;
 typedef void (*TRANSFORMVECTOR)(float *src,float *dst,float mat[4][4]); 
@@ -52,3 +67,4 @@ typedef float (*DOTPRODUCT)(register float *v1, register float *v2);
 extern DOTPRODUCT DotProduct;
 typedef void (*NORMALIZEVECTOR)(float *v);
 extern NORMALIZEVECTOR NormalizeVector;
+#endif

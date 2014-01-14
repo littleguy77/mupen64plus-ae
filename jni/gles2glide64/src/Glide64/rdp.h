@@ -120,6 +120,10 @@ extern wxUint32 frame_count; // frame counter
 #define DECLAREALIGN16VAR(var) float (var) __attribute__ ((aligned(16)))
 #endif
 
+#ifdef __ARM_NEON__
+#include "arm_neon.h"
+#endif
+
 // Vertex structure
 typedef struct
 {

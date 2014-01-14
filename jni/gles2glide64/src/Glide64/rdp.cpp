@@ -56,6 +56,9 @@
 extern FrameSkipper frameSkipper;
 #endif
 
+#ifdef __ARM_NEON__
+#include "arm_neon.h"
+#endif
 /*
 const int NumOfFormats = 3;
 SCREEN_SHOT_FORMAT ScreenShotFormats[NumOfFormats] = { {wxT("BMP"), wxT("bmp"), wxBITMAP_TYPE_BMP}, {wxT("PNG"), wxT("png"), wxBITMAP_TYPE_PNG}, {wxT("JPEG"), wxT("jpeg"), wxBITMAP_TYPE_JPEG} };
