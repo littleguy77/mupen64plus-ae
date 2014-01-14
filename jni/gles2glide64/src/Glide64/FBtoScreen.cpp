@@ -165,12 +165,15 @@ static void DrawRE2Video256(FB_TO_SCREEN_INFO & fb_info)
     for (wxUint32 w = 0; w < 256; w++)
     {
       col = *(src++);
-      r = (wxUint8)((col >> 24)&0xFF);
+      r = (wxUint8)((col >> (24+3))&0x1F);
+      g = (wxUint8)((col >> (16+2))&0x3F);
+      b = (wxUint8)((col >>  (8+3))&0x1F);
+/*      r = (wxUint8)((col >> 24)&0xFF);
       r = (wxUint8)((float)r / 255.0f * 31.0f);
       g = (wxUint8)((col >> 16)&0xFF);
       g = (wxUint8)((float)g / 255.0f * 63.0f);
       b = (wxUint8)((col >>  8)&0xFF);
-      b = (wxUint8)((float)b / 255.0f * 31.0f);
+      b = (wxUint8)((float)b / 255.0f * 31.0f);*/	//*SEB*
       *(dst++) = (r << 11) | (g << 5) | b;
     }
     src += (fb_info.width - 256);
@@ -261,12 +264,15 @@ static void DrawFrameBufferToScreen256(FB_TO_SCREEN_INFO & fb_info)
             if (idx >= bound)
               break;
             c32 = src32[idx];
-            r = (wxUint8)((c32 >> 24)&0xFF);
+            r = (wxUint8)((c32 >> (24+3))&0x1F);
+            g = (wxUint8)((c32 >> (16+2))&0x3F);
+            b = (wxUint8)((c32 >>  (8+3))&0x1F);
+/*            r = (wxUint8)((c32 >> 24)&0xFF);
             r = (wxUint8)((float)r / 255.0f * 31.0f);
             g = (wxUint8)((c32 >> 16)&0xFF);
             g = (wxUint8)((float)g / 255.0f * 63.0f);
             b = (wxUint8)((c32 >>  8)&0xFF);
-            b = (wxUint8)((float)b / 255.0f * 31.0f);
+            b = (wxUint8)((float)b / 255.0f * 31.0f);*/	//*SEB*
             a = (c32&0xFF) ? 1 : 0;
             *(dst++) = (a<<15) | (r << 10) | (g << 5) | b;
           }
