@@ -22,7 +22,7 @@ package paulscode.android.mupen64plusae.input;
 
 import java.util.Locale;
 
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.optim.R;
 import paulscode.android.mupen64plusae.input.provider.AbstractProvider;
 import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;

@@ -28,6 +28,7 @@ import paulscode.android.mupen64plusae.persistent.ConfigFile;
 import paulscode.android.mupen64plusae.persistent.ConfigFile.ConfigSection;
 import paulscode.android.mupen64plusae.persistent.PlayerMapPreference;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;
+import paulscode.android.mupen64plusae.ptitseb.optim.R;
 import paulscode.android.mupen64plusae.util.Notifier;
 import paulscode.android.mupen64plusae.util.PrefUtil;
 import paulscode.android.mupen64plusae.util.Prompt;

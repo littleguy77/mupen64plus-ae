@@ -37,6 +37,7 @@ import paulscode.android.mupen64plusae.input.provider.MogaProvider;
 import paulscode.android.mupen64plusae.input.provider.NativeInputSource;
 import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;
+import paulscode.android.mupen64plusae.ptitseb.optim.R;
 import paulscode.android.mupen64plusae.util.Demultiplexer;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;

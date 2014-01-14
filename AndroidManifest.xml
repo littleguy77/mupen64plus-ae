@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="paulscode.android.mupen64plusae"
+    package="paulscode.android.mupen64plusae.ptitseb.optim"
     android:installLocation="auto"
     android:versionCode="35"
-    android:versionName="2.4.3 (debug)" >
+    android:versionName="ptitseb.neon.opts" >
 
     <uses-feature android:glEsVersion="0x00020000" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>

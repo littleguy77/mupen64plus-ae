@@ -20,7 +20,7 @@
  */
 package paulscode.android.mupen64plusae.persistent;
 
-import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.ptitseb.optim.R;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Parcelable;

@@ -25,6 +25,7 @@ import java.io.File;
 import paulscode.android.mupen64plusae.input.TouchController;
 import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;
+import paulscode.android.mupen64plusae.ptitseb.optim.R;
 import paulscode.android.mupen64plusae.util.ChangeLog;
 import paulscode.android.mupen64plusae.util.CrashTester;
 import paulscode.android.mupen64plusae.util.DeviceUtil;
