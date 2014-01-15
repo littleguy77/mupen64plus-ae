@@ -151,35 +151,34 @@ static void uc2_vertex ()
     v->uv_scaled = 0;
     v->a    = ((wxUint8*)gfx.RDRAM)[(addr+i + 15)^3];
 
-	#ifdef __ARM_NEON__
-	v_xyzw = x*comb0+y*comb1+z*comb2+comb3;
-	//vst1q_f32((float*)v, v_xyzw);
-	v->x=v_xyzw[0];
-	v->y=v_xyzw[1];
-	v->z=v_xyzw[2];
-	v->w=v_xyzw[3];
-	#else
+    #ifdef __ARM_NEON__
+    v_xyzw = vmulq_n_f32(comb0,x)+vmulq_n_f32(comb1,y)+vmulq_n_f32(comb2,z)+comb3;
+    v->x=vgetq_lane_f32(v_xyzw,0);
+    v->y=vgetq_lane_f32(v_xyzw,1);
+    v->z=vgetq_lane_f32(v_xyzw,2);
+    v->w=vgetq_lane_f32(v_xyzw,3);
+    #else
     v->x = x*rdp.combined[0][0] + y*rdp.combined[1][0] + z*rdp.combined[2][0] + rdp.combined[3][0];
     v->y = x*rdp.combined[0][1] + y*rdp.combined[1][1] + z*rdp.combined[2][1] + rdp.combined[3][1];
     v->z = x*rdp.combined[0][2] + y*rdp.combined[1][2] + z*rdp.combined[2][2] + rdp.combined[3][2];
     v->w = x*rdp.combined[0][3] + y*rdp.combined[1][3] + z*rdp.combined[2][3] + rdp.combined[3][3];
-	#endif
+    #endif
 
     v->uv_calculated = 0xFFFFFFFF;
     v->screen_translated = 0;
     v->shade_mod = 0;
     if (fabs(v->w) < 0.001) v->w = 0.001f;
     v->oow = 1.0f / v->w;
-	#ifdef __ARM_NEON__
-	v_xyzw *= v->oow;
-	v->x_w=v_xyzw[0];
-	v->y_w=v_xyzw[1];
-	v->z_w=v_xyzw[2];
-	#else
+    #ifdef __ARM_NEON__
+    v_xyzw = vmulq_n_f32(v_xyzw,v->oow);
+    v->x_w=vgetq_lane_f32(v_xyzw,0);
+    v->y_w=vgetq_lane_f32(v_xyzw,1);
+    v->z_w=vgetq_lane_f32(v_xyzw,2);
+    #else
     v->x_w = v->x * v->oow;
     v->y_w = v->y * v->oow;
     v->z_w = v->z * v->oow;
-	#endif
+    #endif
     CalculateFog (v);
 
 

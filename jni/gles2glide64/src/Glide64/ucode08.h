@@ -84,13 +84,13 @@ static void uc8_vertex ()
 		}
 	}
 	//*/
-    #ifdef __ARM_NEON__
-    float32x4_t comb0, comb1, comb2, comb3;
-    float32x4_t v_xyzw;
-    comb0 = vld1q_f32(rdp.combined[0]);
-    comb1 = vld1q_f32(rdp.combined[1]);
-    comb2 = vld1q_f32(rdp.combined[2]);
-    comb3 = vld1q_f32(rdp.combined[3]);
+	#ifdef __ARM_NEON__
+	float32x4_t comb0, comb1, comb2, comb3;
+	float32x4_t v_xyzw;
+	comb0 = vld1q_f32(rdp.combined[0]);
+	comb1 = vld1q_f32(rdp.combined[1]);
+	comb2 = vld1q_f32(rdp.combined[2]);
+	comb3 = vld1q_f32(rdp.combined[3]);
 	
 	float32x4_t uc8_8_11, uc8_12_15;
 	uc8_8_11 = vld1q_f32(uc8_coord_mod+8);
@@ -120,7 +120,7 @@ static void uc8_vertex ()
 		FRDP ("before v%d - x: %f, y: %f, z: %f\n", i>>4, x, y, z);
 #endif
 		#ifdef __ARM_NEON__
-		v_xyzw = x*comb0+y*comb1+z*comb2+comb3;
+		v_xyzw = vmulq_n_f32(comb0,x)+vmulq_n_f32(comb1,y)+vmulq_n_f32(comb2,z)+comb3;
 		//vst1q_f32((float*)v, v_xyzw);
 		#else
 		v->x = x*rdp.combined[0][0] + y*rdp.combined[1][0] + z*rdp.combined[2][0] + rdp.combined[3][0];
@@ -136,10 +136,10 @@ static void uc8_vertex ()
 		v->screen_translated = 0;
 		v->shade_mod = 0;
 		#ifdef __ARM_NEON__
-		v->x=v_xyzw[0];
-		v->y=v_xyzw[1];
-		v->z=v_xyzw[2];
-		v->w=v_xyzw[3];
+		v->x=vgetq_lane_f32(v_xyzw,0);
+		v->y=vgetq_lane_f32(v_xyzw,1);
+		v->z=vgetq_lane_f32(v_xyzw,2);
+		v->w=vgetq_lane_f32(v_xyzw,3);
 		#endif
 
 		///*
@@ -150,10 +150,10 @@ static void uc8_vertex ()
         if (fabs(v->w) < 0.001) v->w = 0.001f;
 		v->oow = 1.0f / v->w;
 		#ifdef __ARM_NEON__
-		v_xyzw *= v->oow;
-		v->x_w=v_xyzw[0];
-		v->y_w=v_xyzw[1];
-		v->z_w=v_xyzw[2];
+		v_xyzw = vmulq_n_f32(v_xyzw,v->oow);
+		v->x_w=vgetq_lane_f32(v_xyzw,0);
+		v->y_w=vgetq_lane_f32(v_xyzw,1);
+		v->z_w=vgetq_lane_f32(v_xyzw,2);
 		#else
 		v->x_w = v->x * v->oow;
 		v->y_w = v->y * v->oow;
@@ -198,7 +198,7 @@ static void uc8_vertex ()
 			#else
 			float color[3] = {rdp.light[rdp.num_lights].r, rdp.light[rdp.num_lights].g, rdp.light[rdp.num_lights].b};
 			#endif
-			FRDP("ambient light. r: %f, g: %f, b: %f\n", color[0], color[1], color[2]);
+			FRDP("ambient light. r: %f, g: %f, b: %f\n", vgetq_lane_f32(color,0), vgetq_lane_f32(color,1), vgetq_lane_f32(color,2));
 			float light_intensity = 0.0f;
 			wxUint32 l;
 			if (rdp.geom_mode & 0x00400000)
@@ -218,7 +218,7 @@ static void uc8_vertex ()
 			#ifdef __ARM_NEON__
 			float32x4_t vxyzw = (v_xyzw + uc8_8_11)*uc8_12_15 - rdplight[l];
 			vxyzw = vxyzw*vxyzw;
-			float invlen = 65536.0f/(vxyzw[0]+vxyzw[1]+vxyzw[2]+vxyzw[3]);
+			float invlen = 65536.0f/(vgetq_lane_f32(vxyzw,0)+vgetq_lane_f32(vxyzw,1)+vgetq_lane_f32(vxyzw,2)+vgetq_lane_f32(vxyzw,3));
             float p_i = rdp.light[l].ca * invlen;
 			#else
             float vx = (v->x + uc8_coord_mod[8])*uc8_coord_mod[12] - rdp.light[l].x;
@@ -238,27 +238,27 @@ static void uc8_vertex ()
           }
           //*/
 		  #ifdef __ARM_NEON__
-		  color += rdpcolor[l] * light_intensity;
+		  color = color + vmulq_n_f32(rdpcolor[l],light_intensity);
 		  #else
           color[0] += rdp.light[l].r * light_intensity;
           color[1] += rdp.light[l].g * light_intensity;
           color[2] += rdp.light[l].b * light_intensity;
 		  #endif
-          FRDP("light %d r: %f, g: %f, b: %f\n", l, color[0], color[1], color[2]);
+		  FRDP("light %d r: %f, g: %f, b: %f\n", l, vgetq_lane_f32(color, 0), vgetq_lane_f32(color, 1), vgetq_lane_f32(color, 2));
         }
         light_intensity = DotProduct (rdp.light_vector[l], v->vec);
         FRDP("light %d, intensity : %f\n", l, light_intensity);
         if (light_intensity > 0.0f)
         {
 		  #ifdef __ARM_NEON__
-		  color += rdpcolor[l] * light_intensity;
+          color = color + vmulq_n_f32(rdpcolor[l],light_intensity);
 		  #else
           color[0] += rdp.light[l].r * light_intensity;
           color[1] += rdp.light[l].g * light_intensity;
           color[2] += rdp.light[l].b * light_intensity;
 		  #endif
         }
-        FRDP("light %d r: %f, g: %f, b: %f\n", l, color[0], color[1], color[2]);
+		FRDP("light %d r: %f, g: %f, b: %f\n", l, vgetq_lane_f32(color,0), vgetq_lane_f32(color,1), vgetq_lane_f32(color,2));
       }
 			else
 			{
@@ -269,7 +269,7 @@ static void uc8_vertex ()
 						#ifdef __ARM_NEON__
 						float32x4_t vxyzw = (v_xyzw + uc8_8_11)*uc8_12_15 - rdplight[l];
 						vxyzw = vxyzw*vxyzw;
-						float invlen = 65536.0f/(vxyzw[0]+vxyzw[1]+vxyzw[2]+vxyzw[3]);
+						float invlen = 65536.0f/(vgetq_lane_f32(vxyzw,0)+vgetq_lane_f32(vxyzw,1)+vgetq_lane_f32(vxyzw,2)+vgetq_lane_f32(vxyzw,3));
 						light_intensity = rdp.light[l].ca * invlen;
 						#else
 						float vx = (v->x + uc8_coord_mod[8])*uc8_coord_mod[12] - rdp.light[l].x;
@@ -282,7 +282,7 @@ static void uc8_vertex ()
 						if (light_intensity > 1.0f) light_intensity = 1.0f;
 						FRDP("light %d, p_intensity : %f\n", l, light_intensity);
 					    #ifdef __ARM_NEON__
-						color += rdpcolor[l] * light_intensity;
+						color = color + vmulq_n_f32(rdpcolor[l],light_intensity);
 						#else
 						color[0] += rdp.light[l].r * light_intensity;
 						color[1] += rdp.light[l].g * light_intensity;
@@ -299,9 +299,9 @@ static void uc8_vertex ()
 			if (color[1] > 1.0f) color[1] = 1.0f;
 			if (color[2] > 1.0f) color[2] = 1.0f;
 			#endif
-			v->r = (wxUint8)(((float)v->r)*color[0]);
-			v->g = (wxUint8)(((float)v->g)*color[1]);
-			v->b = (wxUint8)(((float)v->b)*color[2]);
+			v->r = (wxUint8)(((float)v->r)*vgetq_lane_f32(color,0));
+			v->g = (wxUint8)(((float)v->g)*vgetq_lane_f32(color,1));
+			v->b = (wxUint8)(((float)v->b)*vgetq_lane_f32(color,2));
 #ifdef EXTREME_LOGGING
 		FRDP("color after light: r: 0x%02lx, g: 0x%02lx, b: 0x%02lx\n", v->r, v->g, v->b);
 #endif
