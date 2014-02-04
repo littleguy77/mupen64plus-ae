@@ -184,6 +184,9 @@ public class GalleryActivity extends Activity implements OnItemClickListener, Co
             case R.id.menuItem_controllerDiagnostics:
                 startActivity( new Intent( this, DiagnosticActivity.class ) );
                 return true;
+            case R.id.menuItem_offsetFinder:
+                startActivity( new Intent( this, OffsetFinderActivity.class ) );
+                return true;
             case R.id.menuItem_reportBug:
                 Utility.launchUri( GalleryActivity.this, R.string.uri_bugReport );
                 return true;
