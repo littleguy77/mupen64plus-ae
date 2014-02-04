@@ -40,6 +40,9 @@
                 android:id="@+id/menuItem_controllerDiagnostics"
                 android:title="@string/menuItem_controllerDiagnostics"/>
             <item
+                android:id="@+id/menuItem_offsetFinder"
+                android:title="Offset finder"/>
+            <item
                 android:id="@+id/menuItem_reportBug"
                 android:title="@string/menuItem_reportBug"/>
         </menu>
