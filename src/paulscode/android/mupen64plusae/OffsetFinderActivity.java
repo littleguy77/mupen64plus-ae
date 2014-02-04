@@ -552,7 +552,7 @@ public class OffsetFinderActivity extends Activity
             final float[] verticesData = {
                 // X, Y, Z,
                 // R, G, B, A
-                4.0f,
+                20.0f,
                 0.0f,
                 0.5f,
                 1.0f,
@@ -568,8 +568,8 @@ public class OffsetFinderActivity extends Activity
                 1.0f,
                 1.0f,
                 
-                4.0f,
-                4.0f,
+                20.0f,
+                20.0f,
                 0.5f,
                 1.0f,
                 1.0f,
@@ -577,7 +577,7 @@ public class OffsetFinderActivity extends Activity
                 1.0f,
                 
                 0.0f,
-                4.0f,
+                20.0f,
                 0.5f,
                 1.0f,
                 1.0f,
@@ -594,17 +594,17 @@ public class OffsetFinderActivity extends Activity
         public void onSurfaceCreated( GL10 glUnused, EGLConfig config )
         {
             // Set the background clear color to black.
-            GLES20.glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+            GLES20.glClearColor( 1.0f, 0.0f, 0.0f, 1.0f );
             
-            // Position the eye behind the origin.
+            // Position the eye at the origin.
             final float eyeX = 0.0f;
             final float eyeY = 0.0f;
-            final float eyeZ = 1.5f;
+            final float eyeZ = 0f;
             
-            // We are looking toward the distance
+            // We are looking toward the negative z-direction.
             final float lookX = 0.0f;
             final float lookY = 0.0f;
-            final float lookZ = -5.0f;
+            final float lookZ = -1.0f;
             
             // Set our up vector. This is where our head would be pointing were we holding the
             // camera.
@@ -617,7 +617,6 @@ public class OffsetFinderActivity extends Activity
             // view matrix. In OpenGL 2, we can keep track of these matrices separately if we
             // choose.
             Matrix.setLookAtM( mViewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ );
-            //Matrix.setIdentityM( mViewMatrix, 0 );
             
             //@formatter:off
             final String vertexShader =
@@ -761,8 +760,8 @@ public class OffsetFinderActivity extends Activity
             GLES20.glViewport( 0, 0, width, height );
             
             // Create a new ortho projection matrix.
-            Matrix.orthoM( mProjectionMatrix, 0, -width/2, width/2, -height/2, height/2, -1f, 1f );
-            //Matrix.setIdentityM( mProjectionMatrix, 0 );
+            //Matrix.orthoM( mProjectionMatrix, 0, -1, 1, -1, 1, -1, 1 );
+            Matrix.orthoM( mProjectionMatrix, 0, -mWidtho, mWidth - mWidtho, -mHeighto, mHeight - mHeighto, -1, 1 );
         }
         
         @Override
@@ -780,53 +779,30 @@ public class OffsetFinderActivity extends Activity
             GLES20.glDisable( GLES20.GL_BLEND );
             GLES20.glDepthFunc( GLES20.GL_ALWAYS );
             GLES20.glDepthMask( true );
-//            for( x = 0, f = 1.0f; f < 65536.0; x += 4, f *= 2.0f )
-//            {
-//                GLES20.glPolygonOffset( 0, f );
-//                
-//                Matrix.setIdentityM( mModelMatrix, 0 );
-//                Matrix.translateM( mModelMatrix, 0, ( x - mWidtho ) / ( mWidth / 2 ),
-//                        ( -mHeighto / ( mHeight / 2 ) ), 0 );
-//                drawTriangleStrip( mVertices );
-//                
-//                FloatBuffer pixels = FloatBuffer.allocate( 1 );
-//                GLES20.glReadPixels( x + 2, 2, 1, 1, GLES20.GL_DEPTH_COMPONENT, GLES20.GL_FLOAT, pixels );
-//                float z = pixels.get( 0 );
-//                z -= 0.75f + 8e-6f;
-//                if( z < 0.0f )
-//                    z = -z;
-//                if( z > 0.01f )
-//                    continue;
-//                if( z < bestz )
-//                {
-//                    bestz = z;
-//                    biasFactor = f;
-//                }
-//            }
-//            Log.i( "OffsetFinderActivity", " --> bias factor " + biasFactor );
-            for( x = 0, f = 1.0f; f < 65536.0; x += 4, f *= 2.0f )
+            for( x = 0, f = 1.0f; f < 65536.0; x += 20, f *= 2.0f )
             {
                 GLES20.glPolygonOffset( 0, f );
                 
                 Matrix.setIdentityM( mModelMatrix, 0 );
-                Matrix.translateM( mModelMatrix, 0, ( x - mWidtho ) / ( mWidth / 2 ),
-                        ( -mHeighto / ( mHeight / 2 ) ), 0 );
+                Matrix.translateM( mModelMatrix, 0, x - mWidtho, -mHeighto, 0 );
                 drawTriangleStrip( mVertices );
                 
                 FloatBuffer pixels = FloatBuffer.allocate( 1 );
-                GLES20.glReadPixels( x + 2, 2, 1, 1, GLES20.GL_DEPTH_COMPONENT, GLES20.GL_FLOAT, pixels );
+                GLES20.glReadPixels( x + 10, 10, 1, 1, GLES20.GL_BLUE_BITS, GLES20.GL_FLOAT, pixels );
                 float z = pixels.get( 0 );
-//                z -= 0.75f + 8e-6f;
-//                if( z < 0.0f )
-//                    z = -z;
-//                if( z > 0.01f )
-//                    continue;
-//                if( z < bestz )
-//                {
-//                    bestz = z;
-//                    biasFactor = f;
-//                }
+                Log.i( "OffsetFinderActivity", "z = " + z );
+                z -= 0.75f + 8e-6f;
+                if( z < 0.0f )
+                    z = -z;
+                if( z > 0.01f )
+                    continue;
+                if( z < bestz )
+                {
+                    bestz = z;
+                    biasFactor = -f;
+                }
             }
+            Log.i( "OffsetFinderActivity", " --> bias factor " + biasFactor + "\n" );
         }
         
         /**
