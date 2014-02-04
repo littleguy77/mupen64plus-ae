@@ -82,6 +82,9 @@ import android.util.Log;
  */
 public class AppData
 {
+    /** True if device is running Froyo or later (8 - Android 2.2.x) */
+    public static final boolean IS_FROYO = Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO;
+    
     /** True if device is running Gingerbread or later (9 - Android 2.3.x) */
     public static final boolean IS_GINGERBREAD = Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD;
     
