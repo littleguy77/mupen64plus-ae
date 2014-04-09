@@ -200,6 +200,10 @@ public class SettingsGlobalActivity extends PreferenceActivity implements OnPref
                 File configFile = new File( mUserPrefs.mupen64plus_cfg );
                 if( configFile.exists() )
                     configFile.delete();
+                    
+                configFile = new File( mUserPrefs.romInfoCache_ini );
+                if( configFile.exists() )
+                    configFile.delete();
                 
                 // Rebuild the menu system by restarting the activity
                 finish();

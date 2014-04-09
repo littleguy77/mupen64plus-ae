@@ -21,9 +21,12 @@
 package paulscode.android.mupen64plusae;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import paulscode.android.mupen64plusae.input.DiagnosticActivity;
 import paulscode.android.mupen64plusae.persistent.AppData;
+import paulscode.android.mupen64plusae.persistent.ConfigFile;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;
 import paulscode.android.mupen64plusae.profile.ManageControllerProfilesActivity;
 import paulscode.android.mupen64plusae.profile.ManageEmulationProfilesActivity;
@@ -31,13 +34,12 @@ import paulscode.android.mupen64plusae.profile.ManageTouchscreenProfilesActivity
 import paulscode.android.mupen64plusae.util.ChangeLog;
 import paulscode.android.mupen64plusae.util.DeviceUtil;
 import paulscode.android.mupen64plusae.util.Notifier;
-import paulscode.android.mupen64plusae.util.Prompt;
-import paulscode.android.mupen64plusae.util.Prompt.PromptFileListener;
 import paulscode.android.mupen64plusae.util.RomDetail;
 import paulscode.android.mupen64plusae.util.Utility;
 import android.annotation.TargetApi;
-import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
+import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -47,15 +49,22 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
-public class GalleryActivity extends Activity implements OnClickListener
+public class GalleryActivity extends ListActivity
 {
     // App data and user preferences
     private AppData mAppData = null;
     private UserPrefs mUserPrefs = null;
+    
+    private List<String> item = null;
+    private List<String> path = null;
+    private TextView mPath;
+    private String mRomDirectoryPath = null;
     private String mRomPath = null;
+    private ConfigFile romInfoCache_ini = null;
     
     @Override
     protected void onNewIntent( Intent intent )
@@ -83,7 +92,15 @@ public class GalleryActivity extends Activity implements OnClickListener
         mAppData = new AppData( this );
         mUserPrefs = new UserPrefs( this );
         mUserPrefs.enforceLocale( this );
-        mRomPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        
+        romInfoCache_ini = new ConfigFile( mUserPrefs.romInfoCache_ini );
+        
+        String RomLastUsedPath = romInfoCache_ini.get( "ROM", "LastUsedPath");   
+        
+        if(RomLastUsedPath == null)
+            mRomDirectoryPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        else
+            mRomDirectoryPath = RomLastUsedPath;
         
         int lastVer = mAppData.getLastAppVersionCode();
         int currVer = mAppData.appVersionCode;
@@ -109,8 +126,7 @@ public class GalleryActivity extends Activity implements OnClickListener
         
         // Lay out the content
         setContentView( R.layout.gallery_activity );
-        findViewById( R.id.button_pathSelectedGame ).setOnClickListener( this );
-        findViewById( R.id.button_play ).setOnClickListener( this );
+        mPath = (TextView)findViewById(R.id.path);
         
         // Popup a warning if the installation appears to be corrupt
         if( !mAppData.isValidInstallation )
@@ -118,6 +134,82 @@ public class GalleryActivity extends Activity implements OnClickListener
             CharSequence title = getText( R.string.invalidInstall_title );
             CharSequence message = getText( R.string.invalidInstall_message );
             new Builder( this ).setTitle( title ).setMessage( message ).create().show();
+        }
+        
+        if(mRomPath != null)
+            launchPlayMenuActivity( mRomPath );
+        else
+            getDir(mRomDirectoryPath);
+    }
+    
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        romInfoCache_ini.put( "ROM", "LastUsedPath", mRomDirectoryPath);  
+        romInfoCache_ini.save();
+    }
+    
+    private void getDir(String dirPath)
+    {
+        mPath.setText("Location: " + dirPath);
+        item = new ArrayList<String>();
+        path = new ArrayList<String>();
+        File f = new File(dirPath);
+        File[] files = f.listFiles();
+        
+        if(f.getParent() != null )
+        {
+            item.add("../");
+            path.add(f.getParent()); 
+        }
+        
+        for(int i=0; i < files.length; i++)
+        {
+            File file = files[i];
+            
+            if(!file.isHidden() && file.canRead())
+            {
+                path.add(file.getPath());
+                if(file.isDirectory())
+                {
+                    item.add(file.getName() + "/");
+                }
+                else
+                {
+                    item.add(file.getName());
+                }
+            } 
+        }
+
+        ArrayAdapter<String> fileList = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, item);
+        setListAdapter(fileList); 
+    }
+    
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) 
+    {
+        // TODO Auto-generated method stub
+        File file = new File(path.get(position));
+        
+        if (file.isDirectory())
+        {
+            if(file.canRead())
+            {
+                mRomDirectoryPath = path.get(position);
+                getDir(mRomDirectoryPath);
+            }
+            else
+            {
+                new AlertDialog.Builder(this)
+                .setTitle("folder can't be read!")
+                .setPositiveButton("OK", null)
+                .show(); 
+            } 
+        }
+        else 
+        {
+            launchPlayMenuActivity( file.getAbsolutePath() );
         }
     }
     
@@ -177,20 +269,6 @@ public class GalleryActivity extends Activity implements OnClickListener
         }
     }
     
-    @Override
-    public void onClick( View v )
-    {
-        switch( v.getId() )
-        {
-            case R.id.button_pathSelectedGame:
-                promptFile( new File( mRomPath ) );
-                break;
-            case R.id.button_play:
-                launchPlayMenuActivity( mRomPath );
-                break;
-        }
-    }
-    
     private void launchPlayMenuActivity( final String romPath )
     {
         // Asynchronously compute MD5 and launch play menu when finished
@@ -215,31 +293,6 @@ public class GalleryActivity extends Activity implements OnClickListener
                 }
             }
         }.execute();
-    }
-    
-    private void promptFile( File startPath )
-    {
-        String title = startPath.getPath();
-        String message = null;
-        Prompt.promptFile( this, title, message, startPath, true, true, true, false, new PromptFileListener()
-        {
-            @Override
-            public void onDialogClosed( File file, int which )
-            {
-                if( which >= 0 )
-                {
-                    if( file.isFile() )
-                    {
-                        mRomPath = file.getAbsolutePath();
-                        refreshViews();
-                    }
-                    else
-                    {
-                        promptFile( file );
-                    }
-                }
-            }
-        } );
     }
 
     private void popupFaq()
@@ -302,9 +355,6 @@ public class GalleryActivity extends Activity implements OnClickListener
         if( AppData.IS_HONEYCOMB )
             invalidateOptionsMenu();
         
-        // Update the button text for the selected game
-        File selectedGame = new File( mRomPath );
-        Button button = (Button) findViewById( R.id.button_pathSelectedGame );
-        button.setText( selectedGame.getName() );
+        getDir(mRomDirectoryPath);
     }
 }
