@@ -268,6 +268,8 @@ public class CoreInterface
     {
         if( sCoreThread != null )
         {
+            sIsPaused = false;
+            
             // Tell the core to quit
             NativeExports.emuStop();
             
