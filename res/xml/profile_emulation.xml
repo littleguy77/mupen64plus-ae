@@ -30,7 +30,22 @@
         android:key="displayImmersiveMode"
         android:summary="@string/displayImmersiveMode_summary"
         android:title="@string/displayImmersiveMode_title" />
-        
+    
+    <paulscode.android.mupen64plusae.persistent.StringSeekBarPreference
+        android:defaultValue="0"
+        android:key="displayCropWidth"
+        android:title="@string/displayCropWidth_title"
+        mupen64:maximumValue="25"
+        mupen64:stepSize="1"
+        mupen64:units="%" />
+    <paulscode.android.mupen64plusae.persistent.StringSeekBarPreference
+        android:defaultValue="0"
+        android:key="displayCropHeight"
+        android:title="@string/displayCropHeight_title"
+        mupen64:maximumValue="25"
+        mupen64:stepSize="1"
+        mupen64:units="%" />
+    
     <paulscode.android.mupen64plusae.persistent.CompatibleListPreference
         android:defaultValue="@string/videoPlugin_default"
         android:entries="@array/videoPlugin_entries"

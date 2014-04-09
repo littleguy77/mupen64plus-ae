@@ -221,8 +221,11 @@ public class GamePrefs
             // Screen size
             final WindowManager windowManager = (WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE);
             Display display = windowManager.getDefaultDisplay();
+            int cropWidthPercent = getSafeInt( emulationProfile, "displayCropWidth", 0 );
+            int cropHeightPercent = getSafeInt( emulationProfile, "displayCropHeight", 0 );
             int stretchWidth;
             int stretchHeight;
+            
             if( display == null )
             {
                 stretchWidth = stretchHeight = 0;
@@ -244,11 +247,12 @@ public class GamePrefs
             boolean isLetterboxed = ( (float) stretchHeight / (float) stretchWidth ) > aspect;
             int zoomWidth = isLetterboxed ? stretchWidth : Math.round( (float) stretchHeight / aspect );
             int zoomHeight = isLetterboxed ? Math.round( (float) stretchWidth * aspect ) : stretchHeight;
-            int cropWidth = isLetterboxed ? Math.round( (float) stretchHeight / aspect ) : stretchWidth;
-            int cropHeight = isLetterboxed ? stretchHeight : Math.round( (float) stretchWidth * aspect );
+            int cropWidth = Math.round( (float) stretchWidth + ((float)stretchWidth*(float)cropWidthPercent/100.f));
+            int cropHeight = Math.round( (float) stretchHeight + ((float)stretchHeight*(float)cropHeightPercent/100.f));
             
             int hResolution = getSafeInt( emulationProfile, "displayResolution", 0 );
             String scaling = emulationProfile.get( "displayScaling", "zoom" );
+
             if( hResolution == 0 )
             {
                 // Native resolution

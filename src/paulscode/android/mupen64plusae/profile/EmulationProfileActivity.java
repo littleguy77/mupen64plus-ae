@@ -47,6 +47,10 @@ public class EmulationProfileActivity extends ProfileActivity
     private static final String CATEGORY_GLIDE64 = "categoryGlide64";
     private static final String VIDEO_PLUGIN = "videoPlugin";
     private static final String DISPLAY_IMMERSIVE_MODE = "displayImmersiveMode";
+    private static final String DISPLAY_SCALING = "displayScaling";
+    private static final String DISPLAY_CROP_WIDTH = "displayCropWidth";
+    private static final String DISPLAY_CROP_HEIGHT = "displayCropHeight";
+    
 
     private static final String PATH_HI_RES_TEXTURES = "pathHiResTextures";
     
@@ -61,6 +65,8 @@ public class EmulationProfileActivity extends ProfileActivity
     private Preference mCategoryRice = null;
     private Preference mCategoryGlide64 = null;
     private Preference mDisplayImmersiveMode = null;
+    private Preference mDisplayCropWidth = null;
+    private Preference mDisplayCropHeight = null;
     
     @Override
     protected int getPrefsResId()
@@ -91,6 +97,8 @@ public class EmulationProfileActivity extends ProfileActivity
         mCategoryRice = findPreference( CATEGORY_RICE );
         mCategoryGlide64 = findPreference( CATEGORY_GLIDE64 );
         mDisplayImmersiveMode = findPreference( DISPLAY_IMMERSIVE_MODE );
+        mDisplayCropWidth = findPreference( DISPLAY_CROP_WIDTH );
+        mDisplayCropHeight = findPreference( DISPLAY_CROP_HEIGHT );
     }
     
     @Override
@@ -106,6 +114,7 @@ public class EmulationProfileActivity extends ProfileActivity
     {
         // Get the current values
         String videoPlugin = mPrefs.getString( VIDEO_PLUGIN, null );
+        String displayScaling = mPrefs.getString( DISPLAY_SCALING, null );
         
         // Hide certain categories altogether if they're not applicable. Normally we just rely on
         // the built-in dependency disabler, but here the categories are so large that hiding them
@@ -113,6 +122,17 @@ public class EmulationProfileActivity extends ProfileActivity
         
         if( !AppData.IS_KITKAT )
             mScreenRoot.removePreference( mDisplayImmersiveMode );
+        
+        if( displayScaling.equals("crop"))
+        {
+            mScreenRoot.addPreference( mDisplayCropWidth );
+            mScreenRoot.addPreference( mDisplayCropHeight );
+        }
+        else
+        {
+            mScreenRoot.removePreference( mDisplayCropWidth );
+            mScreenRoot.removePreference( mDisplayCropHeight );
+        }
         
         if( LIBGLN64_SO.equals( videoPlugin ) )
             mScreenRoot.addPreference( mCategoryN64 );
