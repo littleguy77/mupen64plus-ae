@@ -148,6 +148,20 @@ public abstract class AbstractController
      */
     protected AbstractController()
     {
+        // Reset previous state
+        for(State state : sStates)
+        {
+            mState = state;
+        
+            for(int i=0; i<NUM_N64_BUTTONS; i++)
+                mState.buttons[i]=false;
+            
+            mState.axisFractionX = 0;
+            mState.axisFractionY = 0;
+            
+            notifyChanged();
+        }
+        
         mState = sStates.get( 0 );
     }
     
