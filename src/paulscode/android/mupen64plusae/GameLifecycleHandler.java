@@ -183,6 +183,7 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         
         // If the orientation changes, the screensize info changes, so we must refresh dependencies
         mUserPrefs = new UserPrefs( mActivity );
+        mGamePrefs = new GamePrefs( mActivity, mRomMd5 );
     }
     
     @TargetApi( 11 )
@@ -204,10 +205,10 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         mSurface.getHolder().addCallback( this );
         
         // Update the GameSurface size
-        mSurface.getHolder().setFixedSize( mUserPrefs.videoRenderWidth, mUserPrefs.videoRenderHeight );
+        mSurface.getHolder().setFixedSize( mGamePrefs.videoRenderWidth, mGamePrefs.videoRenderHeight );
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mSurface.getLayoutParams();
-        params.width = mUserPrefs.videoSurfaceWidth;
-        params.height = mUserPrefs.videoSurfaceHeight;
+        params.width = mGamePrefs.videoSurfaceWidth;
+        params.height = mGamePrefs.videoSurfaceHeight;
         params.gravity = mUserPrefs.displayPosition | Gravity.CENTER_HORIZONTAL;
         mSurface.setLayoutParams( params );
         
@@ -429,7 +430,7 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         View view = mSurface.getRootView();
         if( view != null )
         {
-            if( AppData.IS_KITKAT && mUserPrefs.isImmersiveModeEnabled )
+            if( AppData.IS_KITKAT && mGamePrefs.isImmersiveModeEnabled )
                 view.setSystemUiVisibility( View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_FULLSCREEN

@@ -23,6 +23,7 @@ package paulscode.android.mupen64plusae.profile;
 import java.io.File;
 
 import paulscode.android.mupen64plusae.R;
+import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.persistent.UserPrefs;
 import paulscode.android.mupen64plusae.util.FileUtil;
 import paulscode.android.mupen64plusae.util.Notifier;
@@ -45,21 +46,21 @@ public class EmulationProfileActivity extends ProfileActivity
     private static final String CATEGORY_GLN64 = "categoryGln64";
     private static final String CATEGORY_GLIDE64 = "categoryGlide64";
     private static final String VIDEO_PLUGIN = "videoPlugin";
-    private static final String VIDEO_HARDWARE_TYPE = "videoHardwareType";
-    private static final String VIDEO_POLYGON_OFFSET = "videoPolygonOffset";
+    private static final String DISPLAY_IMMERSIVE_MODE = "displayImmersiveMode";
+
     private static final String PATH_HI_RES_TEXTURES = "pathHiResTextures";
     
     // These constants must match the entry-values found in arrays.xml
     private static final String LIBGLIDE64_SO = "libmupen64plus-video-glide64mk2.so";
     private static final String LIBRICE_SO = "libmupen64plus-video-rice.so";
     private static final String LIBGLN64_SO = "libmupen64plus-video-gln64.so";
-    private static final String VIDEO_HARDWARE_TYPE_CUSTOM = "999";
     
     // Preference menu items
     private PreferenceGroup mScreenRoot = null;
     private Preference mCategoryN64 = null;
     private Preference mCategoryRice = null;
     private Preference mCategoryGlide64 = null;
+    private Preference mDisplayImmersiveMode = null;
     
     @Override
     protected int getPrefsResId()
@@ -89,6 +90,7 @@ public class EmulationProfileActivity extends ProfileActivity
         mCategoryN64 = findPreference( CATEGORY_GLN64 );
         mCategoryRice = findPreference( CATEGORY_RICE );
         mCategoryGlide64 = findPreference( CATEGORY_GLIDE64 );
+        mDisplayImmersiveMode = findPreference( DISPLAY_IMMERSIVE_MODE );
     }
     
     @Override
@@ -104,15 +106,13 @@ public class EmulationProfileActivity extends ProfileActivity
     {
         // Get the current values
         String videoPlugin = mPrefs.getString( VIDEO_PLUGIN, null );
-        boolean useCustomOffset = VIDEO_HARDWARE_TYPE_CUSTOM.equals( mPrefs.getString(
-                VIDEO_HARDWARE_TYPE, null ) );
-        
-        // Enable the custom hardware profile prefs only when custom hardware type is selected
-        PrefUtil.enablePreference( this, VIDEO_POLYGON_OFFSET, useCustomOffset );
         
         // Hide certain categories altogether if they're not applicable. Normally we just rely on
         // the built-in dependency disabler, but here the categories are so large that hiding them
         // provides a better user experience.
+        
+        if( !AppData.IS_KITKAT )
+            mScreenRoot.removePreference( mDisplayImmersiveMode );
         
         if( LIBGLN64_SO.equals( videoPlugin ) )
             mScreenRoot.addPreference( mCategoryN64 );

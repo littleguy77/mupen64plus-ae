@@ -10,12 +10,15 @@ import paulscode.android.mupen64plusae.profile.ControllerProfile;
 import paulscode.android.mupen64plusae.profile.Profile;
 import paulscode.android.mupen64plusae.util.Plugin;
 import paulscode.android.mupen64plusae.util.Utility;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.WindowManager;
 
 public class GamePrefs
 {
@@ -48,6 +51,21 @@ public class GamePrefs
     
     /** The selected R4300 emulator. */
     public final String r4300Emulator;
+
+    /** The width of the OpenGL rendering context, in pixels. */
+    public final int videoRenderWidth;
+    
+    /** The height of the OpenGL rendering context, in pixels. */
+    public final int videoRenderHeight;
+    
+    /** The width of the viewing surface, in pixels. */
+    public final int videoSurfaceWidth;
+    
+    /** The height of the viewing surface, in pixels. */
+    public final int videoSurfaceHeight;
+    
+    /** True if immersive mode should be used (KitKat only). */
+    public final boolean isImmersiveModeEnabled;
     
     /** The selected video plug-in. */
     public final Plugin videoPlugin;
@@ -153,6 +171,8 @@ public class GamePrefs
     
     private final SharedPreferences mPreferences;
     
+    @SuppressWarnings( "deprecation" )
+    @TargetApi( 17 )
     public GamePrefs( Context context, String romMd5 )
     {
         final AppData appData = new AppData( context );
@@ -193,7 +213,117 @@ public class GamePrefs
         
         // Emulation prefs
         r4300Emulator = emulationProfile.get( "r4300Emulator", "2" );
+        isImmersiveModeEnabled = emulationProfile.get( "displayImmersiveMode", "False" ).equals( "True" );
         videoPlugin = new Plugin( emulationProfile, appData.libsDir, "videoPlugin" );
+        
+        // Determine the pixel dimensions of the rendering context and view surface
+        {
+            // Screen size
+            final WindowManager windowManager = (WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE);
+            Display display = windowManager.getDefaultDisplay();
+            int stretchWidth;
+            int stretchHeight;
+            if( display == null )
+            {
+                stretchWidth = stretchHeight = 0;
+            }
+            else if( AppData.IS_KITKAT && isImmersiveModeEnabled )
+            {
+                DisplayMetrics metrics = new DisplayMetrics();
+                display.getRealMetrics( metrics );
+                stretchWidth = metrics.widthPixels;
+                stretchHeight = metrics.heightPixels;
+            }
+            else
+            {
+                stretchWidth = display.getWidth();
+                stretchHeight = display.getHeight();
+            }
+            
+            float aspect = 0.75f; // TODO: Handle PAL
+            boolean isLetterboxed = ( (float) stretchHeight / (float) stretchWidth ) > aspect;
+            int zoomWidth = isLetterboxed ? stretchWidth : Math.round( (float) stretchHeight / aspect );
+            int zoomHeight = isLetterboxed ? Math.round( (float) stretchWidth * aspect ) : stretchHeight;
+            int cropWidth = isLetterboxed ? Math.round( (float) stretchHeight / aspect ) : stretchWidth;
+            int cropHeight = isLetterboxed ? stretchHeight : Math.round( (float) stretchWidth * aspect );
+            
+            int hResolution = getSafeInt( emulationProfile, "displayResolution", 0 );
+            String scaling = emulationProfile.get( "displayScaling", "zoom" );
+            if( hResolution == 0 )
+            {
+                // Native resolution
+                if( scaling.equals( "stretch" ) )
+                {
+                    videoRenderWidth = videoSurfaceWidth = stretchWidth;
+                    videoRenderHeight = videoSurfaceHeight = stretchHeight;
+                }
+                else if( scaling.equals( "crop" ) )
+                {
+                    videoRenderWidth = videoSurfaceWidth = cropWidth;
+                    videoRenderHeight = videoSurfaceHeight = cropHeight;
+                }
+                else // scaling.equals( "zoom") || scaling.equals( "none" )
+                {
+                    videoRenderWidth = videoSurfaceWidth = zoomWidth;
+                    videoRenderHeight = videoSurfaceHeight = zoomHeight;
+                }
+            }
+            else
+            {
+                // Non-native resolution
+                switch( hResolution )
+                {
+                    case 720:
+                        videoRenderWidth = 960;
+                        videoRenderHeight = 720;
+                        break;
+                    case 600:
+                        videoRenderWidth = 800;
+                        videoRenderHeight = 600;
+                        break;
+                    case 480:
+                        videoRenderWidth = 640;
+                        videoRenderHeight = 480;
+                        break;
+                    case 360:
+                        videoRenderWidth = 480;
+                        videoRenderHeight = 360;
+                        break;
+                    case 240:
+                        videoRenderWidth = 320;
+                        videoRenderHeight = 240;
+                        break;
+                    case 120:
+                        videoRenderWidth = 160;
+                        videoRenderHeight = 120;
+                        break;
+                    default:
+                        videoRenderWidth = Math.round( (float) hResolution / aspect );
+                        videoRenderHeight = hResolution;
+                        break;
+                }
+                if( scaling.equals( "zoom" ) )
+                {
+                    videoSurfaceWidth = zoomWidth;
+                    videoSurfaceHeight = zoomHeight;
+                }
+                else if( scaling.equals( "crop" ) )
+                {
+                    videoSurfaceWidth = cropWidth;
+                    videoSurfaceHeight = cropHeight;
+                }
+                else if( scaling.equals( "stretch" ) )
+                {
+                    videoSurfaceWidth = stretchWidth;
+                    videoSurfaceHeight = stretchHeight;
+                }
+                else // scaling.equals( "none" )
+                {
+                    videoSurfaceWidth = videoRenderWidth;
+                    videoSurfaceHeight = videoRenderHeight;
+                }
+            }
+        }
         
         // Video prefs - gln64
         isGln64Enabled = videoPlugin.name.equals( "libmupen64plus-video-gln64.so" );

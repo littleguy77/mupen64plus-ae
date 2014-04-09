@@ -42,11 +42,8 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.WindowManager;
 
 /**
  * A convenience class for quickly, safely, and consistently retrieving typed user preferences.
@@ -165,18 +162,6 @@ public class UserPrefs
     /** The vertical screen position. */
     public final int displayPosition;
     
-    /** The width of the OpenGL rendering context, in pixels. */
-    public final int videoRenderWidth;
-    
-    /** The height of the OpenGL rendering context, in pixels. */
-    public final int videoRenderHeight;
-    
-    /** The width of the viewing surface, in pixels. */
-    public final int videoSurfaceWidth;
-    
-    /** The height of the viewing surface, in pixels. */
-    public final int videoSurfaceHeight;
-    
     /** The action bar transparency value. */
     public final int displayActionBarTransparency;
     
@@ -185,9 +170,6 @@ public class UserPrefs
     
     /** True if the FPS indicator is displayed. */
     public final boolean isFpsEnabled;
-    
-    /** True if immersive mode should be used (KitKat only). */
-    public final boolean isImmersiveModeEnabled;
     
     /** True if framelimiter is used. */
     public final boolean isFramelimiterEnabled;
@@ -240,7 +222,6 @@ public class UserPrefs
      * 
      * @param context The application context.
      */
-    @SuppressWarnings( "deprecation" )
     @SuppressLint( "InlinedApi" )
     @TargetApi( 17 )
     public UserPrefs( Context context )
@@ -316,7 +297,6 @@ public class UserPrefs
         isFpsEnabled = displayFpsRefresh > 0;
         videoHardwareType = getSafeInt( mPreferences, "videoHardwareType", -1 );
         videoPolygonOffset = SafeMethods.toFloat( mPreferences.getString( "videoPolygonOffset", "-0.2" ), -0.2f );
-        isImmersiveModeEnabled = mPreferences.getBoolean( "displayImmersiveMode", false );
         
         // Audio prefs
         audioSwapChannels = mPreferences.getBoolean( "audioSwapChannels", false );
@@ -355,115 +335,6 @@ public class UserPrefs
             unmappables.add( KeyEvent.KEYCODE_VOLUME_MUTE );
         }
         unmappableKeyCodes = Collections.unmodifiableList( unmappables );
-        
-        // Determine the pixel dimensions of the rendering context and view surface
-        {
-            // Screen size
-            final WindowManager windowManager = (WindowManager) context.getSystemService(android.content.Context.WINDOW_SERVICE);
-            Display display = windowManager.getDefaultDisplay();
-            int stretchWidth;
-            int stretchHeight;
-            if( display == null )
-            {
-                stretchWidth = stretchHeight = 0;
-            }
-            else if( AppData.IS_KITKAT && isImmersiveModeEnabled )
-            {
-                DisplayMetrics metrics = new DisplayMetrics();
-                display.getRealMetrics( metrics );
-                stretchWidth = metrics.widthPixels;
-                stretchHeight = metrics.heightPixels;
-            }
-            else
-            {
-                stretchWidth = display.getWidth();
-                stretchHeight = display.getHeight();
-            }
-            
-            float aspect = 0.75f; // TODO: Handle PAL
-            boolean isLetterboxed = ( (float) stretchHeight / (float) stretchWidth ) > aspect;
-            int zoomWidth = isLetterboxed ? stretchWidth : Math.round( (float) stretchHeight / aspect );
-            int zoomHeight = isLetterboxed ? Math.round( (float) stretchWidth * aspect ) : stretchHeight;
-            int cropWidth = isLetterboxed ? Math.round( (float) stretchHeight / aspect ) : stretchWidth;
-            int cropHeight = isLetterboxed ? stretchHeight : Math.round( (float) stretchWidth * aspect );
-            
-            int hResolution = getSafeInt( mPreferences, "displayResolution", 0 );
-            String scaling = mPreferences.getString( "displayScaling", "zoom" );
-            if( hResolution == 0 )
-            {
-                // Native resolution
-                if( scaling.equals( "stretch" ) )
-                {
-                    videoRenderWidth = videoSurfaceWidth = stretchWidth;
-                    videoRenderHeight = videoSurfaceHeight = stretchHeight;
-                }
-                else if( scaling.equals( "crop" ) )
-                {
-                    videoRenderWidth = videoSurfaceWidth = cropWidth;
-                    videoRenderHeight = videoSurfaceHeight = cropHeight;
-                }
-                else // scaling.equals( "zoom") || scaling.equals( "none" )
-                {
-                    videoRenderWidth = videoSurfaceWidth = zoomWidth;
-                    videoRenderHeight = videoSurfaceHeight = zoomHeight;
-                }
-            }
-            else
-            {
-                // Non-native resolution
-                switch( hResolution )
-                {
-                    case 720:
-                        videoRenderWidth = 960;
-                        videoRenderHeight = 720;
-                        break;
-                    case 600:
-                        videoRenderWidth = 800;
-                        videoRenderHeight = 600;
-                        break;
-                    case 480:
-                        videoRenderWidth = 640;
-                        videoRenderHeight = 480;
-                        break;
-                    case 360:
-                        videoRenderWidth = 480;
-                        videoRenderHeight = 360;
-                        break;
-                    case 240:
-                        videoRenderWidth = 320;
-                        videoRenderHeight = 240;
-                        break;
-                    case 120:
-                        videoRenderWidth = 160;
-                        videoRenderHeight = 120;
-                        break;
-                    default:
-                        videoRenderWidth = Math.round( (float) hResolution / aspect );
-                        videoRenderHeight = hResolution;
-                        break;
-                }
-                if( scaling.equals( "zoom" ) )
-                {
-                    videoSurfaceWidth = zoomWidth;
-                    videoSurfaceHeight = zoomHeight;
-                }
-                else if( scaling.equals( "crop" ) )
-                {
-                    videoSurfaceWidth = cropWidth;
-                    videoSurfaceHeight = cropHeight;
-                }
-                else if( scaling.equals( "stretch" ) )
-                {
-                    videoSurfaceWidth = stretchWidth;
-                    videoSurfaceHeight = stretchHeight;
-                }
-                else // scaling.equals( "none" )
-                {
-                    videoSurfaceWidth = videoRenderWidth;
-                    videoSurfaceHeight = videoRenderHeight;
-                }
-            }
-        }
     }
     
     public void enforceLocale( Activity activity )

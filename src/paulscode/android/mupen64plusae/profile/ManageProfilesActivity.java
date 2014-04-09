@@ -20,7 +20,6 @@
  */
 package paulscode.android.mupen64plusae.profile;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -132,7 +131,6 @@ abstract public class ManageProfilesActivity extends ListActivity
         // Get the config files from the subclass-specified paths
         String customPath = getConfigFilePath( false );
         String builtinPath = getConfigFilePath( true );
-        new File( customPath ).mkdirs();
         mConfigBuiltin = new ConfigFile( builtinPath );
         mConfigCustom = new ConfigFile( customPath );
     }

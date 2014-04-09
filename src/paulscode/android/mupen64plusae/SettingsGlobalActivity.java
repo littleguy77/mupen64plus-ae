@@ -52,9 +52,10 @@ public class SettingsGlobalActivity extends PreferenceActivity implements OnPref
     private static final String SCREEN_ROOT = "screenRoot";
     private static final String SCREEN_TOUCHPAD = "screenTouchpad";
     private static final String SCREEN_DISPLAY = "screenDisplay";
-    
-    private static final String DISPLAY_IMMERSIVE_MODE = "displayImmersiveMode";
     private static final String DISPLAY_ACTION_BAR_TRANSPARENCY = "displayActionBarTransparency";
+    private static final String VIDEO_HARDWARE_TYPE = "videoHardwareType";
+    private static final String VIDEO_POLYGON_OFFSET = "videoPolygonOffset";
+    private static final String VIDEO_HARDWARE_TYPE_CUSTOM = "999";
     private static final String NAVIGATION_MODE = "navigationMode";
     private static final String AUDIO_BUFFER_SIZE = "audioBufferSize";
     private static final String AUDIO_SYNCHRONIZE = "audioSynchronize";
@@ -92,8 +93,6 @@ public class SettingsGlobalActivity extends PreferenceActivity implements OnPref
         // Hide certain categories altogether if they're not applicable. Normally we just rely on
         // the built-in dependency disabler, but here the categories are so large that hiding them
         // provides a better user experience.
-        if( !AppData.IS_KITKAT )
-            PrefUtil.removePreference( this, SCREEN_DISPLAY, DISPLAY_IMMERSIVE_MODE );
         
         if( !mUserPrefs.isActionBarAvailable )
             PrefUtil.removePreference( this, SCREEN_DISPLAY, DISPLAY_ACTION_BAR_TRANSPARENCY );
@@ -140,6 +139,12 @@ public class SettingsGlobalActivity extends PreferenceActivity implements OnPref
     {
         // Refresh the preferences object
         mUserPrefs = new UserPrefs( this );
+
+        boolean useCustomOffset = VIDEO_HARDWARE_TYPE_CUSTOM.equals( mPrefs.getString(
+                VIDEO_HARDWARE_TYPE, null ) );
+        
+        // Enable the custom hardware profile prefs only when custom hardware type is selected
+        PrefUtil.enablePreference( this, VIDEO_POLYGON_OFFSET, useCustomOffset );
         
         // Enable audio prefs if audio is enabled
         PrefUtil.enablePreference( this, AUDIO_BUFFER_SIZE, mUserPrefs.audioPlugin.enabled );

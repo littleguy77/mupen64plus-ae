@@ -155,6 +155,7 @@ public class CoreInterface
         new File( sUserPrefs.coreUserConfigDir ).mkdirs();
         new File( sUserPrefs.coreUserDataDir ).mkdirs();
         new File( sUserPrefs.coreUserCacheDir ).mkdirs();
+        new File( sUserPrefs.profilesDir ).mkdirs();
     }
     
     @TargetApi( 11 )

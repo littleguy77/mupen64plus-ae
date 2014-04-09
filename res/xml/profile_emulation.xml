@@ -10,6 +10,27 @@
         android:key="r4300Emulator"
         android:summary="@string/selectedValue"
         android:title="@string/r4300Emulator_title" />
+    
+    <paulscode.android.mupen64plusae.persistent.CompatibleListPreference
+        android:defaultValue="@string/displayResolution_default"
+        android:entries="@array/displayResolution_entries"
+        android:entryValues="@array/displayResolution_values"
+        android:key="displayResolution"
+        android:summary="@string/selectedValue"
+        android:title="@string/displayResolution_title" />
+    <paulscode.android.mupen64plusae.persistent.CompatibleListPreference
+        android:defaultValue="@string/displayScaling_default"
+        android:entries="@array/displayScaling_entries"
+        android:entryValues="@array/displayScaling_values"
+        android:key="displayScaling"
+        android:summary="@string/selectedValue"
+        android:title="@string/displayScaling_title" />
+    <paulscode.android.mupen64plusae.persistent.StringCheckBoxPreference
+        android:defaultValue="false"
+        android:key="displayImmersiveMode"
+        android:summary="@string/displayImmersiveMode_summary"
+        android:title="@string/displayImmersiveMode_title" />
+        
     <paulscode.android.mupen64plusae.persistent.CompatibleListPreference
         android:defaultValue="@string/videoPlugin_default"
         android:entries="@array/videoPlugin_entries"
