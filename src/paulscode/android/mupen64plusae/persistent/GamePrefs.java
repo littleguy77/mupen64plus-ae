@@ -106,6 +106,9 @@ public class GamePrefs
     /** The maximum frameskip in the glide64 library. */
     public final int glide64MaxFrameskip;
     
+	/** Brightness boost for the glide64 library. */
+    public final int glide64Brightness;
+    
     /** True if auto-frameskip is enabled in the glide64 library. */
     public final boolean isGlide64AutoFrameskipEnabled;
     
@@ -221,6 +224,7 @@ public class GamePrefs
         maxFrameskip = getSafeInt( emulationProfile, "glide64Frameskip", 0 );
         isGlide64AutoFrameskipEnabled = maxFrameskip < 0;
         glide64MaxFrameskip = Math.abs( maxFrameskip );
+        glide64Brightness = getSafeInt( emulationProfile, "glide64Brightness", 50 );
         
         // Touchscreen prefs
         isTouchscreenEnabled = touchscreenProfile != null;

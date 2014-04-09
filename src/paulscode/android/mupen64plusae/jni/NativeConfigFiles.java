@@ -53,6 +53,7 @@ public class NativeConfigFiles
         glide64_conf.put( "DEFAULT", "aspect", "2" );                                                                    // Stretch to GameSurface, Java will manage aspect ratio
         glide64_conf.put( "DEFAULT", "autoframeskip", boolToNum( game.isGlide64AutoFrameskipEnabled ) );
         glide64_conf.put( "DEFAULT", "maxframeskip", String.valueOf( game.glide64MaxFrameskip ) );
+        glide64_conf.put( "DEFAULT", "brightness", String.valueOf( game.glide64Brightness ) );
         
         // Core and rice config file
         ConfigFile mupen64plus_cfg = new ConfigFile( user.mupen64plus_cfg );

@@ -212,6 +212,7 @@ typedef struct {
   int swapmode;
   int lodmode;
 #ifdef ANDROID_EDITION
+  int brightness;
   int autoframeskip;
   int maxframeskip;
 #endif

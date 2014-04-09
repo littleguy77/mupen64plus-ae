@@ -105,6 +105,9 @@ SHADER_HEADER
 "uniform float lambda;             \n"
 "uniform vec3 fogColor;            \n"
 "uniform float alphaRef;           \n"
+#ifdef ANDROID_EDITION
+"uniform float brightness;         \n"
+#endif
 SHADER_VARYING
 "                                  \n"
 "void test_chroma(vec4 ctexture1); \n"
@@ -160,6 +163,9 @@ static const char* fragment_shader_fog =
 ;
 
 static const char* fragment_shader_end =
+#ifdef ANDROID_EDITION
+"gl_FragColor.rgb = gl_FragColor.rgb + vec3(brightness, brightness, brightness);    \n"
+#endif
 "if(gl_FragColor.a <= alphaRef) {discard;}   \n"
 "                                \n"
 "}                               \n"
@@ -470,6 +476,9 @@ void update_uniforms(shader_program_key prog)
       }
 
       set_lambda();
+#ifdef ANDROID_EDITION
+      set_brightness();
+#endif
 }
 
 void disable_textureSizes() 
@@ -636,6 +645,14 @@ void set_lambda()
   int lambda_location = glGetUniformLocation(program_object, "lambda");
   glUniform1f(lambda_location, lambda);
 }
+
+#ifdef ANDROID_EDITION
+void set_brightness()
+{
+  int brightness_location = glGetUniformLocation(program_object, "brightness");
+  glUniform1f(brightness_location, brightness);
+}
+#endif
 
 FX_ENTRY void FX_CALL 
 grConstantColorValue( GrColor_t value )

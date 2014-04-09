@@ -186,6 +186,11 @@ extern unsigned int pBufferAddress;
 extern int viewport_width, viewport_height, viewport_offset, nvidia_viewport_hack;
 extern int UMAmode;
 
+#ifdef ANDROID_EDITION
+extern float brightness;
+void set_brightness();
+#endif
+
 void grChromaRangeExt(GrColor_t color0, GrColor_t color1, FxU32 mode);
 void grChromaRangeModeExt(GrChromakeyMode_t mode);
 void grTexChromaRangeExt(GrChipID_t tmu, GrColor_t color0, GrColor_t color1, GrTexChromakeyMode_t mode);
