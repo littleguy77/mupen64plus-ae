@@ -113,6 +113,7 @@ public class CoreInterface
     protected static String sRomPath = null;
     protected static String sCheatOptions = null;
     protected static boolean sIsRestarting = false;
+    protected static boolean sIsPaused = false;
     
     // Speed info - used internally
     private static final int BASELINE_SPEED = 100;
@@ -257,6 +258,10 @@ public class CoreInterface
             // Start the core on its own thread
             sCoreThread.start();
         }
+        else
+        {
+            resumeEmulator();
+        }
     }
     
     public static synchronized void shutdownEmulator()
@@ -284,16 +289,18 @@ public class CoreInterface
     
     public static synchronized void resumeEmulator()
     {
-        if( sCoreThread != null )
+        if( sCoreThread != null && sIsPaused && sSurface.isSurfaceReady())
         {
+            sIsPaused = false;
             NativeExports.emuResume();
         }
     }
     
     public static synchronized void pauseEmulator( boolean autoSave )
     {
-        if( sCoreThread != null )
+        if( sCoreThread != null && !sIsPaused && sSurface.isSurfaceReady())
         {
+            sIsPaused = true;
             NativeExports.emuPause();
             
             // Auto-save in case device doesn't resume properly (e.g. OS kills process, battery dies, etc.)
@@ -303,6 +310,11 @@ public class CoreInterface
                 NativeExports.emuSaveFile( sAutoSavePath );
             }
         }
+    }
+    
+    public static void onResize( int format, int width, int height )
+    {
+        // Do nothing on Resize
     }
     
     public static void togglePause()

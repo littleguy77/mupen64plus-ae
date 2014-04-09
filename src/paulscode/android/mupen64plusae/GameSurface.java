@@ -27,478 +27,325 @@ import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 /**
  * Represents a graphical area of memory that can be drawn to.
  */
-public class GameSurface extends SurfaceView
+public class GameSurface extends SurfaceView implements SurfaceHolder.Callback
 {
-    // LogCat strings for debugging, defined here to simplify maintenance/lookup
-    private static final String TAG = "GameSurface";
+    // Internal EGL objects
+    private EGLContext  mEGLContext;
+    private EGLSurface mEGLSurface;
+    private EGLDisplay mEGLDisplay;
+    private EGLConfig   mEGLConfig;
+    private int mGLMajor;
     
-    private static final String EGL_GET_DISPLAY_FAIL = "Failed to find EGL display connection";
-    private static final String EGL_GET_DISPLAY = "Found EGL display connection";
+    private boolean mIsSurfaceReady;
     
-    private static final String EGL_INITIALIZE_FAIL = "Failed to initialize EGL display connection";
-    private static final String EGL_INITIALIZE = "Initialized EGL display connection";
-    
-    private static final String EGL_CHOOSE_CONFIG_FAIL = "Failed to find compatible EGL frame buffer configuration";
-    private static final String EGL_CHOOSE_CONFIG = "Found compatible EGL frame buffer configuration";
-    
-    private static final String EGL_CREATE_CONTEXT_FAIL = "Failed to create EGL rendering context";
-    private static final String EGL_CREATE_CONTEXT = "Created EGL rendering context";
-    private static final String EGL_CREATE_CONTEXT_NOCHANGE = "Re-used EGL rendering context";
-    
-    private static final String EGL_CREATE_SURFACE_FAIL = "Failed to create EGL window surface";
-    private static final String EGL_CREATE_SURFACE = "Created EGL window surface";
-    private static final String EGL_CREATE_SURFACE_NOCHANGE = "Re-used EGL window surface";
-    
-    private static final String EGL_BIND_NOCHANGE = "Re-bound EGL rendering context to EGL window surface";
-    private static final String EGL_BIND = "Bound EGL rendering context to EGL window surface";
-    private static final String EGL_BIND_FAIL = "Failed to bind EGL rendering context to EGL window surface";
-    
-    private static final String EGL_UNBIND_FAIL = "Failed to unbind EGL rendering context from EGL window surface";
-    private static final String EGL_UNBIND = "Unbound EGL rendering context from EGL window surface";
-    private static final String EGL_UNBIND_NOCHANGE = "Already unbound EGL rendering context from EGL window surface";
-    
-    private static final String EGL_DESTROY_SURFACE_FAIL = "Failed to destroy EGL window surface";
-    private static final String EGL_DESTROY_SURFACE = "Destroyed EGL window surface";
-    private static final String EGL_DESTROY_SURFACE_NOCHANGE = "Already destroyed EGL window surface";
-    
-    private static final String EGL_DESTROY_CONTEXT_FAIL = "Failed to destroy EGL rendering context";
-    private static final String EGL_DESTROY_CONTEXT = "Destroyed EGL rendering context";
-    private static final String EGL_DESTROY_CONTEXT_NOCHANGE = "Already destroyed EGL rendering context";
-    
-    private static final String EGL_TERMINATE_FAIL = "Failed to terminate EGL display connection";
-    private static final String EGL_TERMINATE = "Terminated EGL display connection";
-    private static final String EGL_TERMINATE_NOCHANGE = "Already terminated EGL display connection";
-    
-    // Internal EGL objects, created/destroyed in first-in/last-out order
-    // A null value indicates they are destroyed
-    // An EGL10.EGL_NO_*** value indicates they were unsuccessfully created
-    private EGL10 mEgl = null;
-    private EGLDisplay mEglDisplay = null;
-    private EGLConfig mEglConfig = null;
-    private EGLContext mEglContext = null;
-    private EGLSurface mEglSurface = null;
-    private int mGlMajorVersion;
-    
-    /**
-     * Constructor that is called when inflating a view from XML. This is called when a view is
-     * being constructed from an XML file, supplying attributes that were specified in the XML file.
-     * This version uses a default style of 0, so the only attribute values applied are those in the
-     * Context's Theme and the given AttributeSet. The method onFinishInflate() will be called after
-     * all children have been added.
-     * 
-     * @param context The Context the view is running in, through which it can access the current
-     *            theme, resources, etc.
-     * @param attrs The attributes of the XML tag that is inflating the view.
-     */
+    // Startup    
     public GameSurface( Context context, AttributeSet attribs )
     {
         super( context, attribs );
+        getHolder().addCallback( this );
+        mEGLSurface = EGL10.EGL_NO_SURFACE;
+        mEGLContext = EGL10.EGL_NO_CONTEXT;
+        mIsSurfaceReady = false;
     }
     
-    /**
-     * The type of precondition that a method expects.
-     */
-    private enum Precondition
+    // Called when we have a valid drawing surface
+    @SuppressWarnings("deprecation")
+    @Override
+    public void surfaceCreated(SurfaceHolder holder)
     {
-        /** Method expects valid EGL10 object. */
-        EGL,
-        /** Method expects valid EGL10, EGLDisplay objects. */
-        DISPLAY,
-        /** Method expects valid EGL10, EGLDisplay, EGLConfig objects. */
-        CONFIG,
-        /** Method expects valid EGL10, EGLDisplay, EGLConfig, EGLContext objects. */
-        CONTEXT,
-        /** Method expects valid EGL10, EGLDisplay, EGLConfig, EGLContext, EGLSurface objects. */
-        SURFACE
+        Log.v("SDL", "surfaceCreated()");
+        holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+        // Set mIsSurfaceReady to 'true' *before* any call to handleResume
+        mIsSurfaceReady = true;
     }
     
-    /**
-     * Assert the preconditions for a method.
-     * 
-     * @param precondition The type of precondition that the method expects.
-     * @throws IllegalStateException when the precondition has not been met.
-     */
-    private void assertPrecondition( Precondition precondition )
+    // Called when we lose the surface
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder)
     {
-        // Check egl precondition
-        if( mEgl == null )
-            throw new IllegalStateException( "EGL not initialized" );
+        Log.v("SDL", "surfaceDestroyed()");
+        // Call this *before* setting mIsSurfaceReady to 'false'
+        CoreInterface.pauseEmulator(true);
+        mIsSurfaceReady = false;
+    
+        /* We have to clear the current context and destroy the egl surface here
+         * Otherwise there's BAD_NATIVE_WINDOW errors coming from eglCreateWindowSurface on resume
+         * Ref: http://stackoverflow.com/questions/8762589/eglcreatewindowsurface-on-ics-and-switching-from-2d-to-3d
+         */
         
-        if( precondition != Precondition.EGL )
+        EGL10 egl = (EGL10)EGLContext.getEGL();
+        egl.eglMakeCurrent(mEGLDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
+        egl.eglDestroySurface(mEGLDisplay, mEGLSurface);
+        mEGLSurface = EGL10.EGL_NO_SURFACE;
+    }
+    
+    // Called when the surface is resized
+    @SuppressWarnings("deprecation")
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
+    {
+        Log.v("SDL", "surfaceChanged()");
+    
+        int sdlFormat = 0x15151002; // SDL_PIXELFORMAT_RGB565 by default
+        switch (format)
         {
-            // Check display precondition
-            if( mEglDisplay == null || mEglDisplay == EGL10.EGL_NO_DISPLAY )
-                throw new IllegalStateException( "EGL display not initialized" );
+        case PixelFormat.A_8:
+            Log.v("SDL", "pixel format A_8");
+            break;
+        case PixelFormat.LA_88:
+            Log.v("SDL", "pixel format LA_88");
+            break;
+        case PixelFormat.L_8:
+            Log.v("SDL", "pixel format L_8");
+            break;
+        case PixelFormat.RGBA_4444:
+            Log.v("SDL", "pixel format RGBA_4444");
+            sdlFormat = 0x15421002; // SDL_PIXELFORMAT_RGBA4444
+            break;
+        case PixelFormat.RGBA_5551:
+            Log.v("SDL", "pixel format RGBA_5551");
+            sdlFormat = 0x15441002; // SDL_PIXELFORMAT_RGBA5551
+            break;
+        case PixelFormat.RGBA_8888:
+            Log.v("SDL", "pixel format RGBA_8888");
+            sdlFormat = 0x16462004; // SDL_PIXELFORMAT_RGBA8888
+            break;
+        case PixelFormat.RGBX_8888:
+            Log.v("SDL", "pixel format RGBX_8888");
+            sdlFormat = 0x16261804; // SDL_PIXELFORMAT_RGBX8888
+            break;
+        case PixelFormat.RGB_332:
+            Log.v("SDL", "pixel format RGB_332");
+            sdlFormat = 0x14110801; // SDL_PIXELFORMAT_RGB332
+            break;
+        case PixelFormat.RGB_565:
+            Log.v("SDL", "pixel format RGB_565");
+            sdlFormat = 0x15151002; // SDL_PIXELFORMAT_RGB565
+            break;
+        case PixelFormat.RGB_888:
+            Log.v("SDL", "pixel format RGB_888");
+            // Not sure this is right, maybe SDL_PIXELFORMAT_RGB24 instead?
+            sdlFormat = 0x16161804; // SDL_PIXELFORMAT_RGB888
+            break;
+        default:
+            Log.v("SDL", "pixel format unknown " + format);
+            break;
+        }
+    
+        CoreInterface.onResize( sdlFormat, width, height );
+        Log.v("SDL", "Window size:" + width + "x" + height);
+    
+        // Set mIsSurfaceReady to 'true' *before* making a call to handleResume
+        mIsSurfaceReady = true;
+        
+        CoreInterface.startupEmulator();
+    }
+    
+    // unused
+    @Override
+    public void onDraw(Canvas canvas) {}
+    
+    public void deleteGLContext()
+    {
+        if (mEGLDisplay != null && mEGLContext != EGL10.EGL_NO_CONTEXT)
+        {
+            EGL10 egl = (EGL10)EGLContext.getEGL();
+            egl.eglMakeCurrent(mEGLDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
+            egl.eglDestroyContext(mEGLDisplay, mEGLContext);
+            mEGLContext = EGL10.EGL_NO_CONTEXT;
+    
+            if (mEGLSurface != EGL10.EGL_NO_SURFACE)
+            {
+                egl.eglDestroySurface(mEGLDisplay, mEGLSurface);
+                mEGLSurface = EGL10.EGL_NO_SURFACE;
+            }
+        }
+    }
+    
+    // EGL functions
+    public boolean createGLContext(int majorVersion, int minorVersion, int[] attribs)
+    {
+        try
+        {
+            EGL10 egl = (EGL10) EGLContext.getEGL();
             
-            if( precondition != Precondition.DISPLAY )
+            if (mEGLDisplay == null)
             {
-                // Check config precondition
-                if( mEglConfig == null )
-                    throw new IllegalStateException( "EGL config not initialized" );
+                mEGLDisplay = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+                int[] version = new int[2];
+                egl.eglInitialize(mEGLDisplay, version);
+            }
+            
+            if (mEGLDisplay != null && mEGLContext == EGL10.EGL_NO_CONTEXT)
+            {
+                // No current GL context exists, we will create a new one.
+                Log.v("SDL", "Starting up OpenGL ES " + majorVersion + "." + minorVersion);
+                EGLConfig[] configs = new EGLConfig[128];
+                int[] num_config = new int[1];
+                if (!egl.eglChooseConfig(mEGLDisplay, attribs, configs, 1, num_config) || num_config[0] == 0)
+                {
+                    Log.e("SDL", "No EGL config available");
+                    return false;
+                }
+            
+                EGLConfig config = null;
+                int bestdiff = -1, bitdiff;
+                int[] value = new int[1];
                 
-                if( precondition != Precondition.CONFIG )
+                // eglChooseConfig returns a number of configurations that match or exceed the requested attribs.
+                // From those, we select the one that matches our requirements more closely
+                Log.v("SDL", "Got " + num_config[0] + " valid modes from egl");
+                for(int i = 0; i < num_config[0]; i++)
                 {
-                    // Check context precondition
-                    if( mEglContext == null || mEglContext == EGL10.EGL_NO_CONTEXT )
-                        throw new IllegalStateException( "EGL context not initialized" );
+                    bitdiff = 0;
+                    // Go through some of the attributes and compute the bit difference between what we want and what we get.
+                    for (int j = 0; ; j += 2)
+                    {
+                        if (attribs[j] == EGL10.EGL_NONE)
+                            break;
+                        
+                        if (attribs[j+1] != EGL10.EGL_DONT_CARE && (attribs[j] == EGL10.EGL_RED_SIZE ||
+                            attribs[j] == EGL10.EGL_GREEN_SIZE ||
+                            attribs[j] == EGL10.EGL_BLUE_SIZE ||
+                            attribs[j] == EGL10.EGL_ALPHA_SIZE ||
+                            attribs[j] == EGL10.EGL_DEPTH_SIZE ||
+                            attribs[j] == EGL10.EGL_STENCIL_SIZE))
+                        {
+                            egl.eglGetConfigAttrib(mEGLDisplay, configs[i], attribs[j], value);
+                            bitdiff += value[0] - attribs[j + 1];// value is always >= attrib
+                        }
+                    }
                     
-                    if( precondition != Precondition.CONTEXT )
+                    if (bitdiff < bestdiff || bestdiff == -1)
                     {
-                        // Check surface precondition
-                        if( mEglSurface == null || mEglSurface == EGL10.EGL_NO_SURFACE )
-                            throw new IllegalStateException( "EGL surface not initialized" );
+                        config = configs[i];
+                        bestdiff = bitdiff;
                     }
+                    
+                    if (bitdiff == 0)
+                        break; // we found an exact match!
                 }
+                
+                Log.d("SDL", "Selected mode with a total bit difference of " + bestdiff);
+
+                mEGLConfig = config;
+                mGLMajor = majorVersion;
             }
-        }
-    }
-    
-    /**
-     * Create and bind an OpenGL ES rendering context and window surface.
-     * 
-     * @param majorVersion The major OpenGL ES version.
-     * @param minorVersion The minor OpenGL ES version.
-     * @param configSpec The desired context configuration.
-     * @param forceCreate False to try to reuse context/surface; true to always recreate.
-     * @return True, if successful.
-     * @see GameSurface#destroyGLContext()
-     */
-    public boolean createGLContext( int majorVersion, int minorVersion, int[] configSpec, boolean forceCreate )
-    {
-        Log.i( TAG, "Creating GL context" );
-        if( initializeEGL( majorVersion, minorVersion, configSpec ) )
+            
+            return createEGLSurface();
+            
+        } 
+        catch(Exception e)
         {
-            if( createEGLContext( forceCreate ) )
+            Log.v("SDL", e + "");
+            for (StackTraceElement s : e.getStackTrace())
             {
-                if( createEGLSurface( forceCreate ) )
-                {
-                    if( bindEGLContext() )
-                    {
-                        return true;
-                    }
-                    unbindEGLContext();
-                }
-                destroyEGLSurface();
+                Log.v("SDL", s.toString());
             }
-            destroyEGLContext();
+            return false;
         }
-        terminateEGL();
-        Log.e( TAG, "Failed to create GL context" );
-        return false;
     }
-    
-    /**
-     * Unbind and destroy the previously-created OpenGL ES rendering context and window surface.
-     * 
-     * @return True, if successful.
-     * @see GameSurface#createGLContext(int, int, int[])
-     */
-    public boolean destroyGLContext()
+            
+    public boolean createEGLContext()
     {
-        Log.i( TAG, "Destroying GL context" );
-        if( unbindEGLContext() )
+        EGL10 egl = (EGL10)EGLContext.getEGL();
+        int EGL_CONTEXT_CLIENT_VERSION=0x3098;
+        int contextAttrs[] = new int[] { EGL_CONTEXT_CLIENT_VERSION, mGLMajor, EGL10.EGL_NONE };
+        mEGLContext = egl.eglCreateContext(mEGLDisplay, mEGLConfig, EGL10.EGL_NO_CONTEXT, contextAttrs);
+        if (mEGLContext == EGL10.EGL_NO_CONTEXT)
         {
-            if( destroyEGLSurface() )
+            Log.e("SDL", "Couldn't create context");
+            return false;
+        }
+        return true;
+    }
+
+    public boolean createEGLSurface()
+    {
+        if (mEGLDisplay != null && mEGLConfig != null)
+        {
+            EGL10 egl = (EGL10)EGLContext.getEGL();
+            if (mEGLContext == EGL10.EGL_NO_CONTEXT)
+                createEGLContext();
+            
+            if (mEGLSurface == EGL10.EGL_NO_SURFACE)
             {
-                if( destroyEGLContext() )
+                Log.v("SDL", "Creating new EGL Surface");
+                mEGLSurface = egl.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, this, null);
+                if (mEGLSurface == EGL10.EGL_NO_SURFACE)
                 {
-                    if( terminateEGL() )
-                    {
-                        return true;
-                    }
+                    Log.e("SDL", "Couldn't create surface");
+                    return false;
                 }
             }
+            else 
+                Log.v("SDL", "EGL Surface remains valid");
+            
+            if (egl.eglGetCurrentContext() != mEGLContext)
+            {
+                if (!egl.eglMakeCurrent(mEGLDisplay, mEGLSurface, mEGLSurface, mEGLContext))
+                {
+                    Log.e("SDL", "Old EGL Context doesnt work, trying with a new one");
+                    // TODO: Notify the user via a message that the old context could not be restored, and that textures need to be manually restored.
+                    createEGLContext();
+                    if (!egl.eglMakeCurrent(mEGLDisplay, mEGLSurface, mEGLSurface, mEGLContext))
+                    {
+                        Log.e("SDL", "Failed making EGL Context current");
+                        return false;
+                    }
+                }
+                else
+                    Log.v("SDL", "EGL Context made current");
+            }
+            else
+                Log.v("SDL", "EGL Context remains current");
+
+            return true;
         }
-        Log.e( TAG, "Failed to destroy GL context" );
-        return false;
+        else
+        {
+            Log.e("SDL", "Surface creation failed, display = " + mEGLDisplay + ", config = " + mEGLConfig);
+            return false;
+        }
     }
     
-    /**
-     * Swap the OpenGL ES framebuffers. Requires valid, bound rendering context and window surface.
-     * 
-     * @see GameSurface#createGLContext(int, int, int[])
-     */
+    // EGL buffer flip
     public void flipBuffers()
     {
-        // Uncomment the next line only for debugging; otherwise don't waste the time
-        // assertPrecondition( Precondition.surface );
-        mEgl.eglSwapBuffers( mEglDisplay, mEglSurface );
-    }
-    
-    /**
-     * Initialize the EGL, display connection, and configuration objects.
-     * 
-     * @param majorVersion The major OpenGL ES version.
-     * @param minorVersion The minor OpenGL ES version.
-     * @param configSpec The desired context configuration.
-     * @return True if all objects were initialized properly.
-     * @see GameSurface#terminateEGL()
-     */
-    private boolean initializeEGL( int majorVersion, int minorVersion, int[] configSpec )
-    {
-        // Get the EGL object
-        mEgl = (EGL10) EGLContext.getEGL();
-        
-        // Get an EGL display connection for the native display
-        mEglDisplay = mEgl.eglGetDisplay( EGL10.EGL_DEFAULT_DISPLAY );
-        if( mEglDisplay == EGL10.EGL_NO_DISPLAY )
+        try
         {
-            Log.e( TAG, EGL_GET_DISPLAY_FAIL );
-            return false;
+            EGL10 egl = (EGL10) EGLContext.getEGL();
+            
+            //egl.eglWaitNative(EGL10.EGL_CORE_NATIVE_ENGINE, null);
+
+            // drawing here
+
+            //egl.eglWaitGL();
+
+            egl.eglSwapBuffers( mEGLDisplay, mEGLSurface );
         }
-        Log.v( TAG, EGL_GET_DISPLAY );
-        
-        // Initialize the EGL display connection and obtain the GLES version supported by the device
-        final int[] version = new int[2];
-        if( !mEgl.eglInitialize( mEglDisplay, version ) )
+        catch(Exception e)
         {
-            Log.e( TAG, EGL_INITIALIZE_FAIL );
-            return false;
-        }
-        Log.v( TAG, EGL_INITIALIZE );
-        
-        // Set the EGL frame buffer configuration and ensure that it supports the requested GLES
-        // version, display connection, and frame buffer configuration
-        // (http://stackoverflow.com/a/5930935/254218)
-        
-        // Get the number of compatible EGL frame buffer configurations
-        final int[] numConfigOut = new int[1];
-        mEgl.eglChooseConfig( mEglDisplay, configSpec, null, 0, numConfigOut );
-        final int numConfig = numConfigOut[0];
-        
-        // Get the compatible EGL frame buffer configurations
-        final EGLConfig[] configs = new EGLConfig[numConfig];
-        boolean success = mEgl.eglChooseConfig( mEglDisplay, configSpec, configs, numConfig, null );
-        if( !success || numConfig == 0 )
-        {
-            Log.e( TAG, EGL_CHOOSE_CONFIG_FAIL );
-            return false;
-        }
-        
-        // Select the best configuration
-        for( int i = 0; i < numConfig; i++ )
-        {
-            // "Best" config is the first one that is fast and egl-conformant
-            // So we test for the "caveat" flag which would indicate slow/non-conformant
-            int[] value = new int[1];
-            mEgl.eglGetConfigAttrib( mEglDisplay, configs[i], EGL10.EGL_CONFIG_CAVEAT, value );
-            if( value[0] == EGL10.EGL_NONE )
+            Log.v("SDL", "flipEGL(): " + e);
+            for (StackTraceElement s : e.getStackTrace())
             {
-                mEglConfig = configs[i];
-                break;
+                Log.v("SDL", s.toString());
             }
         }
-        
-        // Record the major version
-        mGlMajorVersion = majorVersion;
-        
-        Log.v( TAG, EGL_CHOOSE_CONFIG );
-        return true;
     }
     
-    /**
-     * Create the rendering context. Precondition: Valid EGL10, EGLDisplay, and EGLConfig objects.
-     * 
-     * @param forceCreate False to try to reuse context; true to always recreate.
-     * @return True if the context was created.
-     * @throws IllegalStateException if the precondition was not met.
-     * @see GameSurface#destroyEGLContext()
-     */
-    private boolean createEGLContext( boolean forceCreate )
+    public boolean isSurfaceReady() 
     {
-        assertPrecondition( Precondition.CONFIG );
-        
-        // Create EGL rendering context
-        if( forceCreate || mEglContext == null || mEglContext == EGL10.EGL_NO_CONTEXT )
-        {
-            final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
-            final int[] contextAttrs = new int[] {
-                EGL_CONTEXT_CLIENT_VERSION,
-                mGlMajorVersion,
-                EGL10.EGL_NONE };
-            mEglContext = mEgl.eglCreateContext( mEglDisplay, mEglConfig, EGL10.EGL_NO_CONTEXT,
-                    contextAttrs );
-            if( mEglContext == EGL10.EGL_NO_CONTEXT )
-            {
-                Log.e( TAG, EGL_CREATE_CONTEXT_FAIL );
-                return false;
-            }
-            Log.v( TAG, EGL_CREATE_CONTEXT );
-            return true;
-        }
-        Log.v( TAG, EGL_CREATE_CONTEXT_NOCHANGE );
-        return true;
-    }
-    
-    /**
-     * Create the window surface. Precondition: Valid EGL10, EGLDisplay, EGLConfig, and EGLContext
-     * objects.
-     * 
-     * @param forceCreate False to try to reuse surface; true to always recreate.
-     * @return True if the surface was created.
-     * @throws IllegalStateException if the precondition was not met.
-     */
-    private boolean createEGLSurface( boolean forceCreate )
-    {
-        assertPrecondition( Precondition.CONTEXT );
-        
-        // Create window surface
-        if( forceCreate || mEglSurface == null || mEglSurface == EGL10.EGL_NO_SURFACE )
-        {
-            mEglSurface = mEgl.eglCreateWindowSurface( mEglDisplay, mEglConfig, this, null );
-            if( mEglSurface == EGL10.EGL_NO_SURFACE )
-            {
-                Log.e( TAG, EGL_CREATE_SURFACE_FAIL );
-                return false;
-            }
-            Log.v( TAG, EGL_CREATE_SURFACE );
-            return true;
-        }
-        Log.v( TAG, EGL_CREATE_SURFACE_NOCHANGE );
-        return true;
-    }
-    
-    /**
-     * Bind the rendering context and window surface (i.e. make them "current"). Precondition: Valid
-     * EGL10, EGLDisplay, EGLConfig, EGLContext, and EGLSurface objects.
-     * 
-     * @return True if the context/surface were bound.
-     * @throws IllegalStateException if the precondition was not met.
-     */
-    private boolean bindEGLContext()
-    {
-        assertPrecondition( Precondition.SURFACE );
-        
-        // Bind the EGL rendering context to the window surface and current rendering thread
-        if( mEgl.eglGetCurrentContext() != mEglContext )
-        {
-            if( !mEgl.eglMakeCurrent( mEglDisplay, mEglSurface, mEglSurface, mEglContext ) )
-            {
-                Log.e( TAG, EGL_BIND_FAIL );
-                return false;
-            }
-            Log.v( TAG, EGL_BIND );
-            return true;
-        }
-        Log.v( TAG, EGL_BIND_NOCHANGE );
-        return true;
-    }
-    
-    /**
-     * Unbind the rendering context and window surface (i.e. make nothing "current"). Precondition:
-     * Valid EGL10 and EGLDisplay objects.
-     * 
-     * @return True if the context/surface were unbound.
-     * @throws IllegalStateException if the precondition was not met.
-     */
-    private boolean unbindEGLContext()
-    {
-        assertPrecondition( Precondition.DISPLAY );
-        
-        // Unbind rendering context and window surface
-        if( mEglDisplay != null )
-        {
-            if( !mEgl.eglMakeCurrent( mEglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE,
-                    EGL10.EGL_NO_CONTEXT ) )
-            {
-                Log.e( TAG, EGL_UNBIND_FAIL );
-                return false;
-            }
-            Log.v( TAG, EGL_UNBIND );
-            return true;
-        }
-        Log.v( TAG, EGL_UNBIND_NOCHANGE );
-        return true;
-    }
-    
-    /**
-     * Destroy the window surface. Precondition: Valid EGL10 and EGLDisplay objects.
-     * 
-     * @return True if the surface was destroyed.
-     * @throws IllegalStateException if the precondition was not met.
-     * @see GameSurface#createEGLSurface()
-     */
-    private boolean destroyEGLSurface()
-    {
-        assertPrecondition( Precondition.DISPLAY );
-        
-        // Destroy window surface
-        if( mEglSurface != null && mEglSurface != EGL10.EGL_NO_SURFACE )
-        {
-            if( !mEgl.eglDestroySurface( mEglDisplay, mEglSurface ) )
-            {
-                Log.e( TAG, EGL_DESTROY_SURFACE_FAIL );
-                return false;
-            }
-            mEglSurface = null;
-            Log.v( TAG, EGL_DESTROY_SURFACE );
-            return true;
-        }
-        Log.v( TAG, EGL_DESTROY_SURFACE_NOCHANGE );
-        return true;
-    }
-    
-    /**
-     * Destroy the rendering context. Precondition: Valid EGL10 and EGLDisplay objects.
-     * 
-     * @return True if the context was destroyed.
-     * @throws IllegalStateException if the precondition was not met.
-     * @see GameSurface#createEGLContext()
-     */
-    private boolean destroyEGLContext()
-    {
-        assertPrecondition( Precondition.DISPLAY );
-        
-        // Destroy rendering context
-        if( mEglContext != null && mEglContext != EGL10.EGL_NO_CONTEXT )
-        {
-            if( !mEgl.eglDestroyContext( mEglDisplay, mEglContext ) )
-            {
-                Log.e( TAG, EGL_DESTROY_CONTEXT_FAIL );
-                return false;
-            }
-            mEglContext = null;
-            Log.v( TAG, EGL_DESTROY_CONTEXT );
-            return true;
-        }
-        Log.v( TAG, EGL_DESTROY_CONTEXT_NOCHANGE );
-        return true;
-    }
-    
-    /**
-     * Release the configuration, display connection, and EGL objects. Precondition: Valid EGL10
-     * object.
-     * 
-     * @return True if the objects were properly released.
-     * @throws IllegalStateException if the precondition was not met.
-     * @see GameSurface#initializeEGL(int, int, int[])
-     */
-    private boolean terminateEGL()
-    {
-        assertPrecondition( Precondition.EGL );
-        
-        // Terminate display connection
-        if( mEglDisplay != null && mEglDisplay != EGL10.EGL_NO_DISPLAY )
-        {
-            if( !mEgl.eglTerminate( mEglDisplay ) )
-            {
-                Log.e( TAG, EGL_TERMINATE_FAIL );
-                return false;
-            }
-            mEglConfig = null;
-            mEglDisplay = null;
-            mEgl = null;
-            Log.v( TAG, EGL_TERMINATE );
-            return true;
-        }
-        Log.v( TAG, EGL_TERMINATE_NOCHANGE );
-        return true;
+        return mIsSurfaceReady;
     }
 }

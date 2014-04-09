@@ -54,6 +54,8 @@ typedef void        (*pSdlSetScreen)    (int width, int height, Uint32 format);
 typedef void        (*pVoidFunc)        ();
 typedef m64p_error  (*pCoreDoCommand)   (m64p_command, int, void *);
 typedef int         (*pFrontMain)       (int argc, char* argv[]);
+typedef void        (*pNativeResume)    (JNIEnv* env, jclass cls);
+typedef void        (*pNativePause)     (JNIEnv* env, jclass cls);
 
 // Function pointers
 static pAeiInit         aeiInit         = NULL;
@@ -62,6 +64,8 @@ static pSdlSetScreen    sdlSetScreen    = NULL;
 static pVoidFunc        sdlMainReady    = NULL;
 static pCoreDoCommand   coreDoCommand   = NULL;
 static pFrontMain       frontMain       = NULL;
+static pNativeResume    nativeResume    = NULL;
+static pNativePause     nativePause     = NULL;
 
 /*******************************************************************************
  Functions called automatically by JNI framework
@@ -121,9 +125,11 @@ extern "C" DECLSPEC void SDLCALL Java_paulscode_android_mupen64plusae_jni_Native
     sdlMainReady    = (pVoidFunc)       dlsym(handleSDL,    "SDL_SetMainReady");
     coreDoCommand   = (pCoreDoCommand)  dlsym(handleCore,   "CoreDoCommand");
     frontMain       = (pFrontMain)      dlsym(handleFront,  "SDL_main");
+    nativeResume    = (pNativeResume)   dlsym(handleSDL,    "Java_org_libsdl_app_SDLActivity_nativeResume");
+    nativePause     = (pNativePause)    dlsym(handleSDL,    "Java_org_libsdl_app_SDLActivity_nativePause");
 
     // Make sure we don't have any typos
-    if (!aeiInit || !sdlInit || !sdlSetScreen || !sdlMainReady || !coreDoCommand || !frontMain)
+    if (!aeiInit || !sdlInit || !sdlSetScreen || !sdlMainReady || !coreDoCommand || !frontMain || !nativeResume || !nativePause)
     {
         LOGE("Could not load library functions: be sure they are named and typedef'd correctly");
     }
@@ -141,6 +147,8 @@ extern "C" DECLSPEC void SDLCALL Java_paulscode_android_mupen64plusae_jni_Native
     sdlMainReady    = NULL;
     coreDoCommand   = NULL;
     frontMain       = NULL;
+    nativeResume    = NULL;
+    nativePause     = NULL;
 
     // Close shared libraries
     if (handleFront) dlclose(handleFront);
@@ -195,11 +203,13 @@ extern "C" DECLSPEC void Java_paulscode_android_mupen64plusae_jni_NativeExports_
 
 extern "C" DECLSPEC void Java_paulscode_android_mupen64plusae_jni_NativeExports_emuResume(JNIEnv* env, jclass cls)
 {
+    nativeResume(env, cls);
     if (coreDoCommand) coreDoCommand(M64CMD_RESUME, 0, NULL);
 }
 
 extern "C" DECLSPEC void Java_paulscode_android_mupen64plusae_jni_NativeExports_emuPause(JNIEnv* env, jclass cls)
 {
+    nativePause(env, cls);
     if (coreDoCommand) coreDoCommand(M64CMD_PAUSE, 0, NULL);
 }
 

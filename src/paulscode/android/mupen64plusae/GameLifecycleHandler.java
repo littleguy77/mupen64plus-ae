@@ -35,8 +35,6 @@ import paulscode.android.mupen64plusae.input.provider.Demultiplexer;
 import paulscode.android.mupen64plusae.input.provider.KeyProvider;
 import paulscode.android.mupen64plusae.input.provider.KeyProvider.ImeFormula;
 import paulscode.android.mupen64plusae.input.provider.MogaProvider;
-import paulscode.android.mupen64plusae.jni.NativeConstants;
-import paulscode.android.mupen64plusae.jni.NativeExports;
 import paulscode.android.mupen64plusae.jni.NativeXperiaTouchpad;
 import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.persistent.GamePrefs;
@@ -56,7 +54,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.InputDevice;
 import android.view.KeyEvent;
-import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
@@ -99,7 +96,7 @@ import android.widget.FrameLayout;
 */
 //@formatter:on
 
-public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.Callback
+public class GameLifecycleHandler implements View.OnKeyListener
 {
     // Activity and views
     private Activity mActivity;
@@ -120,12 +117,7 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
     private final String mRomMd5;
     private final String mCheatArgs;
     private final boolean mDoRestart;
-    
-    // Lifecycle state tracking
-    private boolean mIsFocused = false;     // true if the window is focused
-    private boolean mIsResumed = false;     // true if the activity is resumed
-    private boolean mIsSurface = false;     // true if the surface is available
-    
+   
     // App data and user preferences
     private AppData mAppData;
     private UserPrefs mUserPrefs;
@@ -200,9 +192,6 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         // Initialize the objects and data files interfacing to the emulator core
         CoreInterface.initialize( mActivity, mSurface, mRomPath, mRomMd5, mCheatArgs, mDoRestart );
         
-        // Listen to game surface events (created, changed, destroyed)
-        mSurface.getHolder().addCallback( this );
-        
         // Update the GameSurface size
         mSurface.getHolder().setFixedSize( mUserPrefs.videoRenderWidth, mUserPrefs.videoRenderHeight );
         FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mSurface.getLayoutParams();
@@ -249,51 +238,21 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
     public void onResume()
     {
         Log.i( "GameLifecycleHandler", "onResume" );
-        mIsResumed = true;
-        tryRunning();
-        
+        CoreInterface.resumeEmulator();
         mMogaController.onResume();
-    }
-    
-    @Override
-    public void surfaceCreated( SurfaceHolder holder )
-    {
-        Log.i( "GameLifecycleHandler", "surfaceCreated" );
-    }
-    
-    @Override
-    public void surfaceChanged( SurfaceHolder holder, int format, int width, int height )
-    {
-        Log.i( "GameLifecycleHandler", "surfaceChanged" );
-        mIsSurface = true;
-        tryRunning();
     }
     
     public void onWindowFocusChanged( boolean hasFocus )
     {
         // Only try to run; don't try to pause. User may just be touching the in-game menu.
         Log.i( "GameLifecycleHandler", "onWindowFocusChanged: " + hasFocus );
-        mIsFocused = hasFocus;
-        if( hasFocus )
-            hideSystemBars();
-        tryRunning();
     }
     
     public void onPause()
     {
         Log.i( "GameLifecycleHandler", "onPause" );
-        mIsResumed = false;
-        tryPausing();
-        
+        CoreInterface.pauseEmulator( true );
         mMogaController.onPause();
-    }
-    
-    @Override
-    public void surfaceDestroyed( SurfaceHolder holder )
-    {
-        Log.i( "GameLifecycleHandler", "surfaceDestroyed" );
-        mIsSurface = false;
-        tryStopping();
     }
     
     public void onStop()
@@ -457,48 +416,6 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         else
         {
             actionBar.show();
-        }
-    }
-    
-    private boolean isSafeToRender()
-    {
-        return mIsFocused && mIsResumed && mIsSurface;
-    }
-    
-    private void tryRunning()
-    {
-        int state = NativeExports.emuGetState();
-        if( isSafeToRender() && ( state != NativeConstants.EMULATOR_STATE_RUNNING ) )
-        {
-            switch( state )
-            {
-                case NativeConstants.EMULATOR_STATE_UNKNOWN:
-                    CoreInterface.startupEmulator();
-                    break;
-                case NativeConstants.EMULATOR_STATE_PAUSED:
-                    CoreInterface.resumeEmulator();
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    
-    private void tryPausing()
-    {
-        if( NativeExports.emuGetState() != NativeConstants.EMULATOR_STATE_PAUSED )
-        {
-            CoreInterface.pauseEmulator( true );
-        }
-    }
-    
-    private void tryStopping()
-    {
-        if( NativeExports.emuGetState() != NativeConstants.EMULATOR_STATE_STOPPED )
-        {
-            // Never go directly from running to stopped; always pause (and autosave) first
-            tryPausing();
-            CoreInterface.shutdownEmulator();
         }
     }
 }
