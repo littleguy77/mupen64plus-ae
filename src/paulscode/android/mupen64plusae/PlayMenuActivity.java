@@ -127,6 +127,8 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
         // Get the detailed info about the ROM
         mRomDetail = RomDetail.lookupByMd5( romMd5 );
         
+        // TODO: Check the CRC if MD5 isn't found in mupen64plus.ini, for now it's just crashing!
+        
         // Load user preference menu structure from XML and update view
         getPreferenceManager().setSharedPreferencesName( mGamePrefs.sharedPrefsName );
         addPreferencesFromResource( R.xml.preferences_game );
