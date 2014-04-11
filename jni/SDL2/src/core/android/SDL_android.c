@@ -107,6 +107,11 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
     return JNI_VERSION_1_4;
 }
 
+void JNI_OnUnload(JavaVM *vm, void *reserved)
+{
+    pthread_key_delete(mThreadKey);
+}
+
 // Called before SDL_main() to initialize JNI bindings
 void SDL_Android_Init(JNIEnv* mEnv, jclass cls)
 {
@@ -417,10 +422,13 @@ JNIEnv* Android_JNI_GetEnv(void) {
      */
 
     JNIEnv *env;
-    int status = (*mJavaVM)->AttachCurrentThread(mJavaVM, &env, NULL);
-    if(status < 0) {
-        LOGE("failed to attach current thread");
-        return 0;
+    int status = (*mJavaVM)->GetEnv(mJavaVM, (void**) &env, JNI_VERSION_1_4);
+    if (status == JNI_EDETACHED) {
+        LOGI("GetEnv: not attached");
+        if ((*mJavaVM)->AttachCurrentThread(mJavaVM, &env, NULL) != 0) {
+            __android_log_print(ANDROID_LOG_ERROR, "SDL", "Failed to attach");
+        }
+        pthread_setspecific (mThreadKey, &env);
     }
 
     return env;
@@ -437,7 +445,6 @@ int Android_JNI_SetupThread(void) {
      *       (except for some lost CPU cycles)
      */
     JNIEnv *env = Android_JNI_GetEnv();
-    pthread_setspecific(mThreadKey, (void*) env);
     return 1;
 }
 

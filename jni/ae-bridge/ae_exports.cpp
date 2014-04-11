@@ -48,6 +48,7 @@ static void *handleFront;       // libmupen64plus-ui-console.so
 
 // Function types
 typedef jint        (*pJNI_OnLoad)      (JavaVM* vm, void* reserved);
+typedef void        (*pJNI_OnUnload)    (JavaVM *vm, void *reserved);
 typedef int         (*pAeiInit)         (JNIEnv* env, jclass cls);
 typedef int         (*pSdlInit)         (JNIEnv* env, jclass cls);
 typedef void        (*pSdlSetScreen)    (int width, int height, Uint32 format);
@@ -137,6 +138,14 @@ extern "C" DECLSPEC void SDLCALL Java_paulscode_android_mupen64plusae_jni_Native
 
 extern "C" DECLSPEC void SDLCALL Java_paulscode_android_mupen64plusae_jni_NativeExports_unloadLibraries(JNIEnv* env, jclass cls)
 {
+    // Find and call the JNI_OnUnload functions manually since we aren't unloading the libraries from Java
+    pJNI_OnUnload JNI_OnUnload0 = (pJNI_OnUnload) dlsym(handleAEI, "JNI_OnUnload");
+    pJNI_OnUnload JNI_OnUnload1 = (pJNI_OnUnload) dlsym(handleSDL, "JNI_OnUnload");
+    JNI_OnUnload0(mVm, mReserved);
+    JNI_OnUnload1(mVm, mReserved);
+    JNI_OnUnload0 = NULL;
+    JNI_OnUnload1 = NULL;
+
     // Unload the libraries to ensure that static variables are re-initialized next time
     LOGI("Unloading native libraries");
 

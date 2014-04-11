@@ -71,10 +71,13 @@ static JNIEnv* Android_JNI_GetEnv(void)
      */
 
     JNIEnv *env;
-    int status = mJavaVM->AttachCurrentThread(&env, NULL);
-    if (status < 0)
-    {
-        return 0;
+    int status = mJavaVM->GetEnv((void**) &env, JNI_VERSION_1_4);
+    if (status == JNI_EDETACHED) {
+        LOGI("GetEnv: not attached");
+        if (mJavaVM->AttachCurrentThread(&env, NULL) != 0) {
+           LOGE("Failed to attach");
+        }
+        pthread_setspecific (mThreadKey, &env);
     }
 
     return env;
@@ -92,7 +95,6 @@ static int Android_JNI_SetupThread(void)
      *       (except for some lost CPU cycles)
      */
     JNIEnv *env = Android_JNI_GetEnv();
-    pthread_setspecific(mThreadKey, (void*) env);
     return 1;
 }
 
@@ -137,6 +139,11 @@ extern jint JNI_OnLoad(JavaVM* vm, void* reserved)
     }
 
     return JNI_VERSION_1_4;
+}
+
+extern void JNI_OnUnload(JavaVM *vm, void *reserved)
+{
+    pthread_key_delete(mThreadKey);
 }
 
 /*******************************************************************************
