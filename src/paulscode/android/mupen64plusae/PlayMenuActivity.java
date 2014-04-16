@@ -127,7 +127,11 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
         // Get the detailed info about the ROM
         mRomDetail = RomDetail.lookupByMd5( romMd5 );
         
-        // TODO: Check the CRC if MD5 isn't found in mupen64plus.ini, for now it's just crashing!
+        if(TextUtils.isEmpty( mRomDetail.goodName ))
+        {
+        	// TODO: Check the CRC if MD5 isn't found in mupen64plus.ini, for now just finish the activity
+        	finish();
+        }
         
         // Load user preference menu structure from XML and update view
         getPreferenceManager().setSharedPreferencesName( mGamePrefs.sharedPrefsName );
@@ -233,6 +237,8 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
     
     private void refreshViews()
     {
+    	mPrefs.unregisterOnSharedPreferenceChangeListener( this );
+    	
         // Refresh the preferences objects
         mUserPrefs = new UserPrefs( this );
         mGamePrefs = new GamePrefs( this, mRomDetail.md5 );
@@ -275,6 +281,7 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
             boolean enable4 = mGamePrefs.isControllerEnabled4 && mRomDetail.players > 3;
             playerPref.setControllersEnabled( enable1, enable2, enable3, enable4 );
         }
+        mPrefs.registerOnSharedPreferenceChangeListener( this );
     }
     
     private void refreshCheatsCategory()
