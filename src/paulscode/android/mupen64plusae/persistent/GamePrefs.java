@@ -109,6 +109,9 @@ public class GamePrefs
 	/** Brightness boost for the glide64 library. */
     public final int glide64Brightness;
     
+    /** Custom depth bias for the glide64 library. */
+    public final int glide64DepthBias;
+    
     /** True if auto-frameskip is enabled in the glide64 library. */
     public final boolean isGlide64AutoFrameskipEnabled;
     
@@ -225,6 +228,7 @@ public class GamePrefs
         isGlide64AutoFrameskipEnabled = maxFrameskip < 0;
         glide64MaxFrameskip = Math.abs( maxFrameskip );
         glide64Brightness = getSafeInt( emulationProfile, "glide64Brightness", 50 );
+        glide64DepthBias = getSafeInt( emulationProfile, "glide64DepthBias", 64 );
         
         // Touchscreen prefs
         isTouchscreenEnabled = touchscreenProfile != null;

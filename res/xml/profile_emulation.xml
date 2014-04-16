@@ -133,6 +133,13 @@
             mupen64:maximumValue="100"
             mupen64:stepSize="1"
             mupen64:units="%" />
+         <paulscode.android.mupen64plusae.persistent.StringSeekBarPreference
+            android:defaultValue="64"
+            android:key="glide64DepthBias"
+            android:title="@string/glide64DepthBias_title"
+            mupen64:maximumValue="100"
+            mupen64:stepSize="1"
+            mupen64:units="" />
     </PreferenceCategory>
 
 </PreferenceScreen>

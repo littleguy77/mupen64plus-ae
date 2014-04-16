@@ -54,6 +54,7 @@ public class NativeConfigFiles
         glide64_conf.put( "DEFAULT", "autoframeskip", boolToNum( game.isGlide64AutoFrameskipEnabled ) );
         glide64_conf.put( "DEFAULT", "maxframeskip", String.valueOf( game.glide64MaxFrameskip ) );
         glide64_conf.put( "DEFAULT", "brightness", String.valueOf( game.glide64Brightness ) );
+        glide64_conf.put( "DEFAULT", "depth_bias", String.valueOf( game.glide64DepthBias ) );
         
         // Core and rice config file
         ConfigFile mupen64plus_cfg = new ConfigFile( user.mupen64plus_cfg );

@@ -369,6 +369,7 @@
     <string name="touchscreenScale_title">Button scale</string>
     <string name="displayActionBarTransparency_title">Action bar opacity</string>
     <string name="glide64Brightness_title">Brightness</string>
+    <string name="glide64DepthBias_title">Custom depth bias</string>
 
     <!-- Path Preferences (selected path will become the summary) -->
     <!-- '~' indicates rel path & use storage dir if path doesn't exist -->

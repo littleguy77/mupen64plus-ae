@@ -738,8 +738,9 @@ void ReadSpecialSettings (const char * name)
       settings.lodmode = settings.special_lodmode;
 
 #ifdef ANDROID_EDITION
-	ini->Read(_T("brightness"), &(settings.brightness));
-	brightness = ((float)settings.brightness - 50.f) / 100.f;
+    ini->Read(_T("depth_bias"), &(settings.depth_bias));
+    ini->Read(_T("brightness"), &(settings.brightness));
+    brightness = ((float)settings.brightness - 50.f) / 100.f;
     ini->Read(_T("autoframeskip"), &(settings.autoframeskip));
     ini->Read(_T("maxframeskip"), &(settings.maxframeskip));
     if( settings.autoframeskip )
