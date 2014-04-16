@@ -266,6 +266,21 @@ static void add_stub(int type,int addr,int retaddr,int a,int b,int c,int d,int e
 static void add_to_linker(int addr,int target,int ext);
 static int verify_dirty(void *addr);
 
+#if defined(ANDROID_EDITION)
+extern FILE *pFile;
+
+static void Printf (const char *format, ...)
+{
+     va_list argptr;
+
+     va_start (argptr, format);
+     vfprintf(pFile,format,argptr);
+     va_end (argptr);
+
+     fprintf (pFile, "\n");
+}
+#endif
+
 //static int tracedebug=0;
 
 //#define DEBUG_CYCLE_COUNT 1
@@ -282,13 +297,17 @@ static int verify_dirty(void *addr);
 #endif
 static void nullf() {}
 
-#if defined( ASSEM_DEBUG )
+#if defined( ASSEM_DEBUG ) && !defined( ANDROID_EDITION )
     #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
+#elif defined( ASSEM_DEBUG ) && defined( ANDROID_EDITION )
+    #define assem_debug Printf
 #else
     #define assem_debug nullf
 #endif
-#if defined( INV_DEBUG )
+#if defined( INV_DEBUG ) && !defined( ANDROID_EDITION )
     #define inv_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
+#elif defined( INV_DEBUG ) && defined( ANDROID_EDITION )
+    #define inv_debug Printf
 #else
     #define inv_debug nullf
 #endif

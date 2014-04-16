@@ -19,6 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -67,6 +68,10 @@ char invalid_code[0x100000];
 precomp_block *blocks[0x100000], *actual;
 int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
     ceil_mode = 0xB3F, floor_mode = 0x73F;
+
+#if defined(ANDROID_EDITION)
+FILE *pFile = NULL;
+#endif
 
 // -----------------------------------------------------------
 // Cached interpreter functions (and fallback for dynarec).
@@ -1004,6 +1009,9 @@ void r4300_execute(void)
         init_blocks();
 
 #ifdef NEW_DYNAREC
+#if defined(ANDROID_EDITION)
+        pFile = fopen ("mnt/sdcard/mupen64plus/dynarec_debug.txt","w");
+#endif
         new_dynarec_init();
         new_dyna_start();
         new_dynarec_cleanup();
@@ -1059,6 +1067,9 @@ void r4300_execute(void)
         free_blocks();
     }
 
+#if defined(ANDROID_EDITION)
+    fclose (pFile);
+#endif
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
 
     /* print instruction counts */
