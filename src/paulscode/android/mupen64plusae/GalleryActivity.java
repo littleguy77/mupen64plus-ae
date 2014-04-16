@@ -22,7 +22,10 @@ package paulscode.android.mupen64plusae;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import paulscode.android.mupen64plusae.input.DiagnosticActivity;
 import paulscode.android.mupen64plusae.persistent.AppData;
@@ -164,6 +167,8 @@ public class GalleryActivity extends ListActivity
             path.add(f.getParent()); 
         }
         
+        Arrays.sort(files, filecomparator);
+        
         for(int i=0; i < files.length; i++)
         {
             File file = files[i];
@@ -185,6 +190,27 @@ public class GalleryActivity extends ListActivity
         ArrayAdapter<String> fileList = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, item);
         setListAdapter(fileList); 
     }
+    
+    Comparator<? super File> filecomparator = new Comparator<File>()
+    {  
+        public int compare(File file1, File file2)
+        {
+            if(file1.isDirectory())
+            {
+                if (file2.isDirectory())
+                    return String.valueOf(file1.getName().toLowerCase( Locale.US )).compareTo(file2.getName().toLowerCase( Locale.US ));
+                else
+                    return -1;
+            }
+            else 
+            {
+                if (file2.isDirectory())
+                    return 1;
+                else
+                    return String.valueOf(file1.getName().toLowerCase( Locale.US )).compareTo(file2.getName().toLowerCase( Locale.US ));
+            }
+        }  
+    };
     
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) 
