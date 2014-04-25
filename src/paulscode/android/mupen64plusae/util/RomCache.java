@@ -97,7 +97,8 @@ public class RomCache
                 for( final File file : files )
                 {
                     String md5 = RomDetail.computeMd5( file );
-                    RomDetail detail = RomDetail.lookupByMd5( md5 );
+                    String crc = new RomHeader(file).crc;
+                    RomDetail detail = RomDetail.lookupByMd5( md5, crc );
                     String artPath = cacheDir + "/" + detail.artName;
                     
                     this.publishProgress( detail.goodName );
@@ -141,7 +142,8 @@ public class RomCache
                 {
                     if( !ConfigFile.SECTIONLESS_NAME.equals( md5 ) )
                     {
-                        RomDetail detail = RomDetail.lookupByMd5( md5 );
+                        RomDetail detail = RomDetail.lookupByMd5( md5, null);
+                        
                         String artPath = config.get( md5, "artPath" );
                         downloadArt( detail.artUrl, artPath );
                         

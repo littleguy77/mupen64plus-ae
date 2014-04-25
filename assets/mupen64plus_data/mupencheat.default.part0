@@ -853,6 +853,26 @@ gn Dobutsu no Mori (J)
  cn Item Select
   81126EE8 ???? 1011:"Tall Red Cupboard",1C00:"Pet Cage",1CA6:"Fish Tank (Fish Included!)",1D2B:"Orange NES Game",1D2F:"Grey NES Game",1D33:"Red NES Game",1D37:"Light Blue NES Game",1D3A:"Yellow NES Game",1D3E:"Purple NES Game",1D42:"Blue NES Game",1D47:"Stereo NES Colour",1D4C:"Record Player",1D50:"JukeBox",1DA0:"Grandfather Clock",1DA6:"Stereo Kinda Thing",1DA9:"Stereo",1DAC:"CD Player",1DB3:"Alarm Clock",1EA1:"Lamp",1EA5:"Snowman Fridge",1EAB:"Round Snowman Table",1EAF:"Snowman Bed",1EB0:"Snowman Seat",2100:"1000 Bag",2100:"1000 Bag",2101:"10000 Bag",2101:"10000 Bag",2102:"30000 Bag",2102:"30000 Bag",2103:"100 Bag",2103:"100 Bag",2410:"Nook's Shirt",2410:"Nook's Shirt",2514:"Flat Shell",2514:"Flat Shell",2515:"Pointy Shell",2515:"Pointy Shell",2804:"Orange,2804 Orange"
 
+crc 6E5E0A23-A634F0D4-C:45
+gn Dobutsu no Mori (J) [T+Eng]
+ cn Save Hang Fix
+  cd Enable this cheat to fix hanging on the loading screen.
+  8008F443 0000
+ cn Hours
+  80136FBE ???? 0000:"00 AM",0001:"01 AM",0002:"02 AM",0003:"03 AM",0004:"04 AM",0005:"05 AM",0006:"06 AM",0007:"07 AM",0008:"08 AM",0009:"09 AM",000A:"10 AM",000B:"11 AM",000C:"00 PM",000D:"01 PM",000E:"02 PM",000F:"03 PM",0010:"04 PM",0011:"05 PM",0012:"06 PM",0013:"07 PM",0014:"08 PM",0015:"09 PM",0016:"10 PM",0017:"11 PM"
+ cn Minutes
+  80136FBD ???? 0000:"00",0005:"05",000A:"10",000F:"15",0014:"20",0019:"25",001E:"30",0023:"35",0028:"40",002D:"45",0032:"50",0037:"55",003B:"59"
+ cn Day
+  80136FBF ???? 0001:"Monday 1st",0002:"Tuesday 2nd",0003:"Wednesday 3rd",0004:"Thursday 4th",0005:"Friday 5th",0006:"Saturday 6th",0007:"Sunday 7th",0008:"Monday 8th",0009:"Tuesday 9th",000A:"Wednesday 10th",000B:"Thursday 11th",000C:"Friday 12th",000D:"Saturday 13th",000E:"Sunday 14th",000F:"Monday 15th",0010:"Tuesday 16th",0011:"Wednesday 17th",0012:"Thursday 18th",0013:"Friday 19th",0014:"Saturday 30th",0015:"Sunday 21st",0016:"Monday 22nd",0017:"Tuesday 23rd",0018:"Wednesday 24th",0019:"Thursday 25th",001A:"Friday 26th",001B:"Saturday 27th",001C:"Sunday 28th",001D:"Monday 29th",001E:"Tuesday 30th",001F:"Wednesday 31st"
+ cn Month
+  80136FC1 ???? 0001:"Jan",0002:"Feb",0003:"March",0004:"April",0005:"May",0006:"June",0007:"July",0008:"Aug",0009:"Sept",000A:"Oct",000B:"Nov",000C:"Dec"
+ cn Time Passes
+  80136FD2 ???? 0000:"Time Normal",0001:"Mins Like Seconds",0005:"Hours & Mins Medium",0010:"Hours & Mins Fast",00FF:"Time Zooms By"
+ cn Max Cash
+  813BC34C FFFF
+ cn Item Select
+  81126EE8 ???? 1011:"Tall Red Cupboard",1C00:"Pet Cage",1CA6:"Fish Tank (Fish Included!)",1D2B:"Orange NES Game",1D2F:"Grey NES Game",1D33:"Red NES Game",1D37:"Light Blue NES Game",1D3A:"Yellow NES Game",1D3E:"Purple NES Game",1D42:"Blue NES Game",1D47:"Stereo NES Colour",1D4C:"Record Player",1D50:"JukeBox",1DA0:"Grandfather Clock",1DA6:"Stereo Kinda Thing",1DA9:"Stereo",1DAC:"CD Player",1DB3:"Alarm Clock",1EA1:"Lamp",1EA5:"Snowman Fridge",1EAB:"Round Snowman Table",1EAF:"Snowman Bed",1EB0:"Snowman Seat",2100:"1000 Bag",2100:"1000 Bag",2101:"10000 Bag",2101:"10000 Bag",2102:"30000 Bag",2102:"30000 Bag",2103:"100 Bag",2103:"100 Bag",2410:"Nook's Shirt",2410:"Nook's Shirt",2514:"Flat Shell",2514:"Flat Shell",2515:"Pointy Shell",2515:"Pointy Shell",2804:"Orange,2804 Orange"
+
 crc 056EAB63-C215FCD5-C:4A
 gn Dual Heroes (J)
  cn Infinite\Energy\Player 1
