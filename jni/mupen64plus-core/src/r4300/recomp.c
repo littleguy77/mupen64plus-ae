@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - recomp.h                                                *
+ *   Mupen64plus - recomp.c                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -32,12 +32,15 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "memory/memory.h"
+#include "main/profile.h"
 
+#include "cached_interp.h"
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes
-#include "macros.h"
+#include "cp0.h"
 #include "r4300.h"
 #include "ops.h"
+#include "tlb.h"
 
 static void *malloc_exec(size_t size);
 static void free_exec(void *ptr, size_t length);
@@ -2160,7 +2163,7 @@ void init_block(precomp_block *block)
 {
   int i, length, already_exist = 1;
   static int init_length;
-  start_section(COMPILER_SECTION);
+  timed_section_start(TIMED_SECTION_COMPILER);
 #ifdef CORE_DBG
   DebugMessage(M64MSG_INFO, "init block %x - %x", (int) block->start, (int) block->end);
 #endif
@@ -2344,7 +2347,7 @@ void init_block(precomp_block *block)
       init_block(blocks[(block->start-0x20000000)>>12]);
     }
   }
-  end_section(COMPILER_SECTION);
+  timed_section_end(TIMED_SECTION_COMPILER);
 }
 
 void free_block(precomp_block *block)
@@ -2369,7 +2372,7 @@ void free_block(precomp_block *block)
 void recompile_block(int *source, precomp_block *block, unsigned int func)
 {
    int i, length, finished=0;
-   start_section(COMPILER_SECTION);
+   timed_section_start(TIMED_SECTION_COMPILER);
    length = (block->end-block->start)/4;
    dst_block = block;
    
@@ -2497,7 +2500,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
    fclose(pfProfile);
    pfProfile = NULL;
 #endif
-   end_section(COMPILER_SECTION);
+   timed_section_end(TIMED_SECTION_COMPILER);
 }
 
 static int is_jump(void)
