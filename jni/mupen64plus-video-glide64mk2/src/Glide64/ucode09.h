@@ -97,6 +97,8 @@ static int Calc_invw (int w) {
 
 static void uc9_draw_object (wxUint8 * addr, wxUint32 type)
 {
+Check_FrameSkip;
+
   wxUint32 textured, vnum, vsize;
   switch (type) {
     case 1: //sh tri

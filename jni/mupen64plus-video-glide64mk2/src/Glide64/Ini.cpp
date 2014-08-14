@@ -301,7 +301,13 @@ BOOL INI_FindSection (const char *sectionname, BOOL create)
 {
     if (ini == NULL)
         return FALSE;
-    printf("INI_FindSection trying to find name for %s\n", sectionname);
+/*    static char cached_secion[200]="\0";
+    static BOOL cached_result;
+    if (!strcasecmp(section,sectionname))
+	return cached_result;*/
+
+
+//    printf("INI_FindSection trying to find name for %s\n", sectionname);
 
     char line[256], section[64];
     char *p;

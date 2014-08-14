@@ -27,6 +27,8 @@
 #include "main.h"
 #include <stdio.h>
 
+#include "../Glide64/ticks.h"
+
 /* Napalm extensions to GrTextureFormat_t */
 #define GR_TEXFMT_ARGB_CMP_FXT1           0x11
 #define GR_TEXFMT_ARGB_8888               0x12
@@ -59,6 +61,18 @@ static int min_filter1, mag_filter1, wrap_s1, wrap_t1;
 
 unsigned char *filter(unsigned char *source, int width, int height, int *width2, int *height2);
 
+//#define TEXBSP
+#ifdef TEXBSP
+typedef struct _texbsp
+{
+  unsigned int id;
+  struct _texbsp *left;
+  struct _texbsp *right;
+} texbsp;
+
+static int nbTex = 0;
+static texbsp *list = NULL;
+#else
 typedef struct _texlist
 {
   unsigned int id;
@@ -67,14 +81,100 @@ typedef struct _texlist
 
 static int nbTex = 0;
 static texlist *list = NULL;
+#endif
 
 #ifdef _WIN32
 extern PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT;
 extern PFNGLDELETEFRAMEBUFFERSEXTPROC glDeleteFramebuffersEXT;
 extern PFNGLCOMPRESSEDTEXIMAGE2DARBPROC glCompressedTexImage2DARB;
 #endif
+#ifdef TEXBSP
+void print_tex(bool detail=false)
+{
+	texbsp *bsp = list;
+	int i=0;
+	if (!bsp) {
+		printf("empty list (%s)", (nbTex==i)?"OK":"/!\\ KO");
+		return;
+	}
+	bool ok=true;
+	while (bsp->left) bsp=bsp->left;
+	do {
+		i++;
+		if (detail) printf("%u\t", bsp->id);
+		if (bsp->right) if (bsp->id>=bsp->right->id) ok=false;
+		bsp=bsp->right;
+	} while (bsp);
+	printf("%s%s (taille %i/%i %s)\n",(detail)?"\n":"", (ok)?"OK":"KO", nbTex, i, (nbTex==i)?"OK":"/!\\ KO");
+	if (nbTex!=i && !detail) print_tex(true);
+}
+#endif
 void remove_tex(unsigned int idmin, unsigned int idmax)
 {
+#ifdef TEXBSP
+if ((idmin==18449 && idmax==22545) || (idmin==28689 || idmax==30737)) {printf("delete %u->%u, list=", idmin, idmax); print_tex(true);}
+	GLuint texlist[nbTex];
+	int	nbdel = 0;
+	// 1st look at initial point that is <= at idmin and than go right until id > idmax. Deleting all in between, and reattach list is needed
+	texbsp *aux = list;
+	bool reattach = false;
+	texbsp *debut, *fin, *temp;
+	// Empty list, easy
+	if (list==NULL) return;
+	if ((idmin==0x00000000) && (idmax==0xffffffff)) {
+		// delete everything, quite easy
+		debut = list->left;
+		fin = list->right;
+		while ((debut) || (fin)) {
+			if (debut) {
+				texlist[nbdel++]=debut->id;
+				temp = debut->left;
+				free(debut);
+				debut = temp;
+			}
+			if (fin) {
+				texlist[nbdel++]=fin->id;
+				temp = fin->right;
+				free(fin);
+				fin = temp;
+			}
+		}
+		texlist[nbdel++]=list->id;
+		free(list);
+		list=NULL;
+		glDeleteTextures(nbdel, texlist);
+		nbTex = 0;
+//print_tex();
+		return;
+	}
+	// General case, range delete
+	// find starting point.
+	debut = list;
+	while ((debut->id > idmin) && (debut->left!=NULL)) {
+	   debut = debut->left;
+	}
+	while ((debut->right!=NULL) && (debut->right->id <= idmin)) {
+		debut = debut->right;
+	}
+	fin = debut->left;
+	// and now delete
+	while ((debut!=NULL) && (debut->id >= idmin) && (debut->id < idmax))
+	{
+		temp = debut->right;
+		texlist[nbdel++]=debut->id;
+		free(debut);
+		debut=temp;
+	}
+	if (!nbdel)	return;
+	// rechain the list
+	if (fin) fin->right = debut;
+	if (debut) debut->left = fin;
+	if (debut) list = debut; else list = fin;		//change ankor
+	nbTex -= nbdel;
+	glDeleteTextures(nbdel, texlist);
+printf("deleted (%i) %u->%u, list=", nbdel, idmin, idmax); print_tex();
+	return;
+#else
   unsigned int *t;
   int n = 0;
   texlist *aux = list;
@@ -108,11 +208,68 @@ void remove_tex(unsigned int idmin, unsigned int idmax)
   glDeleteTextures(n, t);
   free(t);
   //printf("RMVTEX nbtex is now %d (%06x - %06x)\n", nbTex, idmin, idmax);
+#endif
 }
 
 
 void add_tex(unsigned int id)
 {
+#ifdef TEXBSP
+ if (list == NULL) {
+	list = (texbsp*)malloc(sizeof(texbsp));
+	list->left = NULL; list->right = NULL;
+	list->id = id;
+	nbTex++;
+	return;
+ }
+ texbsp *bsp = list;
+if (id>TMU_SIZE*2) {printf("/!\\ add (%u), anchor=%u, list=", id, bsp->id); print_tex();}
+ if (bsp->id>=id) {	// go left
+	while ((bsp->left!=NULL) && (bsp->id > id))
+	{
+		bsp=bsp->left;
+	}
+	if (bsp->id == id) return;
+	texbsp *ins = (texbsp*)malloc(sizeof(texbsp)); 
+	ins->id = id;
+	if ((bsp->id > id) && (bsp->left==NULL)) {
+		bsp->left = ins;
+		ins->right = bsp;
+		ins->left = NULL;
+	} else {
+		texbsp *aux = bsp->right;
+		ins->left = bsp;
+		ins->right = aux;
+		bsp->right = ins;
+		if (aux) aux->left = ins;
+	}
+	nbTex++;
+	list=bsp;	// new ankor
+	return;
+ } else {			// go right
+	while ((bsp->right!=NULL) && (bsp->id < id))
+	{
+		bsp=bsp->right;
+	}
+	if (bsp->id == id) return;
+	texbsp *ins = (texbsp*)malloc(sizeof(texbsp)); 
+	ins->id = id;
+	if ((bsp->id < id) && (bsp->right==NULL)) {	// add at end of chain !
+		bsp->right = ins;
+		ins->left = bsp;
+		ins->right = NULL;
+	} else {	// insert in chain
+		texbsp *aux = bsp->left;
+		ins->right = bsp;
+		ins->left = aux;
+		bsp->left = ins;
+		if (aux) aux->right = ins;
+	}
+	nbTex++;
+	list=bsp;	// new ankor
+	return;
+ }
+#else
   texlist *aux = list;
   texlist *aux2;
   //printf("ADDTEX nbtex is now %d (%06x)\n", nbTex, id);
@@ -132,6 +289,7 @@ void add_tex(unsigned int id)
   aux->next = (texlist*)malloc(sizeof(texlist));
   aux->next->id = id;
   aux->next->next = aux2;
+#endif
 }
 
 void init_textures()
@@ -143,6 +301,10 @@ void init_textures()
   // 	nbTex = 0;
 
   if (!texture)	texture = (unsigned char*)malloc(2048*2048*4);
+  #ifdef TEXBSP
+  list = NULL;
+  nbTex = 0;
+  #endif
 }
 
 void free_textures()

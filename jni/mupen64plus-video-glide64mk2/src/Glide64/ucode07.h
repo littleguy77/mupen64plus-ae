@@ -67,6 +67,8 @@ typedef struct
 
 static void uc7_vertex ()
 {
+Check_FrameSkip;
+
   if (rdp.update & UPDATE_MULT_MAT)
   {
     rdp.update ^= UPDATE_MULT_MAT;

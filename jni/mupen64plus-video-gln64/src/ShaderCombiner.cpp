@@ -221,6 +221,13 @@ const char * _alpha_param_str(int param)
     }
 }
 
+#define MAX_CACHE	16
+ShaderProgram*	prog_cache[MAX_CACHE];
+u64				mux_cache[MAX_CACHE];
+int				flag_cache[MAX_CACHE];
+int				old_cache[MAX_CACHE];
+static int		cache_turn=0;
+
 DecodedMux::DecodedMux(u64 mux, bool cycle2)
 {
     combine.mux = mux;
@@ -602,6 +609,15 @@ void ShaderCombiner_Init()
     {
         _glcompiler_error(_vertex_shader);
     }
+	
+	// prepare prog cache
+	for (int i=0; i<MAX_CACHE; i++) {
+		prog_cache[i]=NULL;
+		flag_cache[i]=0;
+		mux_cache[i]=0;
+		old_cache[i]=0;
+	}
+	cache_turn=0;
 };
 
 void ShaderCombiner_DeletePrograms(ShaderProgram *prog)

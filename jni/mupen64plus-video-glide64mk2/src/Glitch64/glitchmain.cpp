@@ -45,6 +45,8 @@
 #include <IL/il.h>
 #endif
 
+#include "../Glide64/ticks.h"	//*SEB*
+
 extern void (*renderCallback)(int);
 
 wrapper_config config = {0, 0, 0, 0};
@@ -140,6 +142,8 @@ typedef struct
   unsigned int address;
   int width;
   int height;
+  int fb_width;
+  int fb_height;
   unsigned int fbid;
   unsigned int zbid;
   unsigned int texid;
@@ -656,6 +660,9 @@ grSstWinOpen(
 #ifdef _WIN32
   glCompressedTexImage2DARB = (PFNGLCOMPRESSEDTEXIMAGE2DPROC)wglGetProcAddress("glCompressedTexImage2DARB");
 #endif
+/*SEB*/
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 
 #ifdef _WIN32
@@ -806,6 +813,7 @@ grSstWinClose( GrContext_t context )
     fullscreen = 0;
   }
 #else
+  CoreVideo_Quit();
   //SDL_QuitSubSystem(SDL_INIT_VIDEO);
   //sleep(2);
 #endif
@@ -826,7 +834,6 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
   int i;
   static int fbs_init = 0;
 
-  //printf("grTextureBufferExt(%d, %d, %d, %d, %d, %d, %d)\r\n", tmu, startAddress, lodmin, lodmax, aspect, fmt, evenOdd);
   LOG("grTextureBufferExt(%d, %d, %d, %d %d, %d, %d)\r\n", tmu, startAddress, lodmin, lodmax, aspect, fmt, evenOdd);
   if (lodmin != lodmax) display_warning("grTextureBufferExt : loading more than one LOD");
   if (!use_fbo) {
@@ -910,8 +917,8 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
       tmu_usage[rtmu].min = pBufferAddress;
     if ((unsigned int) tmu_usage[rtmu].max < pBufferAddress+size)
       tmu_usage[rtmu].max = pBufferAddress+size;
-    //   printf("tmu %d usage now %gMb - %gMb\n",
-    //          rtmu, tmu_usage[rtmu].min/1024.0f, tmu_usage[rtmu].max/1024.0f);
+	//printf("tmu %d usage now %gMb - %gMb\n",
+    //      rtmu, tmu_usage[rtmu].min/1024.0f, tmu_usage[rtmu].max/1024.0f);
 
 
     width = pBufferWidth;
@@ -930,14 +937,14 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
     texbufs[i].fmt = fmt;
     if (i == texbuf_i)
       texbuf_i = (texbuf_i+1)&(NB_TEXBUFS-1);
-    //printf("texbuf %x fmt %x\n", pBufferAddress, fmt);
+	//printf("texbuf %x fmt %x\n", pBufferAddress, fmt);
 
     // ZIGGY it speeds things up to not delete the buffers
     // a better thing would be to delete them *sometimes*
     //   remove_tex(pBufferAddress+1, pBufferAddress + size);
     add_tex(pBufferAddress);
 
-    //printf("viewport %dx%d\n", width, height);
+	//printf("viewport %dx%d\n", width, height);
     if (height > screen_height) {
       glViewport( 0, viewport_offset + screen_height - height, width, height);
     } else
@@ -982,8 +989,10 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
     {
       if (fbs[i].address == pBufferAddress)
       {
-        if (fbs[i].width == width && fbs[i].height == height) //select already allocated FBO
+//        if (fbs[i].width == width && fbs[i].height == height) //select already allocated FBO
+        if (fbs[i].width >= width && fbs[i].height >= height) //select already allocated FBO, or large enough
         {
+//unsigned int tticks = ticksGetTicks();
           glBindFramebuffer( GL_FRAMEBUFFER, 0 );
           glBindFramebuffer( GL_FRAMEBUFFER, fbs[i].fbid );
           glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbs[i].texid, 0 );
@@ -991,6 +1000,8 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
           glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, fbs[i].zbid );
           glViewport( 0, 0, width, height);
           glScissor( 0, 0, width, height);
+		  fbs[i].fb_width=width;
+		  fbs[i].fb_height=height;
           if (fbs[i].buff_clear)
           {
             glDepthMask(1);
@@ -999,21 +1010,25 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
           }
           CHECK_FRAMEBUFFER_STATUS();
           curBufferAddr = pBufferAddress;
+//printf("select existing fbo (%u ms)\n", ticksGetTicks()-tticks);
           return;
         }
-        else //create new FBO at the same address, delete old one
+        else //create new FBO at the same address, delete old one 
         {
+//unsigned int tticks = ticksGetTicks();
           glDeleteFramebuffers( 1, &(fbs[i].fbid) );
           glDeleteRenderbuffers( 1, &(fbs[i].zbid) );
           if (nb_fb > 1)
             memmove(&(fbs[i]), &(fbs[i+1]), sizeof(fb)*(nb_fb-i));
           nb_fb--;
+//printf("delete existing fbo (%u ms)\n", ticksGetTicks()-tticks);
           break;
         }
       }
     }
-
+//unsigned int tticks = ticksGetTicks();
     remove_tex(pBufferAddress, pBufferAddress + width*height*2/*grTexFormatSize(fmt)*/);
+//printf("delete texture (%u ms)\n", ticksGetTicks()-tticks);
     //create new FBO
     glGenFramebuffers( 1, &(fbs[nb_fb].fbid) );
     glGenRenderbuffers( 1, &(fbs[nb_fb].zbid) );
@@ -1022,6 +1037,8 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
     fbs[nb_fb].address = pBufferAddress;
     fbs[nb_fb].width = width;
     fbs[nb_fb].height = height;
+    fbs[nb_fb].fb_width = width;
+    fbs[nb_fb].fb_height = height;
     fbs[nb_fb].texid = pBufferAddress;
     fbs[nb_fb].buff_clear = 0;
     add_tex(fbs[nb_fb].texid);
@@ -1043,6 +1060,7 @@ FX_ENTRY void FX_CALL grTextureBufferExt( GrChipID_t  		tmu,
     CHECK_FRAMEBUFFER_STATUS();
     curBufferAddr = pBufferAddress;
     nb_fb++;
+//printf("create new fbo=fb[%i] (%u ms)\n", nb_fb-1, ticksGetTicks()-tticks);
   }
 }
 
@@ -1060,7 +1078,7 @@ int CheckTextureBufferFormat(GrChipID_t tmu, FxU32 startAddress, GrTexInfo *info
     found = i = 0;
     while (i < nb_fb)
     {
-      unsigned int end = fbs[i].address + fbs[i].width*fbs[i].height*2;
+      unsigned int end = fbs[i].address + fbs[i].fb_width*fbs[i].fb_height*2;
       if (startAddress >= fbs[i].address &&  startAddress < end)
       {
         found = 1;
@@ -1721,18 +1739,11 @@ grBufferClear( GrColor_t color, GrAlpha_t alpha, FxU32 depth )
 FX_ENTRY void FX_CALL
 grBufferSwap( FxU32 swap_interval )
 {
-//   GLuint program;
-
   vbo_draw();
 //	glFinish();
 //  printf("rendercallback is %p\n", renderCallback);
-  if(renderCallback) {
-//      glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*) &program);
-//      glUseProgramObjectARB(0);
+  if(renderCallback)
       (*renderCallback)(1);
-//      if (program)
-//         glUseProgramObjectARB(program);
-  }
   int i;
   LOG("grBufferSwap(%d)\r\n", swap_interval);
   //printf("swap\n");
@@ -1778,6 +1789,7 @@ grLfbLock( GrLock_t type, GrBuffer_t buffer, GrLfbWriteMode_t writeMode,
           GrLfbInfo_t *info )
 {
   LOG("grLfbLock(%d,%d,%d,%d,%d)\r\n", type, buffer, writeMode, origin, pixelPipeline);
+printf("grLfbLock(%d,%d,%d,%d,%d)\r\n", type, buffer, writeMode, origin, pixelPipeline);
   if (type == GR_LFB_WRITE_ONLY)
   {
     display_warning("grLfbLock : write only");
@@ -1802,12 +1814,32 @@ grLfbLock( GrLock_t type, GrBuffer_t buffer, GrLfbWriteMode_t writeMode,
     if(buffer != GR_BUFFER_AUXBUFFER)
     {
       if (writeMode == GR_LFBWRITEMODE_888) {
+/*SEB*/
+        buf = (unsigned char*)malloc(width*height*4);
         //printf("LfbLock GR_LFBWRITEMODE_888\n");
         info->lfbPtr = frameBuffer;
         info->strideInBytes = width*4;
         info->writeMode = GR_LFBWRITEMODE_888;
         info->origin = origin;
         //glReadPixels(0, viewport_offset, width, height, GL_BGRA, GL_UNSIGNED_BYTE, frameBuffer);
+        glReadPixels(0, viewport_offset, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+
+/*SEB*/
+	    unsigned char *p=buf;
+        for (j=0; j<height; j++)
+        {
+	    short unsigned int *f=frameBuffer+(height-j-1)*width;
+          for (i=0; i<width; i++)
+          {
+            *(f++) =
+              (*(p)   <<24) |
+              (*(p+1) <<16) |
+              (*(p+2) << 8) |
+	          (0xff);
+              p+=4;
+          }
+        }
+        free(buf);
       } else {
         buf = (unsigned char*)malloc(width*height*4);
 
@@ -1817,14 +1849,22 @@ grLfbLock( GrLock_t type, GrBuffer_t buffer, GrLfbWriteMode_t writeMode,
         info->origin = origin;
         glReadPixels(0, viewport_offset, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buf);
 
+/*SEB*/
+	    unsigned char *p=buf;
         for (j=0; j<height; j++)
         {
+	      short unsigned int *f=frameBuffer+(height-j-1)*width;
           for (i=0; i<width; i++)
           {
-            frameBuffer[(height-j-1)*width+i] =
+/*            frameBuffer[(height-j-1)*width+i] =
               ((buf[j*width*4+i*4+0] >> 3) << 11) |
               ((buf[j*width*4+i*4+1] >> 2) <<  5) |
-              (buf[j*width*4+i*4+2] >> 3);
+              (buf[j*width*4+i*4+2] >> 3);*/
+            *(f++) =
+              ((*(p)   >> 3) << 11) |
+              ((*(p+1) >> 2) <<  5) |
+              (*(p+2)  >> 3);
+              p+=4;
           }
         }
         free(buf);
@@ -1836,6 +1876,7 @@ grLfbLock( GrLock_t type, GrBuffer_t buffer, GrLfbWriteMode_t writeMode,
       info->strideInBytes = width*2;
       info->writeMode = GR_LFBWRITEMODE_ZA16;
       info->origin = origin;
+      //*SEB* *TODO* check alignment
       glReadPixels(0, viewport_offset, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, depthBuffer);
     }
   }
@@ -1865,6 +1906,7 @@ grLfbReadRegion( GrBuffer_t src_buffer,
   unsigned short *frameBuffer = (unsigned short*)dst_data;
   unsigned short *depthBuffer = (unsigned short*)dst_data;
   LOG("grLfbReadRegion(%d,%d,%d,%d,%d,%d)\r\n", src_buffer, src_x, src_y, src_width, src_height, dst_stride);
+//printf("grLfbReadRegion(%d,%d,%d,%d,%d,%d)\r\n", src_buffer, src_x, src_y, src_width, src_height, dst_stride);
 
   switch(src_buffer)
   {
@@ -1886,15 +1928,22 @@ grLfbReadRegion( GrBuffer_t src_buffer,
     buf = (unsigned char*)malloc(src_width*src_height*4);
 
     glReadPixels(src_x, (viewport_offset)+height-src_y-src_height, src_width, src_height, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-
     for (j=0; j<src_height; j++)
     {
+/*SEB*/
+      unsigned char *p=buf+(src_height-j-1)*src_width*4;
+      unsigned short *f=frameBuffer+(j*dst_stride/2);
       for (i=0; i<src_width; i++)
       {
-        frameBuffer[j*(dst_stride/2)+i] =
+/*        frameBuffer[j*(dst_stride/2)+i] =
           ((buf[(src_height-j-1)*src_width*4+i*4+0] >> 3) << 11) |
           ((buf[(src_height-j-1)*src_width*4+i*4+1] >> 2) <<  5) |
-          (buf[(src_height-j-1)*src_width*4+i*4+2] >> 3);
+          (buf[(src_height-j-1)*src_width*4+i*4+2] >> 3);*/
+        *(f++) =
+          ((*(p) >> 3) << 11) |
+          ((*(p+1) >> 2) <<  5) |
+          (*(p+2) >> 3);
+	  p+=4;
       }
     }
     free(buf);
@@ -1902,15 +1951,19 @@ grLfbReadRegion( GrBuffer_t src_buffer,
   else
   {
     buf = (unsigned char*)malloc(src_width*src_height*2);
-
-    glReadPixels(src_x, (viewport_offset)+height-src_y-src_height, src_width, src_height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, depthBuffer);
+//*SEB read in buf, not depthBuffer.
+    glReadPixels(src_x, (viewport_offset)+height-src_y-src_height, src_width, src_height, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, buf);
 
     for (j=0;j<src_height; j++)
     {
+//*SEB*
+      unsigned short *d=depthBuffer+j*dst_stride/2;
+      unsigned short *p=(unsigned short*)buf+(src_height-j-1)*src_width; //orignal look fishy. why *4???
       for (i=0; i<src_width; i++)
       {
-        depthBuffer[j*(dst_stride/2)+i] =
-          ((unsigned short*)buf)[(src_height-j-1)*src_width*4+i*4];
+/*        depthBuffer[j*(dst_stride/2)+i] =
+          ((unsigned short*)buf)[(src_height-j-1)*src_width*4+i*4];*/
+        *(d++) = *(p++); //why *4 (prob. GL_PACK was=4), plus transcoding to short, that make *8 ???
       }
     }
     free(buf);
@@ -1933,6 +1986,7 @@ grLfbWriteRegion( GrBuffer_t dst_buffer,
   int texture_number;
   unsigned int tex_width = 1, tex_height = 1;
   LOG("grLfbWriteRegion(%d,%d,%d,%d,%d,%d,%d,%d)\r\n",dst_buffer, dst_x, dst_y, src_format, src_width, src_height, pixelPipeline, src_stride);
+//printf("grLfbWriteRegion(%d,%d,%d,%d,%d,%d,%d,%d)\r\n",dst_buffer, dst_x, dst_y, src_format, src_width, src_height, pixelPipeline, src_stride);
 
   //glPushAttrib(GL_ALL_ATTRIB_BITS);
 
@@ -1959,6 +2013,12 @@ grLfbWriteRegion( GrBuffer_t dst_buffer,
     glActiveTexture(texture_number);
 
     const unsigned int half_stride = src_stride / 2;
+
+    const int comp_stride = half_stride - src_width;
+    const int comp_tex = (tex_width - src_width)*4;
+    unsigned short *f=frameBuffer;
+    unsigned char *p=buf;
+
     switch(src_format)
     {
     case GR_LFB_SRC_FMT_1555:
@@ -1966,12 +2026,20 @@ grLfbWriteRegion( GrBuffer_t dst_buffer,
       {
         for (i=0; i<src_width; i++)
         {
-          const unsigned int col = frameBuffer[j*half_stride+i];
+/*          const unsigned int col = frameBuffer[j*half_stride+i];
           buf[j*tex_width*4+i*4+0]=((col>>10)&0x1F)<<3;
           buf[j*tex_width*4+i*4+1]=((col>>5)&0x1F)<<3;
           buf[j*tex_width*4+i*4+2]=((col>>0)&0x1F)<<3;
-          buf[j*tex_width*4+i*4+3]= (col>>15) ? 0xFF : 0;
+          buf[j*tex_width*4+i*4+3]= (col>>15) ? 0xFF : 0;*/
+          const unsigned int col = *(f++);
+          *(p)=((col>>10)&0x1F)<<3;
+          *(p+1)=((col>>5)&0x1F)<<3;
+          *(p+2)=((col>>0)&0x1F)<<3;
+          *(p+3)= (col>>15) ? 0xFF : 0;
+	  p+=4;
         }
+	p+=comp_tex;
+	f+=comp_stride;
       }
       break;
     case GR_LFBWRITEMODE_555:
@@ -1979,12 +2047,20 @@ grLfbWriteRegion( GrBuffer_t dst_buffer,
       {
         for (i=0; i<src_width; i++)
         {
-          const unsigned int col = frameBuffer[j*half_stride+i];
+/*          const unsigned int col = frameBuffer[j*half_stride+i];
           buf[j*tex_width*4+i*4+0]=((col>>10)&0x1F)<<3;
           buf[j*tex_width*4+i*4+1]=((col>>5)&0x1F)<<3;
           buf[j*tex_width*4+i*4+2]=((col>>0)&0x1F)<<3;
-          buf[j*tex_width*4+i*4+3]=0xFF;
+          buf[j*tex_width*4+i*4+3]=0xFF;*/
+          const unsigned int col = *(f++);
+          *(p)=((col>>10)&0x1F)<<3;
+          *(p+1)=((col>>5)&0x1F)<<3;
+          *(p+2)=((col>>0)&0x1F)<<3;
+          *(p+3)=0xFF;
+	  p+=4;
         }
+	p+=comp_tex;
+	f+=comp_stride;
       }
       break;
     case GR_LFBWRITEMODE_565:
@@ -1992,12 +2068,20 @@ grLfbWriteRegion( GrBuffer_t dst_buffer,
       {
         for (i=0; i<src_width; i++)
         {
-          const unsigned int col = frameBuffer[j*half_stride+i];
+/*          const unsigned int col = frameBuffer[j*half_stride+i];
           buf[j*tex_width*4+i*4+0]=((col>>11)&0x1F)<<3;
           buf[j*tex_width*4+i*4+1]=((col>>5)&0x3F)<<2;
           buf[j*tex_width*4+i*4+2]=((col>>0)&0x1F)<<3;
-          buf[j*tex_width*4+i*4+3]=0xFF;
+          buf[j*tex_width*4+i*4+3]=0xFF;*/
+          const unsigned int col = *(f++);
+          *(p)=((col>>11)&0x1F)<<3;
+          *(p+1)=((col>>5)&0x3F)<<2;
+          *(p+2)=((col>>0)&0x1F)<<3;
+          *(p+3)=0xFF;
+	  p+=4;
         }
+	p+=comp_tex;
+	f+=comp_stride;
       }
       break;
     default:
@@ -2016,7 +2100,7 @@ grLfbWriteRegion( GrBuffer_t dst_buffer,
 #endif
 
     glBindTexture(GL_TEXTURE_2D, default_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
     free(buf);
 
     set_copy_shader();
