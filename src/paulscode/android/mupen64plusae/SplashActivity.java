@@ -57,10 +57,10 @@ public class SplashActivity extends Activity implements OnExtractionProgressList
      * Asset version number, used to determine stale assets. Increment this number every time the
      * assets are updated on disk.
      */
-    private static final int ASSET_VERSION = 42;
+    private static final int ASSET_VERSION = 43;
     
     /** The total number of assets to be extracted (for computing progress %). */
-    private static final int TOTAL_ASSETS = 124;
+    private static final int TOTAL_ASSETS = 115;
     
     /** The minimum duration that the splash screen is shown, in milliseconds. */
     private static final int SPLASH_DELAY = 1000;
@@ -86,13 +86,19 @@ public class SplashActivity extends Activity implements OnExtractionProgressList
     private SharedPreferences mPrefs = null;
     
     // These constants must match the keys used in res/xml/preferences*.xml
-    private static final String TOUCHPAD_LAYOUT = "touchpadLayout";
+    private static final String DISPLAY_ORIENTATION = "displayOrientation";
     private static final String DISPLAY_POSITION = "displayPosition";
     private static final String DISPLAY_RESOLUTION = "displayResolution";
     private static final String DISPLAY_SCALING = "displayScaling";
-    private static final String NAVIGATION_MODE = "navigationMode";
+    private static final String DISPLAY_FPS_REFRESH = "displayFpsRefresh";
+    private static final String VIDEO_HARDWARE_TYPE = "videoHardwareType";
     private static final String AUDIO_PLUGIN = "audioPlugin";
     private static final String AUDIO_BUFFER_SIZE = "audioBufferSize";
+    private static final String TOUCHSCREEN_STYLE = "touchscreenStyle";
+    private static final String TOUCHSCREEN_REFRESH = "touchscreenRefresh";
+    private static final String TOUCHSCREEN_AUTO_HOLD = "touchscreenAutoHold";
+    private static final String TOUCHPAD_LAYOUT = "touchpadLayout";
+    private static final String NAVIGATION_MODE = "navigationMode";
     
     /*
      * (non-Javadoc)
@@ -117,13 +123,19 @@ public class SplashActivity extends Activity implements OnExtractionProgressList
         // Ensure that selected plugin names and other list preferences are valid
         // @formatter:off
         Resources res = getResources();
-        PrefUtil.validateListPreference( res, mPrefs, TOUCHPAD_LAYOUT,    R.string.touchpadLayout_default,    R.array.touchpadLayout_values );
-        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_POSITION,   R.string.displayPosition_default,   R.array.displayPosition_values );
-        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_RESOLUTION, R.string.displayResolution_default, R.array.displayResolution_values );
-        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_SCALING,    R.string.displayScaling_default,    R.array.displayScaling_values );
-        PrefUtil.validateListPreference( res, mPrefs, AUDIO_PLUGIN,       R.string.audioPlugin_default,       R.array.audioPlugin_values );
-        PrefUtil.validateListPreference( res, mPrefs, AUDIO_BUFFER_SIZE,  R.string.audioBufferSize_default,   R.array.audioBufferSize_values );
-        PrefUtil.validateListPreference( res, mPrefs, NAVIGATION_MODE,    R.string.navigationMode_default,    R.array.navigationMode_values );
+        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_ORIENTATION,      R.string.displayOrientation_default,    R.array.displayOrientation_values );
+        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_POSITION,         R.string.displayPosition_default,       R.array.displayPosition_values );
+        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_RESOLUTION,       R.string.displayResolution_default,     R.array.displayResolution_values );
+        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_SCALING,          R.string.displayScaling_default,        R.array.displayScaling_values );
+        PrefUtil.validateListPreference( res, mPrefs, DISPLAY_FPS_REFRESH,      R.string.displayFpsRefresh_default,     R.array.displayFpsRefresh_values );
+        PrefUtil.validateListPreference( res, mPrefs, VIDEO_HARDWARE_TYPE,      R.string.videoHardwareType_default,     R.array.videoHardwareType_values );
+        PrefUtil.validateListPreference( res, mPrefs, AUDIO_PLUGIN,             R.string.audioPlugin_default,           R.array.audioPlugin_values );
+        PrefUtil.validateListPreference( res, mPrefs, AUDIO_BUFFER_SIZE,        R.string.audioBufferSize_default,       R.array.audioBufferSize_values );
+        PrefUtil.validateListPreference( res, mPrefs, TOUCHSCREEN_STYLE,        R.string.touchscreenStyle_default,      R.array.touchscreenStyle_values );
+        PrefUtil.validateListPreference( res, mPrefs, TOUCHSCREEN_REFRESH,      R.string.touchscreenRefresh_default,    R.array.touchscreenRefresh_values );
+        PrefUtil.validateListPreference( res, mPrefs, TOUCHSCREEN_AUTO_HOLD,    R.string.touchscreenAutoHold_default,   R.array.touchscreenAutoHold_values );
+        PrefUtil.validateListPreference( res, mPrefs, TOUCHPAD_LAYOUT,          R.string.touchpadLayout_default,        R.array.touchpadLayout_values );
+        PrefUtil.validateListPreference( res, mPrefs, NAVIGATION_MODE,          R.string.navigationMode_default,        R.array.navigationMode_values );
         // @formatter:on
         
         // Refresh the preference data wrapper
