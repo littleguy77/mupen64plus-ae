@@ -279,7 +279,7 @@ public class PathPreference extends DialogPreference
         
         // Populate the key-value pairs for the list entries
         boolean isFilesIncluded = mSelectionMode != SELECTION_MODE_DIRECTORY;
-        FileUtil.populate( startPath, true, true, isFilesIncluded, mNames, mPaths );
+        FileUtil.populate( startPath, true, true, isFilesIncluded, mNames, mPaths, null);
     }
 
     private static String validate( String value )

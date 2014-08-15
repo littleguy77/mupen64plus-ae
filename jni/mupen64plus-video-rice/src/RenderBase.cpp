@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "VertexShaderConstantDef.h"
 #include "Render.h"
 #include "Timing.h"
-#define __ARM_NEON__
 extern FiddledVtx * g_pVtxBase;
 
 #define ENABLE_CLIP_TRI
@@ -1698,7 +1697,7 @@ void ProcessVertexDataNEON(uint32 dwAddr, uint32 dwV0, uint32 dwNum)
 	asm volatile("mrc p15, 0, %0, c9, c13, 0" : "=r"(cc_start));
 #endif
 
-#if 1
+#ifdef __ARM_NEON__
     i = dwV0;
     pv_neon(&g_vtxTransformed[i], &g_vecProjected[i],
             &g_dwVtxDifColor[i], &g_fVtxTxtCoords[i],

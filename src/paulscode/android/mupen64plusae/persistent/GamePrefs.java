@@ -28,6 +28,9 @@ public class GamePrefs
     /** The touchscreen profile. */
     public final Profile touchscreenProfile;
     
+    /** The method used for auto holding buttons. */
+    public final int touchscreenAutoHold;
+    
     /** The input profile for Player 1. */
     public final ControllerProfile controllerProfile1;
     
@@ -227,6 +230,7 @@ public class GamePrefs
         String folder = "";
         if( isTouchscreenEnabled )
         {
+        	touchscreenAutoHold = getSafeInt( touchscreenProfile, "touchscreenAutoHold", 0 );
             touchscreenAutoHoldables = getSafeIntSet( touchscreenProfile,
                     "touchscreenAutoHoldables" );
             
@@ -293,6 +297,7 @@ public class GamePrefs
                 folder = appData.touchscreenSkinsDir
                         + context.getString( R.string.touchscreenLayout_fpsOnly );
             }
+            touchscreenAutoHold = 0;
             touchscreenAutoHoldables = null;
         }
         isTouchscreenHidden = !isTouchscreenEnabled || userPrefs.touchscreenTransparency == 0;

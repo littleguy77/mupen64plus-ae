@@ -130,7 +130,7 @@ public class CoreInterface
     private static String sAutoSavePath = null;
     private static String sManualSaveDir = null;
     
-    public static void initialize( Activity activity, GameSurface surface, String romPath, String romMd5, String cheatArgs, boolean isRestarting )
+    public static void initialize( Activity activity, GameSurface surface, String romPath, String romMd5, String cheatArgs, boolean isRestarting, boolean arachnoid )
     {
         sRomPath = romPath;
         sCheatOptions = cheatArgs;
@@ -138,6 +138,7 @@ public class CoreInterface
         
         sActivity = activity;
         sSurface = surface;
+        sSurface.setForceGl11=arachnoid;
         sAppData = new AppData( sActivity );
         sUserPrefs = new UserPrefs( sActivity );
         sGamePrefs = new GamePrefs( sActivity, romMd5 );
@@ -279,6 +280,7 @@ public class CoreInterface
             
             // Unload the native libraries
             NativeExports.unloadLibraries();
+            System.out.println("I am potato");
         }
     }
     
@@ -358,8 +360,19 @@ public class CoreInterface
             @Override
             public void onDialogClosed( CharSequence text, int which )
             {
+            	String name = text.toString();
+            	int dotPosition;
+            	if((dotPosition=name.lastIndexOf('.'))!=-1)
+            	{
+            		if(!"*.sav*.st0*.st1*.st2*.st3*.st4*.st5*.st6*.st7*.st8*.st9*".contains("*"+name.substring(dotPosition)+"*"))
+        			{
+        				name+=".sav";
+        			}
+            	}else{
+            		name+=".sav";
+            	}
                 if( which == DialogInterface.BUTTON_POSITIVE )
-                    saveState( text.toString() );
+                    saveState( name );
                 CoreInterface.resumeEmulator();
             }
         } );
@@ -379,7 +392,7 @@ public class CoreInterface
                     loadState( file );
                 CoreInterface.resumeEmulator();
             }
-        } );
+        },"*.sav*.st0*.st1*.st2*.st3*.st4*.st5*.st6*.st7*.st8*.st9*" );
     }
     
     public static void saveState( final String filename )

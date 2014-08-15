@@ -60,7 +60,6 @@ LOCAL_SRC_FILES :=                      \
     $(SRCDIR)/OGLTexture.cpp            \
     $(SRCDIR)/Render.cpp                \
     $(SRCDIR)/RenderBase.cpp            \
-    $(SRCDIR)/RenderBase_neon.S \
     $(SRCDIR)/RenderExt.cpp             \
     $(SRCDIR)/RenderTexture.cpp         \
     $(SRCDIR)/RSP_Parser.cpp            \
@@ -103,7 +102,10 @@ ifeq ($(TARGET_ARCH_ABI), armeabi-v7a)
     # Use for ARM7a:
     LOCAL_CFLAGS += -mfpu=neon
     LOCAL_CFLAGS += -mfloat-abi=softfp
-    
+    LOCAL_SRC_FILES += $(SRCDIR)/RenderBase_neon.S
+    LOCAL_CFLAGS += -fno-associative-math
+    LOCAL_CPPFLAGS += -fno-associative-math
+
 else ifeq ($(TARGET_ARCH_ABI), armeabi)
     # Use for pre-ARM7a:
     

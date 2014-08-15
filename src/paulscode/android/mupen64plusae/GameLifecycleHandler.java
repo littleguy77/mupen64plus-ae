@@ -182,60 +182,51 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         // If the orientation changes, the screensize info changes, so we must refresh dependencies
         mUserPrefs = new UserPrefs( mActivity );
     }
-    
     @TargetApi( 11 )
     public void onCreateEnd( Bundle savedInstanceState )
     {
-        // Take control of the GameSurface if necessary
-        if( mIsXperiaPlay )
-            mActivity.getWindow().takeSurface( null );
-        
-        // Lay out content and get the views
-        mActivity.setContentView( R.layout.game_activity );
-        mSurface = (GameSurface) mActivity.findViewById( R.id.gameSurface );
-        mOverlay = (GameOverlay) mActivity.findViewById( R.id.gameOverlay );
-        
-        // Initialize the objects and data files interfacing to the emulator core
-        CoreInterface.initialize( mActivity, mSurface, mRomPath, mRomMd5, mCheatArgs, mDoRestart );
-        
-        // Listen to game surface events (created, changed, destroyed)
-        mSurface.getHolder().addCallback( this );
-        
-        // Update the GameSurface size
-        mSurface.getHolder().setFixedSize( mUserPrefs.videoRenderWidth, mUserPrefs.videoRenderHeight );
-        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mSurface.getLayoutParams();
-        params.width = mUserPrefs.videoSurfaceWidth;
-        params.height = mUserPrefs.videoSurfaceHeight;
-        params.gravity = mUserPrefs.displayPosition | Gravity.CENTER_HORIZONTAL;
-        mSurface.setLayoutParams( params );
-        
-        // Configure the action bar introduced in higher Android versions
-        if( mUserPrefs.isActionBarAvailable )
-        {
-            mActivity.getActionBar().hide();
-            ColorDrawable color = new ColorDrawable( Color.parseColor( "#303030" ) );
-            color.setAlpha( mUserPrefs.displayActionBarTransparency );
-            mActivity.getActionBar().setBackgroundDrawable( color );
-        }
-        
-        // Initialize the screen elements
-        if( mGamePrefs.isTouchscreenEnabled || mUserPrefs.isFpsEnabled )
-        {
-            // The touch map and overlay are needed to display frame rate and/or controls
-            mTouchscreenMap = new VisibleTouchMap( mActivity.getResources() );
-            mTouchscreenMap.load( mUserPrefs.touchscreenSkin, mGamePrefs.touchscreenProfile,
-                    mUserPrefs.touchscreenRefresh > 0, mUserPrefs.isFpsEnabled,
-                    mUserPrefs.touchscreenScale, mUserPrefs.touchscreenTransparency );
-            mOverlay.initialize( mTouchscreenMap, !mGamePrefs.isTouchscreenHidden,
-                    mUserPrefs.displayFpsRefresh, mUserPrefs.touchscreenRefresh );
-        }
-        
-        // Initialize user interface devices
-        View inputSource = mIsXperiaPlay ? new NativeXperiaTouchpad( mActivity ) : mOverlay;
-        initControllers( inputSource );
-        
-        // Override the peripheral controllers' key provider, to add some extra functionality
-        inputSource.setOnKeyListener( this );
+    // Take control of the GameSurface if necessary
+    if( mIsXperiaPlay )
+    mActivity.getWindow().takeSurface( null );
+    // Lay out content and get the views
+    mActivity.setContentView( R.layout.game_activity );
+    mSurface = (GameSurface) mActivity.findViewById( R.id.gameSurface );
+    mOverlay = (GameOverlay) mActivity.findViewById( R.id.gameOverlay );
+    // Initialize the objects and data files interfacing to the emulator core
+    CoreInterface.initialize( mActivity, mSurface, mRomPath, mRomMd5, mCheatArgs, mDoRestart, mGamePrefs.videoPlugin.name.equals("libmupen64plus-video-arachnoid.so"));
+    // Listen to game surface events (created, changed, destroyed)
+    mSurface.getHolder().addCallback( this );
+    // Update the GameSurface size
+    mSurface.getHolder().setFixedSize( mUserPrefs.videoRenderWidth, mUserPrefs.videoRenderHeight );
+    FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) mSurface.getLayoutParams();
+    params.width = mUserPrefs.videoSurfaceWidth;
+    params.height = mUserPrefs.videoSurfaceHeight;
+    params.gravity = mUserPrefs.displayPosition | Gravity.CENTER_HORIZONTAL;
+    mSurface.setLayoutParams( params );
+    // Configure the action bar introduced in higher Android versions
+    if( mUserPrefs.isActionBarAvailable )
+    {
+    mActivity.getActionBar().hide();
+    ColorDrawable color = new ColorDrawable( Color.parseColor( "#303030" ) );
+    color.setAlpha( mUserPrefs.displayActionBarTransparency );
+    mActivity.getActionBar().setBackgroundDrawable( color );
+    }
+    // Initialize the screen elements
+    if( mGamePrefs.isTouchscreenEnabled || mUserPrefs.isFpsEnabled )
+    {
+    // The touch map and overlay are needed to display frame rate and/or controls
+    mTouchscreenMap = new VisibleTouchMap( mActivity.getResources() );
+    mTouchscreenMap.load( mUserPrefs.touchscreenSkin, mGamePrefs.touchscreenProfile,
+    mUserPrefs.touchscreenRefresh > 0, mUserPrefs.isFpsEnabled,
+    mUserPrefs.touchscreenScale, mUserPrefs.touchscreenTransparency );
+    mOverlay.initialize( mTouchscreenMap, !mGamePrefs.isTouchscreenHidden,
+    mUserPrefs.displayFpsRefresh, mUserPrefs.touchscreenRefresh );
+    }
+    // Initialize user interface devices
+    View inputSource = mIsXperiaPlay ? new NativeXperiaTouchpad( mActivity ) : mOverlay;
+    initControllers( inputSource );
+    // Override the peripheral controllers' key provider, to add some extra functionality
+    inputSource.setOnKeyListener( this );
     }
     
     public void onStart()
@@ -291,6 +282,7 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         Log.i( "GameLifecycleHandler", "surfaceDestroyed" );
         mIsSurface = false;
         tryStopping();
+        System.out.println("The surface is nuked");    
     }
     
     public void onStop()
@@ -334,85 +326,77 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
     @SuppressLint( "InlinedApi" )
     private void initControllers( View inputSource )
     {
-        // By default, send Player 1 rumbles through phone vibrator
-        Vibrator vibrator = (Vibrator) mActivity.getSystemService( Context.VIBRATOR_SERVICE );
-        CoreInterface.registerVibrator( 1, vibrator );
-        
-        // Create the touchpad controls, if applicable
-        TouchController touchpadController = null;
-        if( mIsXperiaPlay )
-        {
-            // Create the map for the touchpad
-            TouchMap touchpadMap = new TouchMap( mActivity.getResources() );
-            touchpadMap.load( mUserPrefs.touchpadSkin, mUserPrefs.touchpadProfile, false );
-            touchpadMap.resize( NativeXperiaTouchpad.PAD_WIDTH, NativeXperiaTouchpad.PAD_HEIGHT );
-            
-            // Create the touchpad controller
-            touchpadController = new TouchController( touchpadMap, inputSource, null, vibrator,
-                    TouchController.AUTOHOLD_METHOD_DISABLED, mUserPrefs.isTouchpadFeedbackEnabled,
-                    null );
-            mControllers.add( touchpadController );
-            
-            // Filter by source identifier
-            touchpadController.setSourceFilter( InputDevice.SOURCE_TOUCHPAD );
-        }
-        
-        // Create the touchscreen controls
-        if( mGamePrefs.isTouchscreenEnabled )
-        {
-            // Create the touchscreen controller
-            TouchController touchscreenController = new TouchController( mTouchscreenMap,
-                    inputSource, mOverlay, vibrator, mUserPrefs.touchscreenAutoHold,
-                    mUserPrefs.isTouchscreenFeedbackEnabled, mGamePrefs.touchscreenAutoHoldables );
-            mControllers.add( touchscreenController );
-            
-            // If using touchpad & touchscreen together...
-            if( touchpadController != null )
-            {
-                // filter by source identifier...
-                touchscreenController.setSourceFilter( InputDevice.SOURCE_TOUCHSCREEN );
-                
-                // and demux the input source to both touch listeners
-                Demultiplexer.OnTouchListener demux = new Demultiplexer.OnTouchListener();
-                demux.addListener( touchpadController );
-                demux.addListener( touchscreenController );
-                inputSource.setOnTouchListener( demux );
-            }
-        }
-        
-        // Create the input providers shared among all peripheral controllers
-        mKeyProvider = new KeyProvider( inputSource, ImeFormula.DEFAULT,
-                mUserPrefs.unmappableKeyCodes );
-        MogaProvider mogaProvider = new MogaProvider( mMogaController );
-        AbstractProvider axisProvider = AppData.IS_HONEYCOMB_MR1
-                ? new AxisProvider( inputSource )
-                : null;
-        
-        // Create the peripheral controls to handle key/stick presses
-        if( mGamePrefs.isControllerEnabled1 )
-        {
-            ControllerProfile p = mGamePrefs.controllerProfile1;
-            mControllers.add( new PeripheralController( 1, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
-                    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
-        }
-        if( mGamePrefs.isControllerEnabled2 )
-        {
-            ControllerProfile p = mGamePrefs.controllerProfile2;
-            mControllers.add( new PeripheralController( 2, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
-                    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
-        }
-        if( mGamePrefs.isControllerEnabled3 )
-        {
-            ControllerProfile p = mGamePrefs.controllerProfile3;
-            mControllers.add( new PeripheralController( 3, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
-                    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
-        }
-        if( mGamePrefs.isControllerEnabled4 )
-        {
-            ControllerProfile p = mGamePrefs.controllerProfile4;
-            mControllers.add( new PeripheralController( 4, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
-                    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
-        }
+    // By default, send Player 1 rumbles through phone vibrator
+    Vibrator vibrator = (Vibrator) mActivity.getSystemService( Context.VIBRATOR_SERVICE );
+    CoreInterface.registerVibrator( 1, vibrator );
+    // Create the touchpad controls, if applicable
+    TouchController touchpadController = null;
+    if( mIsXperiaPlay )
+    {
+    // Create the map for the touchpad
+    TouchMap touchpadMap = new TouchMap( mActivity.getResources() );
+    touchpadMap.load( mUserPrefs.touchpadSkin, mUserPrefs.touchpadProfile, false );
+    touchpadMap.resize( NativeXperiaTouchpad.PAD_WIDTH, NativeXperiaTouchpad.PAD_HEIGHT );
+    // Create the touchpad controller
+    touchpadController = new TouchController( touchpadMap, inputSource, null, vibrator,
+    TouchController.AUTOHOLD_METHOD_DISABLED, mUserPrefs.isTouchpadFeedbackEnabled,
+    null );
+    mControllers.add( touchpadController );
+    // Filter by source identifier
+    touchpadController.setSourceFilter( InputDevice.SOURCE_TOUCHPAD );
+    }
+    // Create the touchscreen controls
+    if( mGamePrefs.isTouchscreenEnabled )
+    {
+    // Create the touchscreen controller
+    TouchController touchscreenController = new TouchController( mTouchscreenMap,
+    inputSource, mOverlay, vibrator, mUserPrefs.touchscreenAutoHold,
+    mUserPrefs.isTouchscreenFeedbackEnabled, mGamePrefs.touchscreenAutoHoldables );
+    mControllers.add( touchscreenController );
+    // If using touchpad & touchscreen together...
+    if( touchpadController != null )
+    {
+    // filter by source identifier...
+    touchscreenController.setSourceFilter( InputDevice.SOURCE_TOUCHSCREEN );
+    // and demux the input source to both touch listeners
+    Demultiplexer.OnTouchListener demux = new Demultiplexer.OnTouchListener();
+    demux.addListener( touchpadController );
+    demux.addListener( touchscreenController );
+    inputSource.setOnTouchListener( demux );
+    }
+    }
+    // Create the input providers shared among all peripheral controllers
+    mKeyProvider = new KeyProvider( inputSource, ImeFormula.DEFAULT,
+    mUserPrefs.unmappableKeyCodes );
+    MogaProvider mogaProvider = new MogaProvider( mMogaController );
+    AbstractProvider axisProvider = AppData.IS_HONEYCOMB_MR1
+    ? new AxisProvider( inputSource )
+    : null;
+    // Create the peripheral controls to handle key/stick presses
+    if( mGamePrefs.isControllerEnabled1 )
+    {
+    ControllerProfile p = mGamePrefs.controllerProfile1;
+    mControllers.add( new PeripheralController( 1, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
+    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
+    }
+    if( mGamePrefs.isControllerEnabled2 )
+    {
+    ControllerProfile p = mGamePrefs.controllerProfile2;
+    mControllers.add( new PeripheralController( 2, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
+    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
+    }
+    if( mGamePrefs.isControllerEnabled3 )
+    {
+    ControllerProfile p = mGamePrefs.controllerProfile3;
+    mControllers.add( new PeripheralController( 3, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
+    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
+    }
+    if( mGamePrefs.isControllerEnabled4 )
+    {
+    ControllerProfile p = mGamePrefs.controllerProfile4;
+    mControllers.add( new PeripheralController( 4, mGamePrefs.playerMap, p.getMap(), p.getDeadzone(),
+    p.getSensitivity(), mKeyProvider, axisProvider, mogaProvider ) );
+    }
     }
     
     @SuppressLint( "InlinedApi" )
@@ -496,6 +480,7 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
             // Never go directly from running to stopped; always pause (and autosave) first
             tryPausing();
             CoreInterface.shutdownEmulator();
+            System.out.println("More potato");
         }
     }
 }

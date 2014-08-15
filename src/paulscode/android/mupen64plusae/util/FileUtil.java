@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import android.text.Html;
 import android.util.Log;
@@ -46,7 +47,7 @@ import android.util.Log;
 public final class FileUtil
 {
     public static void populate( File startPath, boolean includeParent, boolean includeDirectories,
-            boolean includeFiles, List<CharSequence> outNames, List<String> outPaths )
+            boolean includeFiles, List<CharSequence> outNames, List<String> outPaths, String fileFilter )
     {
         if( !startPath.exists() )
             return;
@@ -79,8 +80,22 @@ public final class FileUtil
         {
             for( File file : getContents( startPath, new VisibleFileFilter() ) )
             {
+            	if(fileFilter!=null)
+            	{
+            		String name = file.getName().toLowerCase(Locale.US);
+            		int dot; 
+            		if((dot=name.lastIndexOf('.'))!=-1)
+            		{
+            			if(fileFilter.contains("*"+name.substring(dot)+"*"))
+            			{
+            				outNames.add( Html.fromHtml( file.getName() ) );
+                            outPaths.add( file.getPath() );
+            			}
+            		}
+            	}else{
                 outNames.add( Html.fromHtml( file.getName() ) );
                 outPaths.add( file.getPath() );
+            	}
             }
         }
     }

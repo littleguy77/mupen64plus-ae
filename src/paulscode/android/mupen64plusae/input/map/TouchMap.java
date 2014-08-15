@@ -323,7 +323,17 @@ public class TouchMap
         
         return new Point( dX, dY );
     }
-    
+    public boolean isAnalogTouched(int xLocation, int yLocation)
+    {
+    	System.out.println(String.format("Image x: %d Image y: %d Test x: %d Test y: %d",analogBackImage.x,analogBackImage.y,xLocation,yLocation));
+    	//System.out.println(String.format("Image x: %d Image y: %d Test x: %d Test y: %d",analogBackX,analogBackY,xLocation,yLocation));
+    	int lowerx = analogBackImage.x - (int) (analogBackImage.hWidth*scale*1.5);
+    	int upperx = analogBackImage.x + (int) (analogBackImage.hWidth*scale*1.5);
+    	int lowery = analogBackImage.y - (int) (analogBackImage.hHeight*scale*1.5);
+    	int uppery = analogBackImage.y + (int) (analogBackImage.hHeight*scale*1.5);
+    	System.out.println(String.format("Lower x: %d Upper x: %d Lower y: %d Upper y: %d",lowerx,upperx,lowery,uppery));
+    	return lowerx <= xLocation && xLocation <= upperx && lowery <= yLocation && yLocation <= uppery;
+    }
     /**
      * Gets the N64 analog stick displacement, constrained to an octagon.
      * 

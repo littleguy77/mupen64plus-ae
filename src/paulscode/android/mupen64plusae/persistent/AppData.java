@@ -275,7 +275,7 @@ public class AppData
         // Get the contents of the libraries directory
         ArrayList<CharSequence> names = new ArrayList<CharSequence>();
         ArrayList<String> paths = new ArrayList<String>();
-        FileUtil.populate( new File( libsDir ), false, false, true, names, paths );
+        FileUtil.populate( new File( libsDir ), false, false, true, names, paths, null );
         String libnames = TextUtils.join( "\n", names );
 
         // Record some info in the crash reporter

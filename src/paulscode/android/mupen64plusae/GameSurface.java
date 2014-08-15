@@ -85,6 +85,8 @@ public class GameSurface extends SurfaceView
     private EGLContext mEglContext = null;
     private EGLSurface mEglSurface = null;
     private int mGlMajorVersion;
+    // Cheat and force GLES1.1 for arachnoid because SDL is stupid and uses #ifdefs
+    public boolean setForceGl11=false;
     
     /**
      * Constructor that is called when inflating a view from XML. This is called when a view is
@@ -173,7 +175,7 @@ public class GameSurface extends SurfaceView
     public boolean createGLContext( int majorVersion, int minorVersion, int[] configSpec, boolean forceCreate )
     {
         Log.i( TAG, "Creating GL context" );
-        if( initializeEGL( majorVersion, minorVersion, configSpec ) )
+        if( initializeEGL( setForceGl11?1:majorVersion, setForceGl11?1:minorVersion, configSpec ) )
         {
             if( createEGLContext( forceCreate ) )
             {

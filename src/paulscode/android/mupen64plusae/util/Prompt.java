@@ -312,7 +312,7 @@ public final class Prompt
      */
     public static void promptFile( Context context, CharSequence title, CharSequence message,
             final File startPath, boolean includeParent, boolean includeDirs, boolean includeFiles,
-            boolean dirsSelectable, final PromptFileListener listener )
+            boolean dirsSelectable, final PromptFileListener listener, String fileFilter )
     {
         // Don't even open the dialog if the path doesn't exist
         if( !startPath.exists() )
@@ -321,7 +321,7 @@ public final class Prompt
         // Get the filenames and absolute paths
         final List<CharSequence> names = new ArrayList<CharSequence>();
         final List<String> paths = new ArrayList<String>();
-        FileUtil.populate( startPath, includeParent, includeDirs, includeFiles, names, paths );
+        FileUtil.populate( startPath, includeParent, includeDirs, includeFiles, names, paths, fileFilter );
         
         // When the user clicks a file, notify the downstream listener
         OnClickListener internalListener = new OnClickListener()
@@ -369,9 +369,9 @@ public final class Prompt
      * @param listener  The listener to process the file, when selected.
      */
     public static void promptFile( Context context, CharSequence title, CharSequence message,
-            File startPath, final PromptFileListener listener )
+            File startPath, final PromptFileListener listener, String fileFilter )
     {
-        promptFile( context, title, message, startPath, false, false, true, false, listener );
+        promptFile( context, title, message, startPath, false, false, true, false, listener, fileFilter );
     }
     
     /**

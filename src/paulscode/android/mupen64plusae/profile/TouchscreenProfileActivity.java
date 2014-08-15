@@ -404,7 +404,14 @@ public class TouchscreenProfileActivity extends Activity implements OnTouchListe
         }
         else
         {
+        	System.out.println("Testing for analog");
             // TODO: test for analog touch
+        	if(mTouchscreenMap.isAnalogTouched(x, y))
+        		
+        	{
+        		System.out.println("Analog has been touched at "+x+" "+y);
+        		popupDialog(ANALOG,"Analog",-1);
+        	}
         }
         
         return true;

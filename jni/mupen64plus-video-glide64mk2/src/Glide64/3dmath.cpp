@@ -46,7 +46,7 @@ extern "C" {
 
 #include <math.h>
 #include "3dmath.h"
-#define __ARM_NEON__
+//#define __ARM_NEON__
 void calc_light (VERTEX *v)
 {
   float light_intensity = 0.0f;
