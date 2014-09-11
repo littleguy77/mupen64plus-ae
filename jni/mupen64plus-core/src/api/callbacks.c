@@ -36,6 +36,10 @@ static ptr_StateCallback pStateFunc = NULL;
 static void *            DebugContext = NULL;
 static void *            StateContext = NULL;
 
+#if defined(ANDROID_EDITION)
+extern FILE *pDebugFile;
+#endif
+
 /* global Functions for use by the Core */
 m64p_error SetDebugCallback(ptr_DebugCallback pFunc, void *Context)
 {
@@ -62,9 +66,19 @@ void DebugMessage(int level, const char *message, ...)
   va_start(args, message);
   vsprintf(msgbuf, message, args);
 
+  #if defined(ANDROID_EDITION)
+  if(pDebugFile != NULL)
+     vfprintf(pDebugFile,message,args);
+  #endif
+  
   (*pDebugFunc)(DebugContext, level, msgbuf);
 
   va_end(args);
+  
+  #if defined(ANDROID_EDITION)
+  if(pDebugFile != NULL)
+      fprintf (pDebugFile, "\n");
+  #endif
 }
 
 void StateChanged(m64p_core_param param_type, int new_value)
