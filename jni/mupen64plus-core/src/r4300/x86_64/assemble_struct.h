@@ -20,8 +20,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_ASSEMBLE_STRUCT_H
-#define M64P_R4300_ASSEMBLE_STRUCT_H
+#ifndef __ASSEMBLE_STRUCT_H__
+#define __ASSEMBLE_STRUCT_H__
 
 typedef struct _reg_cache_struct
 {
@@ -31,4 +31,4 @@ typedef struct _reg_cache_struct
    int need_cop1_check;
 } reg_cache_struct;
 
-#endif /* M64P_R4300_ASSEMBLE_STRUCT_H */
+#endif /* __ASSEMBLE_STRUCT_H__ */

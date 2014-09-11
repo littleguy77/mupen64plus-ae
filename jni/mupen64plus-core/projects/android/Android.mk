@@ -40,15 +40,14 @@ LOCAL_SRC_FILES :=                              \
     $(SRCDIR)/api/debugger.c                    \
     $(SRCDIR)/api/frontend.c                    \
     $(SRCDIR)/api/vidext.c                      \
-    $(SRCDIR)/main/main.c                       \
-    $(SRCDIR)/main/util.c                       \
     $(SRCDIR)/main/cheat.c                      \
     $(SRCDIR)/main/eventloop.c                  \
+    $(SRCDIR)/main/main.c                       \
     $(SRCDIR)/main/md5.c                        \
-    $(SRCDIR)/main/profile.c                    \
     $(SRCDIR)/main/rom.c                        \
     $(SRCDIR)/main/savestates.c                 \
     $(SRCDIR)/main/sdl_key_converter.c          \
+    $(SRCDIR)/main/util.c                       \
     $(SRCDIR)/main/zip/ioapi.c                  \
     $(SRCDIR)/main/zip/unzip.c                  \
     $(SRCDIR)/main/zip/zip.c                    \
@@ -57,26 +56,23 @@ LOCAL_SRC_FILES :=                              \
     $(SRCDIR)/memory/memory.c                   \
     $(SRCDIR)/memory/n64_cic_nus_6105.c         \
     $(SRCDIR)/memory/pif.c                      \
-    $(SRCDIR)/plugin/plugin.c                   \
-    $(SRCDIR)/plugin/dummy_video.c              \
+    $(SRCDIR)/memory/tlb.c                      \
+    $(SRCDIR)/osal/dynamiclib_unix.c            \
+    $(SRCDIR)/osal/files_unix.c                 \
+    $(SRCDIR)/osd/screenshot.cpp                \
     $(SRCDIR)/plugin/dummy_audio.c              \
     $(SRCDIR)/plugin/dummy_input.c              \
     $(SRCDIR)/plugin/dummy_rsp.c                \
-    $(SRCDIR)/r4300/r4300.c                     \
-    $(SRCDIR)/r4300/cached_interp.c             \
-    $(SRCDIR)/r4300/cp0.c                       \
-    $(SRCDIR)/r4300/cp1.c                       \
+    $(SRCDIR)/plugin/dummy_video.c              \
+    $(SRCDIR)/plugin/plugin.c                   \
+    $(SRCDIR)/r4300/empty_dynarec.c             \
     $(SRCDIR)/r4300/exception.c                 \
-    $(SRCDIR)/r4300/instr_counters.c            \
     $(SRCDIR)/r4300/interupt.c                  \
+    $(SRCDIR)/r4300/profile.c                   \
     $(SRCDIR)/r4300/pure_interp.c               \
+    $(SRCDIR)/r4300/r4300.c                     \
     $(SRCDIR)/r4300/recomp.c                    \
     $(SRCDIR)/r4300/reset.c                     \
-    $(SRCDIR)/r4300/tlb.c                       \
-    $(SRCDIR)/osd/screenshot.cpp                \
-    $(SRCDIR)/osal/dynamiclib_unix.c            \
-    $(SRCDIR)/osal/files_unix.c                 \
-    $(SRCDIR)/r4300/empty_dynarec.c             \
     $(SRCDIR)/r4300/new_dynarec/new_dynarec.c   \
     #$(SRCDIR)/debugger/dbg_breakpoints.c        \
     #$(SRCDIR)/debugger/dbg_decoder.c            \
@@ -103,7 +99,6 @@ ifeq ($(TARGET_ARCH_ABI), armeabi-v7a)
     LOCAL_SRC_FILES += $(SRCDIR)/r4300/new_dynarec/linkage_arm.S
     LOCAL_CFLAGS += -DDYNAREC
     LOCAL_CFLAGS += -DNEW_DYNAREC=3
-    LOCAL_CFLAGS += -DNEON
     LOCAL_CFLAGS += -mfloat-abi=softfp
     LOCAL_CFLAGS += -mfpu=vfp
 

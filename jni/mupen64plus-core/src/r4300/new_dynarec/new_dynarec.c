@@ -27,13 +27,10 @@
 
 #include "../recomp.h"
 #include "../recomph.h" //include for function prototypes
-#include "../cp0.h"
-#include "../cp1.h"
+#include "../macros.h"
 #include "../r4300.h"
 #include "../ops.h"
-#include "../tlb.h"
 #include "../interupt.h"
-#include "../cached_interp.h"
 #include "new_dynarec.h"
 
 #include "../../memory/memory.h"

@@ -30,14 +30,10 @@
 #include "osal/preproc.h"
 
 #include "r4300.h"
-#include "cp0.h"
-#include "cp1.h"
-#include "cached_interp.h"
 #include "ops.h"
 #include "exception.h"
 #include "macros.h"
 #include "interupt.h"
-#include "tlb.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -45,6 +41,7 @@
 #endif
 
 static precomp_instr interp_PC;
+unsigned int op;
 
 static void prefetch(void);
 

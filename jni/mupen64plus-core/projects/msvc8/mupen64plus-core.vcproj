@@ -187,10 +187,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\r4300\cached_interp.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\api\callbacks.c"
 				>
 			</File>
@@ -204,14 +200,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\api\config.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cp0.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cp1.c"
 				>
 			</File>
 			<File
@@ -341,10 +329,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\r4300\instr_counters.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\r4300\interupt.c"
 				>
 			</File>
@@ -389,7 +373,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\profile.c"
+				RelativePath="..\..\src\r4300\profile.c"
 				>
 			</File>
 			<File
@@ -433,7 +417,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\r4300\tlb.c"
+				RelativePath="..\..\src\memory\tlb.c"
 				>
 			</File>
 			<File
@@ -467,10 +451,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\r4300\cached_interp.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\api\callbacks.h"
 				>
 			</File>
@@ -480,14 +460,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\api\config.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cp0.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cp1.h"
 				>
 			</File>
 			<File
@@ -560,10 +532,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\memory\flashram.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\instr_counters.h"
 				>
 			</File>
 			<File
@@ -655,14 +623,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\profile.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\pure_interp.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\r4300\r4300.h"
 				>
 			</File>
@@ -699,7 +659,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\r4300\tlb.h"
+				RelativePath="..\..\src\memory\tlb.h"
 				>
 			</File>
 			<File

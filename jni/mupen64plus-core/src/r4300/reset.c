@@ -26,7 +26,6 @@
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
 #include "memory/memory.h"
-#include "r4300/cached_interp.h"
 
 int reset_hard_job = 0;
 

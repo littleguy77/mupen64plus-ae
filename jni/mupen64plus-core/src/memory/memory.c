@@ -37,16 +37,13 @@
 #include "flashram.h"
 
 #include "r4300/r4300.h"
-#include "r4300/cached_interp.h"
-#include "r4300/cp0.h"
+#include "r4300/macros.h"
 #include "r4300/interupt.h"
 #include "r4300/recomph.h"
 #include "r4300/ops.h"
-#include "r4300/tlb.h"
 
 #include "api/callbacks.h"
 #include "main/main.h"
-#include "main/profile.h"
 #include "main/rom.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
@@ -1191,7 +1188,7 @@ static void do_SP_Task(void)
                     {
 #ifdef DBG
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
                         {
                             readmem[0x8000+j] = read_rdram_break;
                             readmemb[0x8000+j] = read_rdramb_break;
@@ -1208,7 +1205,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
                         {
                             readmem[0xa000+j] = read_rdram_break;
                             readmemb[0xa000+j] = read_rdramb_break;
@@ -1225,7 +1222,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
                         {
                             writemem[0x8000+j] = write_rdram_break;
                             writememb[0x8000+j] = write_rdramb_break;
@@ -1242,7 +1239,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
                         {
                             writemem[0xa000+j] = write_rdram_break;
                             writememb[0xa000+j] = write_rdramb_break;
@@ -1266,9 +1263,9 @@ static void do_SP_Task(void)
 
         //gfx.processDList();
         rsp_register.rsp_pc &= 0xFFF;
-        timed_section_start(TIMED_SECTION_GFX);
+        start_section(GFX_SECTION);
         rsp.doRspCycles(0xFFFFFFFF);
-        timed_section_end(TIMED_SECTION_GFX);
+        end_section(GFX_SECTION);
         rsp_register.rsp_pc |= save_pc;
         new_frame();
 
@@ -1304,7 +1301,7 @@ static void do_SP_Task(void)
                     {
 #ifdef DBG
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
                         {
                             readmem[0x8000+j] = read_rdramFB_break;
                             readmemb[0x8000+j] = read_rdramFBb_break;
@@ -1321,7 +1318,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
                         {
                             readmem[0xa000+j] = read_rdramFB_break;
                             readmemb[0xa000+j] = read_rdramFBb_break;
@@ -1338,7 +1335,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
                         {
                             writemem[0x8000+j] = write_rdramFB_break;
                             writememb[0x8000+j] = write_rdramFBb_break;
@@ -1355,7 +1352,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
                         {
                             writemem[0xa000+j] = write_rdramFB_break;
                             writememb[0xa000+j] = write_rdramFBb_break;
@@ -1396,9 +1393,9 @@ static void do_SP_Task(void)
     {
         //audio.processAList();
         rsp_register.rsp_pc &= 0xFFF;
-        timed_section_start(TIMED_SECTION_AUDIO);
+        start_section(AUDIO_SECTION);
         rsp.doRspCycles(0xFFFFFFFF);
-        timed_section_end(TIMED_SECTION_AUDIO);
+        end_section(AUDIO_SECTION);
         rsp_register.rsp_pc |= save_pc;
 
         update_count();

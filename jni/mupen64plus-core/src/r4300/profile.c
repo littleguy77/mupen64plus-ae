@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - profile.c                                               *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
  *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -22,13 +21,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifdef PROFILE
-#include "profile.h"
+#include "r4300.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 
-static long long int time_in_section[NUM_TIMED_SECTIONS];
-static long long int last_start[NUM_TIMED_SECTIONS];
+static long long int time_in_section[5];
+static long long int last_start[5];
 
 #if defined(WIN32) && !defined(__MINGW32__)
   // timing
@@ -62,38 +61,38 @@ static long long int last_start[NUM_TIMED_SECTIONS];
   }
 #endif
 
-void timed_section_start(enum timed_section section)
+void start_section(int section_type)
 {
-   last_start[section] = get_time();
+   last_start[section_type] = get_time();
 }
 
-void timed_section_end(enum timed_section section)
+void end_section(int section_type)
 {
    long long int end = get_time();
-   time_in_section[section] += end - last_start[section];
+   time_in_section[section_type] += end - last_start[section_type];
 }
 
-void timed_sections_refresh()
+void refresh_stat()
 {
    long long int curr_time = get_time();
-   if(time_to_nsec(curr_time - last_start[TIMED_SECTION_ALL]) >= 2000000000)
+   if(time_to_nsec(curr_time - last_start[ALL_SECTION]) >= 2000000000)
    {
-      time_in_section[TIMED_SECTION_ALL] = curr_time - last_start[TIMED_SECTION_ALL];
+      time_in_section[ALL_SECTION] = curr_time - last_start[ALL_SECTION];
       DebugMessage(M64MSG_INFO, "gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%",
-         100.0 * (double)time_in_section[TIMED_SECTION_GFX] / time_in_section[TIMED_SECTION_ALL],
-         100.0 * (double)time_in_section[TIMED_SECTION_AUDIO] / time_in_section[TIMED_SECTION_ALL],
-         100.0 * (double)time_in_section[TIMED_SECTION_COMPILER] / time_in_section[TIMED_SECTION_ALL],
-         100.0 * (double)time_in_section[TIMED_SECTION_IDLE] / time_in_section[TIMED_SECTION_ALL]);
+         100.0 * (double)time_in_section[GFX_SECTION] / time_in_section[ALL_SECTION],
+         100.0 * (double)time_in_section[AUDIO_SECTION] / time_in_section[ALL_SECTION],
+         100.0 * (double)time_in_section[COMPILER_SECTION] / time_in_section[ALL_SECTION],
+         100.0 * (double)time_in_section[IDLE_SECTION] / time_in_section[ALL_SECTION]);
       DebugMessage(M64MSG_INFO, "gfx=%llins - audio=%llins - compiler %llins - idle=%llins",
-         time_to_nsec(time_in_section[TIMED_SECTION_GFX]),
-         time_to_nsec(time_in_section[TIMED_SECTION_AUDIO]),
-         time_to_nsec(time_in_section[TIMED_SECTION_COMPILER]),
-         time_to_nsec(time_in_section[TIMED_SECTION_IDLE]));
-      time_in_section[TIMED_SECTION_GFX] = 0;
-      time_in_section[TIMED_SECTION_AUDIO] = 0;
-      time_in_section[TIMED_SECTION_COMPILER] = 0;
-      time_in_section[TIMED_SECTION_IDLE] = 0;
-      last_start[TIMED_SECTION_ALL] = curr_time;
+         time_to_nsec(time_in_section[GFX_SECTION]),
+         time_to_nsec(time_in_section[AUDIO_SECTION]),
+         time_to_nsec(time_in_section[COMPILER_SECTION]),
+         time_to_nsec(time_in_section[IDLE_SECTION]));
+      time_in_section[GFX_SECTION] = 0;
+      time_in_section[AUDIO_SECTION] = 0;
+      time_in_section[COMPILER_SECTION] = 0;
+      time_in_section[IDLE_SECTION] = 0;
+      last_start[ALL_SECTION] = curr_time;
    }
 }
 
