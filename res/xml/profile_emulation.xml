@@ -78,6 +78,11 @@
             android:title="@string/riceFog_title" />
         <paulscode.android.mupen64plusae.persistent.StringCheckBoxPreference
             android:defaultValue="false"
+            android:key="riceWidescreenHack"
+            android:summary="@string/riceWidescreenHack_summary"
+            android:title="@string/riceWidescreenHack_title" />
+        <paulscode.android.mupen64plusae.persistent.StringCheckBoxPreference
+            android:defaultValue="false"
             android:key="riceFastTexture"
             android:summary="@string/riceFastTexture_summary"
             android:title="@string/riceFastTexture_title" />

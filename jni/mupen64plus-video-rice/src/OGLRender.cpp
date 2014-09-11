@@ -385,6 +385,7 @@ void OGLRender::SetAlphaRef(uint32 dwAlpha)
     if (m_dwAlpha != dwAlpha)
     {
         m_dwAlpha = dwAlpha;
+        ((COGL_FragmentProgramCombiner*)m_pColorCombiner)->SetAlphaValue((float)dwAlpha/255.f);
 #if SDL_VIDEO_OPENGL
         glAlphaFunc(GL_GEQUAL, (float)dwAlpha);
         OPENGL_CHECK_ERRORS;
@@ -399,6 +400,7 @@ void OGLRender::ForceAlphaRef(uint32 dwAlpha)
     glAlphaFunc(GL_GEQUAL, ref);
     OPENGL_CHECK_ERRORS;
 #elif SDL_VIDEO_OPENGL_ES2
+    ((COGL_FragmentProgramCombiner*)m_pColorCombiner)->SetAlphaValue((float)dwAlpha/255.f);
     m_dwAlpha = dwAlpha;
 #endif
 }
@@ -821,6 +823,12 @@ void OGLRender::DrawSimple2DTexture(float x0, float y0, float x1, float y1, floa
 
     StartDrawSimple2DTexture(x0, y0, x1, y1, u0, v0, u1, v1, dif, spe, z, rhw);
 
+	if(options.bWideScreenHack)
+	{
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+
     GLboolean cullface = glIsEnabled(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
     OPENGL_CHECK_ERRORS;
@@ -1095,10 +1103,12 @@ void OGLRender::EnableTexUnit(int unitno, BOOL flag)
     if( m_texUnitEnabled[0] != flag )
     {
         m_texUnitEnabled[0] = flag;
+#if SDL_VIDEO_OPENGL
         if( flag == TRUE )
             glEnable(GL_TEXTURE_2D);
         else
             glDisable(GL_TEXTURE_2D);
+#endif
     }
 }
 
@@ -1133,7 +1143,12 @@ void OGLRender::UpdateScissor()
 
 void OGLRender::ApplyRDPScissor(bool force)
 {
+	int x = (int)((float)gRDP.scissor.left*windowSetting.fMultX);
+
     if( !force && status.curScissor == RDP_SCISSOR )    return;
+
+	if(options.bWideScreenHack && x>0)
+		x = x-(int)(0.25f*(float)x-(0.125f*(float)windowSetting.uDisplayWidth));
 
     if( options.bEnableHacks && g_CI.dwWidth == 0x200 && gRDP.scissor.right == 0x200 && g_CI.dwWidth>(*g_GraphicsInfo.VI_WIDTH_REG & 0xFFF) )
     {
@@ -1148,7 +1163,7 @@ void OGLRender::ApplyRDPScissor(bool force)
     }
     else
     {
-        glScissor(int(gRDP.scissor.left*windowSetting.fMultX), int((windowSetting.uViHeight-gRDP.scissor.bottom)*windowSetting.fMultY+windowSetting.statusBarHeightToUse),
+        glScissor(x, int((windowSetting.uViHeight-gRDP.scissor.bottom)*windowSetting.fMultY+windowSetting.statusBarHeightToUse),
             int((gRDP.scissor.right-gRDP.scissor.left)*windowSetting.fMultX), int((gRDP.scissor.bottom-gRDP.scissor.top)*windowSetting.fMultY ));
         OPENGL_CHECK_ERRORS;
     }
@@ -1158,11 +1173,16 @@ void OGLRender::ApplyRDPScissor(bool force)
 
 void OGLRender::ApplyScissorWithClipRatio(bool force)
 {
+	int x = windowSetting.clipping.left;
+
     if( !force && status.curScissor == RSP_SCISSOR )    return;
+
+	if(options.bWideScreenHack && x>0)
+		x = x-(int)(0.25f*(float)x-(0.125f*(float)windowSetting.uDisplayWidth));
 
     glEnable(GL_SCISSOR_TEST);
     OPENGL_CHECK_ERRORS;
-    glScissor(windowSetting.clipping.left, int((windowSetting.uViHeight-gRSP.real_clip_scissor_bottom)*windowSetting.fMultY)+windowSetting.statusBarHeightToUse,
+    glScissor(x, int((windowSetting.uViHeight-gRSP.real_clip_scissor_bottom)*windowSetting.fMultY)+windowSetting.statusBarHeightToUse,
         windowSetting.clipping.width, windowSetting.clipping.height);
     OPENGL_CHECK_ERRORS;
 
@@ -1284,6 +1304,10 @@ void OGLRender::glViewportWrapper(GLint x, GLint y, GLsizei width, GLsizei heigh
         OPENGL_CHECK_ERRORS;
         if( flag )  glOrtho(0, windowSetting.uDisplayWidth, windowSetting.uDisplayHeight, 0, -1, 1);
         OPENGL_CHECK_ERRORS;
+
+		if(options.bWideScreenHack && x>0)
+			x = x - (int)(0.0375f*(float)windowSetting.uDisplayWidth);
+
         glViewport(x,y,width,height);
         OPENGL_CHECK_ERRORS;
     }

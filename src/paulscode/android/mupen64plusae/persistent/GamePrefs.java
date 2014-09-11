@@ -103,6 +103,9 @@ public class GamePrefs
     /** True if fog is enabled in the rice library. */
     public final boolean isRiceFogEnabled;
     
+    /** True if widescreen hack is enabled in the rice library. */
+    public final boolean isRiceWideScreenEnabled;
+    
     /** The maximum frameskip in the glide64 library. */
     public final int glide64MaxFrameskip;
     
@@ -215,6 +218,7 @@ public class GamePrefs
         riceTextureEnhancement = emulationProfile.get( "riceTextureEnhancement", "0" );
         isRiceHiResTexturesEnabled = emulationProfile.get( "riceHiResTextures", "True" ).equals( "True" );
         isRiceFogEnabled = emulationProfile.get( "riceFog", "False" ).equals( "True" );
+        isRiceWideScreenEnabled = emulationProfile.get( "riceWidescreenHack", "False" ).equals( "True" );
         
         // Video prefs - glide64
         isGlide64Enabled = videoPlugin.name.equals( "libmupen64plus-video-glide64mk2.so" );

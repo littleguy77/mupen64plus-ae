@@ -97,6 +97,9 @@ void COGLTexture::EndUpdate(DrawInfo *di)
 {
     COGLGraphicsContext *pcontext = (COGLGraphicsContext *)(CGraphicsContext::g_pGraphicsContext); // we need this to check if the GL extension is avaible
 
+	pglActiveTexture(GL_TEXTURE0_ARB);
+	OPENGL_CHECK_ERRORS;
+
     glBindTexture(GL_TEXTURE_2D, m_dwTextureName);
     OPENGL_CHECK_ERRORS;
 
@@ -140,6 +143,9 @@ void COGLTexture::EndUpdate(DrawInfo *di)
     //GL_BGRA_IMG works on adreno but not inside profiler.
     glTexImage2D(GL_TEXTURE_2D, 0, m_glFmt, m_dwCreatedTextureWidth, m_dwCreatedTextureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_pTexture);
 #endif
+    OPENGL_CHECK_ERRORS;
+
+	glBindTexture(GL_TEXTURE_2D, 0);
     OPENGL_CHECK_ERRORS;
 }
 
