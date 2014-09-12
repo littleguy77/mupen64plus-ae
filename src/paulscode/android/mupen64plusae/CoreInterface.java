@@ -141,7 +141,6 @@ public class CoreInterface
         sAppData = new AppData( sActivity );
         sUserPrefs = new UserPrefs( sActivity );
         sGamePrefs = new GamePrefs( sActivity, romMd5 );
-        NativeConfigFiles.syncConfigFiles( sGamePrefs, sUserPrefs, sAppData );
         
         File romFile = new File( romPath );
         sAutoSavePath = sUserPrefs.autoSaveDir + "/" + romFile.getName() + ".sav";
@@ -156,6 +155,8 @@ public class CoreInterface
         new File( sUserPrefs.coreUserDataDir ).mkdirs();
         new File( sUserPrefs.coreUserCacheDir ).mkdirs();
         new File( sUserPrefs.profilesDir ).mkdirs();
+        
+        NativeConfigFiles.syncConfigFiles( sGamePrefs, sUserPrefs, sAppData );
     }
     
     @TargetApi( 11 )

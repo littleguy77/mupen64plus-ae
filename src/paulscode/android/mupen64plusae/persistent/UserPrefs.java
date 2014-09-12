@@ -280,7 +280,7 @@ public class UserPrefs
         isTouchscreenFeedbackEnabled = mPreferences.getBoolean( "touchscreenFeedback", false );
         touchscreenRefresh = getSafeInt( mPreferences, "touchscreenRefresh", 0 );
         touchscreenScale = ( (float) mPreferences.getInt( "touchscreenScale", 100 ) ) / 100.0f;
-        touchscreenTransparency = ( 255 * mPreferences.getInt( "touchscreenTransparency", 100 ) ) / 100;
+        touchscreenTransparency = ( 255 * mPreferences.getInt( "touchscreenTransparency", 40 ) ) / 100;
         touchscreenStyle = mPreferences.getString( "touchscreenStyle", "Mupen64Plus-AE-Outline" );
         
         // Xperia PLAY touchpad prefs

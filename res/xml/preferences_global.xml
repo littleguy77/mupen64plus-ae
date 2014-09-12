@@ -146,7 +146,7 @@
             android:title="@string/touchscreenRefresh_title" />
 
         <paulscode.android.mupen64plusae.persistent.SeekBarPreference
-            android:defaultValue="100"
+            android:defaultValue="40"
             android:key="touchscreenTransparency"
             android:title="@string/touchscreenTransparency_title"
             mupen64:maximumValue="100"
