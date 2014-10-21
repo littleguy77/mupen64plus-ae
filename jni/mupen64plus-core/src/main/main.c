@@ -681,7 +681,7 @@ void new_frame(void)
     }
 }
 
-void new_vi(void)
+void new_vi_(void)
 {
     int FrameDuration;
     unsigned int CurrentFPSTime;
@@ -739,6 +739,62 @@ void new_vi(void)
 
     LastFPSTime = CurrentFPSTime ;
     timed_section_end(TIMED_SECTION_IDLE);
+}
+
+#define TOL_FRAMES 3
+
+void new_vi(void)
+{
+    static int prev_vilimit, prev_factor;
+    static float counter, interval;
+    unsigned int now, expect;
+    int diff;
+
+    if (!l_MainSpeedLimit)
+        return;
+
+    if (ROM_PARAMS.vilimit != prev_vilimit || l_SpeedFactor != prev_factor)
+    {
+        double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
+        interval = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
+        prev_vilimit = ROM_PARAMS.vilimit;
+        prev_factor = l_SpeedFactor;
+    }
+
+    start_section(IDLE_SECTION);
+
+#ifdef DBG
+    if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
+#endif
+
+    now = SDL_GetTicks();
+    counter += interval;
+    expect = (int)counter;
+    diff = now - expect;
+
+    if (diff < -200 || diff > 200)
+    {
+        counter = now - 1 * 17;
+        return;
+    }
+
+    if (diff > TOL_FRAMES * 17)
+    {
+        //printf("lim %d\n", diff);
+        counter = now - TOL_FRAMES * 17;
+        return;
+    }
+
+    if (diff < 0)
+    {
+        int time = -diff;
+        time -= time / 4;
+        //DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", time);
+        //printf("sleep %2d\n", time);
+        SDL_Delay(time);
+    }
+
+    end_section(IDLE_SECTION);
 }
 
 /*********************************************************************************************************
