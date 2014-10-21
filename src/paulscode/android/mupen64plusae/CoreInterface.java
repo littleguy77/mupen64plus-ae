@@ -406,11 +406,14 @@ public class CoreInterface
             Prompt.promptConfirm( sActivity, title, message, new PromptConfirmListener()
             {
                 @Override
-                public void onConfirm()
+                public void onDialogClosed( int which )
                 {
-                    Notifier.showToast( sActivity, R.string.toast_overwritingFile, file.getName() );
-                    NativeExports.emuSaveFile( file.getAbsolutePath() );
-                }
+                    if( which == DialogInterface.BUTTON_POSITIVE )
+                    {
+                        Notifier.showToast( sActivity, R.string.toast_overwritingFile, file.getName() );
+                        NativeExports.emuSaveFile( file.getAbsolutePath() );
+                    }
+				}
             } );
         }
         else
@@ -479,5 +482,27 @@ public class CoreInterface
     {
         NativeExports.emuPause();
         NativeExports.emuAdvanceFrame();
+    }
+    
+    public static void exit()
+    {
+    	CoreInterface.pauseEmulator(false);
+        String title = sActivity.getString( R.string.confirm_title );
+        String message = sActivity.getString( R.string.confirmExitGame_message );
+        Prompt.promptConfirm( sActivity, title, message, new PromptConfirmListener()
+        {
+            @Override
+            public void onDialogClosed( int which )
+            {
+                if( which == DialogInterface.BUTTON_POSITIVE )
+                {
+                    NativeExports.emuSaveFile( sAutoSavePath );
+                	CoreInterface.shutdownEmulator();
+                    sActivity.finish();
+                }
+                else
+                	CoreInterface.resumeEmulator();
+            }
+        } );
     }
 }

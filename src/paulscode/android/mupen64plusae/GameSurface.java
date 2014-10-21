@@ -75,7 +75,7 @@ public class GameSurface extends SurfaceView implements SurfaceHolder.Callback
     {
         Log.v("SDL", "surfaceDestroyed()");
         // Call this *before* setting mIsSurfaceReady to 'false'
-        CoreInterface.pauseEmulator(true);
+        CoreInterface.pauseEmulator(false);
         mIsSurfaceReady = false;
     
         /* We have to clear the current context and destroy the egl surface here

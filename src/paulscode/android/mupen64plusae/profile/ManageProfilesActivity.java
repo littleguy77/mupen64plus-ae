@@ -327,12 +327,15 @@ abstract public class ManageProfilesActivity extends ListActivity
         Prompt.promptConfirm( this, title, message, new PromptConfirmListener()
         {
             @Override
-            public void onConfirm()
+            public void onDialogClosed( int which )
             {
-                assert ( mConfigCustom.keySet().contains( profile.name ) );
-                mConfigCustom.remove( profile.name );
-                mConfigCustom.save();
-                refreshList();
+                if( which == DialogInterface.BUTTON_POSITIVE )
+                {
+                    assert ( mConfigCustom.keySet().contains( profile.name ) );
+                    mConfigCustom.remove( profile.name );
+                    mConfigCustom.save();
+                    refreshList();
+                }
             }
         } );
     }

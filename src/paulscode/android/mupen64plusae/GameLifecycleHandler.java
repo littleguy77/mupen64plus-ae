@@ -251,7 +251,7 @@ public class GameLifecycleHandler implements View.OnKeyListener
     public void onPause()
     {
         Log.i( "GameLifecycleHandler", "onPause" );
-        CoreInterface.pauseEmulator( true );
+        CoreInterface.pauseEmulator( false );
         mMogaController.onPause();
     }
     

@@ -309,10 +309,13 @@ public class ControllerProfileActivity extends Activity implements OnInputListen
         Prompt.promptConfirm( this, title, message, new PromptConfirmListener()
         {
             @Override
-            public void onConfirm()
+            public void onDialogClosed( int which )
             {
-                mProfile.putMap( new InputMap() );
-                refreshAllButtons();
+                if( which == DialogInterface.BUTTON_POSITIVE )
+                {
+                    mProfile.putMap( new InputMap() );
+                    refreshAllButtons();
+                }
             }
         } );
     }

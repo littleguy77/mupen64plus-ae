@@ -29,6 +29,7 @@ import paulscode.android.mupen64plusae.util.PrefUtil;
 import paulscode.android.mupen64plusae.util.Prompt;
 import paulscode.android.mupen64plusae.util.Prompt.PromptConfirmListener;
 import android.annotation.TargetApi;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -189,21 +190,28 @@ public class SettingsGlobalActivity extends PreferenceActivity implements OnPref
         Prompt.promptConfirm( this, title, message, new PromptConfirmListener()
         {
             @Override
-            public void onConfirm()
+            public void onDialogClosed( int which )
             {
-                // Reset the user preferences
-                mPrefs.unregisterOnSharedPreferenceChangeListener( SettingsGlobalActivity.this );
-                mPrefs.edit().clear().commit();
-                PreferenceManager.setDefaultValues( SettingsGlobalActivity.this, R.xml.preferences_global, true );
-                
-                // Also reset any manual overrides the user may have made in the config file
-                File configFile = new File( mUserPrefs.mupen64plus_cfg );
-                if( configFile.exists() )
-                    configFile.delete();
-                
-                // Rebuild the menu system by restarting the activity
-                finish();
-                startActivity( getIntent() );
+                if( which == DialogInterface.BUTTON_POSITIVE )
+                {
+                    // Reset the user preferences
+                    mPrefs.unregisterOnSharedPreferenceChangeListener( SettingsGlobalActivity.this );
+                    mPrefs.edit().clear().commit();
+                    PreferenceManager.setDefaultValues( SettingsGlobalActivity.this, R.xml.preferences_global, true );
+                    
+                    // Also reset any manual overrides the user may have made in the config file
+                    File configFile = new File( mUserPrefs.mupen64plus_cfg );
+                    if( configFile.exists() )
+                        configFile.delete();
+                        
+                    configFile = new File( mUserPrefs.romInfoCache_ini );
+                    if( configFile.exists() )
+                        configFile.delete();
+                    
+                    // Rebuild the menu system by restarting the activity
+                    finish();
+                    startActivity( getIntent() );
+                }
             }
         } );
     }

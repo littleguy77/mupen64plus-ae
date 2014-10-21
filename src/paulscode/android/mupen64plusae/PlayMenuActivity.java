@@ -39,6 +39,7 @@ import paulscode.android.mupen64plusae.util.Prompt;
 import paulscode.android.mupen64plusae.util.Prompt.PromptConfirmListener;
 import paulscode.android.mupen64plusae.util.RomDetail;
 import paulscode.android.mupen64plusae.util.Utility;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -308,9 +309,12 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
             Prompt.promptConfirm( this, title, message, new PromptConfirmListener()
             {
                 @Override
-                public void onConfirm()
+                public void onDialogClosed( int which )
                 {
-                    launchGame( true );
+                    if( which == DialogInterface.BUTTON_POSITIVE )
+                    {
+                    	launchGame( true );
+                    }
                 }
             } );
             return true;
