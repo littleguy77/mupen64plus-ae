@@ -88,7 +88,7 @@ static osd_message_t *l_msgVol = NULL;
 static osd_message_t *l_msgFF = NULL;
 static osd_message_t *l_msgPause = NULL;
 
-#if defined(ANDROID_EDITION)
+#if defined(DEBUG_MSG_TO_LOGFILE)
 FILE *pDebugFile = NULL;
 #endif
 
@@ -733,8 +733,12 @@ void new_vi(void)
 */
 m64p_error main_run(void)
 {
+#if defined(DEBUG_MSG_TO_LOGFILE)
 #if defined(ANDROID_EDITION)
     pDebugFile = fopen ("mnt/sdcard/mupen64plus/core_debug.txt","w");
+#else
+    pDebugFile = fopen ("core_debug.txt","w");
+#endif
 #endif
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
@@ -834,8 +838,9 @@ m64p_error main_run(void)
     g_EmulatorRunning = 0;
     StateChanged(M64CORE_EMU_STATE, M64EMU_STOPPED);
 
-#if defined(ANDROID_EDITION)
-    fclose (pDebugFile);
+#if defined(DEBUG_MSG_TO_LOGFILE)
+	if(pDebugFile != NULL)
+		fclose (pDebugFile);
 #endif
 
     return M64ERR_SUCCESS;

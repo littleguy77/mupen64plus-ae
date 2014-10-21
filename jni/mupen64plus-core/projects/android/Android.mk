@@ -79,13 +79,14 @@ LOCAL_SRC_FILES :=                              \
     #$(SRCDIR)/debugger/dbg_memory.c             \
     #$(SRCDIR)/debugger/debugger.c               \
 
-LOCAL_CFLAGS :=         \
-    $(COMMON_CFLAGS)    \
-    -DANDROID           \
-    -DANDROID_EDITION   \
-    -DIOAPI_NO_64       \
-    -DNOCRYPT           \
-    -DNOUNCRYPT         \
+LOCAL_CFLAGS :=            \
+    $(COMMON_CFLAGS)       \
+    -DANDROID              \
+    -DANDROID_EDITION      \
+    -DIOAPI_NO_64          \
+    -DNOCRYPT              \
+    -DNOUNCRYPT            \
+    -DDEBUG_MSG_TO_LOGFILE \
 
 LOCAL_LDFLAGS :=                                                    \
     -Wl,-Bsymbolic                                                  \
