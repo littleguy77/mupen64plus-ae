@@ -96,8 +96,6 @@ public class GalleryActivity extends ListActivity
         mUserPrefs = new UserPrefs( this );
         mUserPrefs.enforceLocale( this );
         
-        new File( mUserPrefs.coreUserCacheDir ).mkdirs();
-        
         romInfoCache_ini = new ConfigFile( mUserPrefs.romInfoCache_ini );
         
         String RomLastUsedPath = romInfoCache_ini.get( "ROM", "LastUsedPath");   

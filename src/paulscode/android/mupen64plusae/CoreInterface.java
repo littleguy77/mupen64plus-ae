@@ -144,17 +144,10 @@ public class CoreInterface
         
         File romFile = new File( romPath );
         sAutoSavePath = sUserPrefs.autoSaveDir + "/" + romFile.getName() + ".sav";
-        sManualSaveDir = sUserPrefs.gameSaveDir + "/" + romFile.getName();
+        sManualSaveDir = sUserPrefs.gameSaveDir + "/ManualSaves" + "/" + romFile.getName();
         
-        // Make sure various directories exist so that we can write to them
-        new File( sUserPrefs.sramSaveDir ).mkdirs();
-        new File( sUserPrefs.slotSaveDir ).mkdirs();
-        new File( sUserPrefs.autoSaveDir ).mkdirs();
+        //Create directory for manual save game
         new File( sManualSaveDir ).mkdirs();
-        new File( sUserPrefs.coreUserConfigDir ).mkdirs();
-        new File( sUserPrefs.coreUserDataDir ).mkdirs();
-        new File( sUserPrefs.coreUserCacheDir ).mkdirs();
-        new File( sUserPrefs.profilesDir ).mkdirs();
         
         NativeConfigFiles.syncConfigFiles( sGamePrefs, sUserPrefs, sAppData );
     }

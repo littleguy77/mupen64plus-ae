@@ -63,7 +63,7 @@ public class SplashActivity extends Activity implements OnExtractionProgressList
     private static final int TOTAL_ASSETS = 124;
     
     /** The minimum duration that the splash screen is shown, in milliseconds. */
-    private static final int SPLASH_DELAY = 1000;
+    private static final int SPLASH_DELAY = 0;
     
     /** PaulsCode OUYA developer UUID */
     private static final String DEVELOPER_ID = "68d84579-c1e2-4418-8976-cda2692133f1";
@@ -124,6 +124,15 @@ public class SplashActivity extends Activity implements OnExtractionProgressList
         
         // Refresh the preference data wrapper
         mUserPrefs = new UserPrefs( this );
+        
+        // Make sure various directories exist so that we can write to them
+        new File( mUserPrefs.sramSaveDir ).mkdirs();
+        new File( mUserPrefs.slotSaveDir ).mkdirs();
+        new File( mUserPrefs.autoSaveDir ).mkdirs();
+        new File( mUserPrefs.coreUserConfigDir ).mkdirs();
+        new File( mUserPrefs.coreUserDataDir ).mkdirs();
+        new File( mUserPrefs.coreUserCacheDir ).mkdirs();
+        new File( mUserPrefs.profilesDir ).mkdirs();
         
         // Initialize the OUYA interface if running on OUYA
         if( AppData.IS_OUYA_HARDWARE )
