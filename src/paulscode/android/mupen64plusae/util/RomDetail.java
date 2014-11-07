@@ -186,6 +186,13 @@ public class RomDetail
                 _rumble = "Yes".equals( section.get( "Rumble" ) );
             }
         }
+        else
+        {
+        	_md5=computedMd5;
+        	_crc="00000000 00000000";
+        	_goodName="Mupen64 Plus AE";
+        	_players=4;
+        }
         
         // Assign the final fields; assign goodname only if MD5 is valid
         md5 = _md5;
