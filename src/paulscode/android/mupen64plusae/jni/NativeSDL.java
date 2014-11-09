@@ -20,6 +20,8 @@
  */
 package paulscode.android.mupen64plusae.jni;
 
+import javax.microedition.khronos.egl.EGL10;
+
 import paulscode.android.mupen64plusae.CoreInterface;
 import paulscode.android.mupen64plusae.util.SafeMethods;
 import android.media.AudioFormat;
@@ -50,7 +52,74 @@ public class NativeSDL extends CoreInterface
      */
     public static boolean createGLContext( int majorVersion, int minorVersion, int[] configSpec )
     {
-        return sSurface.createGLContext( majorVersion, minorVersion, configSpec );
+    	boolean result = sSurface.createGLContext( majorVersion, minorVersion, configSpec );
+        
+        if( !result )
+        {
+            // Some devices don't seem to like the EGL_BUFFER_SIZE request. If context creation
+            // fails, try it again without the buffer size request.
+            // TODO: Solve the root issue rather than applying this bandaid.
+            int i = 0;
+            int j = 0;
+            while( configSpec[i] != EGL10.EGL_NONE )
+            {
+                // Copy all config elements except the buffer size element
+                if( configSpec[i] != EGL10.EGL_BUFFER_SIZE )
+                {
+                    configSpec[j] = configSpec[i];
+                    configSpec[j + 1] = configSpec[i + 1];
+                    j += 2;
+                }
+                else
+                {
+                    Log.w( "CoreInterfaceNative", "Retrying GL context creation without EGL_BUFFER_SIZE=" + configSpec[i + 1] );
+                }
+                i += 2;
+            }
+            configSpec[j] = EGL10.EGL_NONE;
+            result = sSurface.createGLContext( majorVersion, minorVersion, configSpec );
+            
+            if( !result )
+            {
+                // Secondary fallback, ignore SDL's requested config and just use what we had been using in SDL 1.3
+                Log.w( "CoreInterfaceNative", "Retrying GL context creation using legacy settings" );
+                
+                // Generate a bit mask to limit the configuration search to compatible GLES versions
+                final int UNKNOWN = 0;
+                final int EGL_OPENGL_ES_BIT = 1;
+                final int EGL_OPENGL_ES2_BIT = 4;
+                final int renderableType;
+                
+                // Determine which version of EGL we're using.
+                switch( majorVersion )
+                {
+                    case 1:
+                        renderableType = EGL_OPENGL_ES_BIT;
+                        break;
+                    
+                    case 2:
+                        renderableType = EGL_OPENGL_ES2_BIT;
+                        break;
+                    
+                    default: // Shouldn't happen.
+                        renderableType = UNKNOWN;
+                        break;
+                }
+                
+                // Specify the desired EGL frame buffer configuration
+                // @formatter:off
+                final int[] configSpec1;
+                configSpec1 = new int[] 
+                { 
+                    EGL10.EGL_DEPTH_SIZE, 16,                   // request 16-bit depth (Z) buffer
+                    EGL10.EGL_RENDERABLE_TYPE, renderableType,  // limit search to requested GLES version
+                    EGL10.EGL_NONE                              // terminate array
+                };
+                // @formatter:on            
+                result = sSurface.createGLContext( majorVersion, minorVersion, configSpec1 );
+            }
+        }
+        return result;
     }
     
     /**
