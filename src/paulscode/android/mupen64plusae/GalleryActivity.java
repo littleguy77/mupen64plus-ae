@@ -103,7 +103,13 @@ public class GalleryActivity extends ListActivity
         if(RomLastUsedPath == null)
             mRomDirectoryPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         else
-            mRomDirectoryPath = RomLastUsedPath;
+        {
+            File f = new File(RomLastUsedPath);
+        	if(f.isDirectory())
+        		mRomDirectoryPath = RomLastUsedPath;
+        	else
+        		mRomDirectoryPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        }
         
         int lastVer = mAppData.getLastAppVersionCode();
         int currVer = mAppData.appVersionCode;
