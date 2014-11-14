@@ -1187,7 +1187,7 @@ static void emit_sbc(int rs1,int rs2,int rt)
     output_byte(0x19);
     output_modrm(3,rs1,rs2);
   } else if(rs2==rt) {
-    emit_neg(rs2,rs2);
+    emit_not(rs2,rs2);
     emit_adc(rs2,rs1,rs2);
   } else {
     emit_mov(rs1,rt);
