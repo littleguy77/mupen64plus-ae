@@ -229,7 +229,7 @@ void Config_LoadRomConfig(unsigned char* header)
         while (!feof(f))
         {
             fgets(line, 4096, f);
-            if (line[0] == '\n') continue;
+            if ((line[0] == '\r') || (line[0] == '\n')) continue;
 
             if (strncmp(line,"rom name=", 9) == 0)
             {
@@ -283,7 +283,7 @@ void Config_LoadConfig()
             char *val;
             fgets( line, 4096, f );
 
-            if (line[0] == '#' || line[0] == '\n')
+            if (line[0] == '#' || line[0] == '\r' || line[0] == '\n')
                 continue;
 
             val = strchr( line, '=' );
