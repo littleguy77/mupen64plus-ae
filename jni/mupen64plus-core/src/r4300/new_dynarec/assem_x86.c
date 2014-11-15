@@ -711,8 +711,11 @@ static void multdiv_alloc_x86(struct regstat *current,int i)
     }
     else // 64-bit
     {
-      alloc_x86_reg(current,i,HIREG|64,EDX);
-      alloc_x86_reg(current,i,HIREG,EAX);
+      if(opcode2[i]==0x1D) // DMULTU
+      {
+        alloc_x86_reg(current,i,HIREG|64,EDX);
+        alloc_x86_reg(current,i,HIREG,EAX);
+      }
       alloc_reg64(current,i,rs1[i]);
       alloc_reg64(current,i,rs2[i]);
       alloc_all(current,i);
