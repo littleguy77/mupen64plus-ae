@@ -13,6 +13,7 @@
     #if SDL_VERSION_ATLEAST(2,0,0)
     #include "sdl2_compat.h" // Slightly hacked version of core/vidext_sdl2_compat.h
     #endif
+	//#include "eglport.h"
 #endif
 ////
 
@@ -80,6 +81,7 @@ const char _default_fsh[] = "                           \n\t" \
 "gl_FragColor = texture2D(uTex, vTexCoord);             \n\t" \
 "}                                                      \n\t";
 
+
 void OGL_EnableRunfast()
 {
 #ifdef ARM_ASM
@@ -144,17 +146,17 @@ void OGL_InitStates()
 
 ///// paulscode, fixes missing graphics on Qualcomm, Adreno:
     glDepthRangef(0.0f, 1.0f);
-/*
+
     // default values (only seem to work on OMAP!)
     glPolygonOffset(0.2f, 0.2f);
-*/
+
     //// paulscode, added for different configurations based on hardware
     // (part of the missing shadows and stars bug fix)
-    int hardwareType = Android_JNI_GetHardwareType();
+/*    int hardwareType = Android_JNI_GetHardwareType();
     float f1, f2;
     Android_JNI_GetPolygonOffset(hardwareType, 1, &f1, &f2);
     glPolygonOffset( f1, f2 );
-    ////
+*/    ////
 
 // some other settings that have been tried, which do not work:
     //glDepthRangef(1.0f, 0.0f);  // reverses depth-order on OMAP3 chipsets
@@ -223,10 +225,12 @@ void OGL_ResizeWindow(int x, int y, int width, int height)
     config.window.width = width;
     config.window.height = height;
 
-    config.framebuffer.xpos = x;
-    config.framebuffer.ypos = y;
-    config.framebuffer.width = width;
-    config.framebuffer.height = height;
+	if (config.framebuffer.enable!=1) {
+		config.framebuffer.xpos = x;
+		config.framebuffer.ypos = y;
+		config.framebuffer.width = width;
+		config.framebuffer.height = height;
+	}
     OGL_UpdateScale();
 
     glViewport(config.framebuffer.xpos, config.framebuffer.ypos,
@@ -244,19 +248,28 @@ bool OGL_SDL_Start()
          LOG(LOG_ERROR, "Error initializing SDL video subsystem: %s\n", SDL_GetError() );
         return FALSE;
     }
-
+/*SEB*
     int current_w = config.window.width;
     int current_h = config.window.height;
-
+*/
+    int current_w = 800;
+    int current_h = 480;
     /* Set the video mode */
     LOG(LOG_MINIMAL, "Setting video mode %dx%d...\n", current_w, current_h );
 
-    // TODO: I should actually check what the pixelformat is, rather than assuming 16 bpp (RGB_565) or 32 bpp (RGBA_8888):
-    int bitsPP = 16;
+// TODO: I should actually check what the pixelformat is, rather than assuming 16 bpp (RGB_565) or 32 bpp (RGBA_8888):
+//// paulscode, added for switching between modes RGBA8888 and RGB565
+// (part of the color banding fix)
+int bitsPP;
+/*if( Android_JNI_UseRGBA8888() )
+    bitsPP = 32;
+else*/
+    bitsPP = 16;
+////
 
     // TODO: Replace SDL_SetVideoMode with something that is SDL 2.0 compatible
     //       Better yet, eliminate all SDL calls by using the Mupen64Plus core api
-    if (!(OGL.hScreen = SDL_SetVideoMode( current_w, current_h, bitsPP, SDL_HWSURFACE )))
+    if (!(OGL.hScreen = SDL_SetVideoMode( current_w, current_h, bitsPP, SDL_HWSURFACE | SDL_FULLSCREEN )))
     {
         LOG(LOG_ERROR, "Problem setting videomode %dx%d: %s\n", current_w, current_h, SDL_GetError() );
         SDL_QuitSubSystem( SDL_INIT_VIDEO );
@@ -265,36 +278,60 @@ bool OGL_SDL_Start()
 
 //// paulscode, fixes the screen-size problem
     const float ratio = ( config.romPAL ? 9.0f/11.0f : 0.75f );
-    int videoWidth = current_w;
-    int videoHeight = current_h;
+    int videoWidth = config.window.refwidth;
+    int videoHeight = config.window.refheight;
     int x = 0;
     int y = 0;
     
     //re-scale width and height on per-rom basis
-    float width = (float)videoWidth * (float)config.window.refwidth / 800.f;
-    float height = (float)videoHeight * (float)config.window.refheight / 480.f;
+    float width = /*(float)videoWidth * (float)config.window.refwidth /*/ 800.f;
+    float height = /*(float)videoHeight * (float)config.window.refheight / */480.f;
     
-    //re-center video if it was re-scaled per-rom
-    x -= (width - (float)videoWidth) / 2.f;
-    y -= (height - (float)videoHeight) / 2.f;
+   if (!config.stretchVideo) {
+/*	if ((float)videoWith*480.0f/(float)videoHeight/800.0f>1.0f) {
+		//scale by Width
+	} else {
+		//scale by Height
+	}*/
+        videoWidth = (int) (height / ratio);
+        if (videoWidth > width) {
+            videoWidth = width;
+            videoHeight = (int) (width * ratio);
+        }
+    } else {
+	videoWidth=800;
+	videoHeight=480;
+    }
+    x = (width - videoWidth) / 2;
+    y = (height - videoHeight) / 2;
     
     //set xpos and ypos
     config.window.xpos = x;
     config.window.ypos = y;
-    config.framebuffer.xpos = x;
-    config.framebuffer.ypos = y;
     
     //set width and height
-    config.window.width = (int)width;
-    config.window.height = (int)height;
-    config.framebuffer.width = (int)width;
-    config.framebuffer.height = (int)height;
+    config.window.width = (int)videoWidth;
+    config.window.height = (int)videoHeight;
+	if (config.framebuffer.enable!=1) {
+		config.framebuffer.xpos = x;
+		config.framebuffer.ypos = y;
+		config.framebuffer.width = (int)videoWidth;
+		config.framebuffer.height = (int)videoHeight;
+	}
+	
 ////
     return true;
 }
 #endif
+
 //////
 
+#ifdef USE_SDL
+/*void Android_JNI_SwapWindow()
+{
+	EGL_SwapBuffers();
+}*/
+#endif
 
 bool OGL_Start()
 {
@@ -335,13 +372,18 @@ bool OGL_Start()
         }
 
         glGenFramebuffers(1, &OGL.framebuffer.fb);
-        glGenRenderbuffers(1, &OGL.framebuffer.depth_buffer);
         glGenTextures(1, &OGL.framebuffer.color_buffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, OGL.framebuffer.depth_buffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, config.framebuffer.width, config.framebuffer.height);
         glBindTexture(GL_TEXTURE_2D, OGL.framebuffer.color_buffer);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, config.framebuffer.width, config.framebuffer.height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
-        glBindFramebuffer(GL_FRAMEBUFFER, OGL.framebuffer.fb);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glBindTexture(GL_TEXTURE_2D, 0);
+        glGenRenderbuffers(1, &OGL.framebuffer.depth_buffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, OGL.framebuffer.depth_buffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, config.framebuffer.width, config.framebuffer.height);
+		glBindFramebuffer(GL_FRAMEBUFFER, OGL.framebuffer.fb);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, OGL.framebuffer.color_buffer, 0);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, OGL.framebuffer.depth_buffer);
 
@@ -381,7 +423,7 @@ bool OGL_Start()
 
     //Print some info
     LOG(LOG_VERBOSE, "Width: %i Height:%i \n", config.framebuffer.width, config.framebuffer.height);
-    LOG(LOG_VERBOSE, "[gln64]: Enable Runfast... \n");
+    LOG(LOG_VERBOSE, "[gles2n64]: Enable Runfast... \n");
 
     OGL_EnableRunfast();
     OGL_UpdateScale();
@@ -418,6 +460,7 @@ void OGL_Stop()
     LOG(LOG_MINIMAL, "Stopping OpenGL\n");
 
 #ifdef USE_SDL
+	//EGL_Close();
     SDL_QuitSubSystem( SDL_INIT_VIDEO );
 #endif
 
@@ -1125,8 +1168,8 @@ void OGL_ClearDepthBuffer()
 /////// paulscode, graphics bug-fixes
     glDisable( GL_SCISSOR_TEST );
     glDepthMask( GL_TRUE );  // fixes side-bar graphics glitches
-//    glClearDepthf( depth );  // broken on Qualcomm Adreno
-    glClearDepthf( 1.0f );  // fixes missing graphics on Qualcomm Adreno
+    glClearDepthf( depth );  // broken on Qualcomm Adreno	// Should be ok on Pandora
+//    glClearDepthf( 1.0f );  // fixes missing graphics on Qualcomm Adreno
     glClearColor( 0, 0, 0, 1 );
     glClear( GL_DEPTH_BUFFER_BIT );
     OGL_UpdateDepthUpdate();
@@ -1180,7 +1223,7 @@ void OGL_SwapBuffers()
 {
     //OGL_DrawTriangles();
     scProgramChanged = 0;
-#if 0
+#if 1
     static int frames = 0;
     static unsigned lastTicks = 0;
     unsigned ticks = ticksGetTicks();
@@ -1237,17 +1280,22 @@ void OGL_SwapBuffers()
     }
 #endif
 
+    // if emulator defined a render callback function, call it before
+	// buffer swap
+    if (renderCallback) (*renderCallback)();
+
     if (config.framebuffer.enable)
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor( 0, 0, 0, 1 );
-        glClear( GL_COLOR_BUFFER_BIT );
-
         glUseProgram(OGL.defaultProgram);
         glDisable(GL_SCISSOR_TEST);
         glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);	//*SEB*
         glViewport(config.window.xpos, config.window.ypos, config.window.width, config.window.height);
 
+        glClearColor( 0, 0, 0, 1 );	
+        glClear( GL_COLOR_BUFFER_BIT );
+		
         static const float vert[] =
         {
             -1.0, -1.0, +0.0, +0.0,
@@ -1279,6 +1327,7 @@ void OGL_SwapBuffers()
 
         glBindFramebuffer(GL_FRAMEBUFFER, OGL.framebuffer.fb);
         OGL_UpdateViewport();
+		OGL_UpdateCullFace();
         if (scProgramCurrent) glUseProgram(scProgramCurrent->program);
         OGL.renderState = RS_NONE;
     }
@@ -1286,10 +1335,6 @@ void OGL_SwapBuffers()
     {
         Android_JNI_SwapWindow(); // paulscode, fix for black-screen bug
     }
-
-    // if emulator defined a render callback function, call it before
-	// buffer swap
-    if (renderCallback) (*renderCallback)();
 
     OGL.screenUpdate = false;
 
@@ -1299,8 +1344,8 @@ void OGL_SwapBuffers()
     float depth = gDP.fillColor.z ;
     glDisable( GL_SCISSOR_TEST );
     glDepthMask( GL_TRUE );  // fixes side-bar graphics glitches
-//    glClearDepthf( depth );  // broken on Qualcomm Adreno
-    glClearDepthf( 1.0f );  // fixes missing graphics on Qualcomm Adreno
+    glClearDepthf( depth );  // broken on Qualcomm Adreno			Should by ok on Pandora
+//    glClearDepthf( 1.0f );  // fixes missing graphics on Qualcomm Adreno
     glClearColor( 0, 0, 0, 1 );
     glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
     OGL_UpdateDepthUpdate();

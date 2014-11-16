@@ -1,7 +1,7 @@
 
 #include <dlfcn.h>
 #include <string.h>
-#include <cpu-features.h>
+//#include <cpu-features.h>
 
 #include "m64p_types.h"
 #include "m64p_plugin.h"
@@ -20,7 +20,7 @@
 #include "FrameSkipper.h"
 #include "ticks.h"
 
-#include "ae_imports.h"
+//#include "ae_bridge.h"
 
 ptr_ConfigGetSharedDataFilepath ConfigGetSharedDataFilepath = NULL;
 
@@ -35,12 +35,13 @@ extern "C" {
 EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle,
         void *Context, void (*DebugCallback)(void *, int, const char *))
 {
+printf("GLES2N64 Plugin StartUp\n");
     ConfigGetSharedDataFilepath = (ptr_ConfigGetSharedDataFilepath)
             dlsym(CoreLibHandle, "ConfigGetSharedDataFilepath");
 
 #ifdef __NEON_OPT
-    if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM &&
-            (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) != 0)
+/*    if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM &&
+            (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) != 0)*/
     {
         MathInitNeon();
         gSPInitNeon();
@@ -51,7 +52,6 @@ EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle CoreLibHandle,
 
 EXPORT m64p_error CALL PluginShutdown(void)
 {
-    OGL_Stop();  // paulscode, OGL_Stop missing from Yongzh's code
 }
 
 EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType,
@@ -89,6 +89,7 @@ EXPORT void CALL MoveScreen (int xpos, int ypos)
 
 EXPORT int CALL InitiateGFX (GFX_INFO Gfx_Info)
 {
+printf("InitateGFX\n");
     DMEM = Gfx_Info.DMEM;
     IMEM = Gfx_Info.IMEM;
     RDRAM = Gfx_Info.RDRAM;
@@ -129,7 +130,7 @@ EXPORT int CALL InitiateGFX (GFX_INFO Gfx_Info)
     else
         frameSkipper.setSkips( FrameSkipper::MANUAL, config.maxFrameSkip );
 
-    OGL_Start();
+	OGL_Start();
 
     return 1;
 }
@@ -138,6 +139,39 @@ EXPORT void CALL ProcessDList(void)
 {
     OGL.frame_dl++;
 
+#if 1
+    if (config.autoFrameSkip)
+    {
+        OGL_UpdateFrameTime();
+
+        if (OGL.consecutiveSkips < 1)
+        {
+            unsigned t = 0;
+            for(int i = 0; i < OGL_FRAMETIME_NUM; i++) t += OGL.frameTime[i];
+            t *= config.targetFPS;
+            if (config.romPAL) t = (t * 5) / 6;
+            if (t > (OGL_FRAMETIME_NUM * 1000))
+            {
+                OGL.consecutiveSkips++;
+                OGL.frameSkipped++;
+                RSP.busy = FALSE;
+                RSP.DList++;
+				*REG.MI_INTR |= MI_INTR_SP | MI_INTR_DP;
+				CheckInterrupts();
+                return;
+            }
+        }
+    }
+    else if ((OGL.frame_vsync % config.frameRenderRate) != 0)
+    {
+        OGL.frameSkipped++;
+        RSP.busy = FALSE;
+        RSP.DList++;
+        *REG.MI_INTR |= MI_INTR_SP | MI_INTR_DP;
+        CheckInterrupts();
+        return;
+    }
+#else
     if (frameSkipper.willSkipNext())
     {
         OGL.frameSkipped++;
@@ -145,13 +179,13 @@ EXPORT void CALL ProcessDList(void)
         RSP.DList++;
 
         /* avoid hang on frameskip */
-        *REG.MI_INTR |= MI_INTR_DP;
-        CheckInterrupts();
-        *REG.MI_INTR |= MI_INTR_SP;
+//        *REG.MI_INTR |= MI_INTR_DP;
+//        CheckInterrupts();
+        *REG.MI_INTR |= MI_INTR_SP | MI_INTR_DP;
         CheckInterrupts();
         return;
     }
-
+#endif
     OGL.consecutiveSkips = 0;
     RSP_ProcessDList();
     OGL.mustRenderDlist = true;
@@ -167,6 +201,7 @@ EXPORT void CALL ResizeVideoOutput(int Width, int Height)
 
 EXPORT void CALL RomClosed (void)
 {
+    OGL_Stop();  // paulscode, OGL_Stop missing from Yongzh's code
 }
 
 EXPORT int CALL RomOpen (void)
