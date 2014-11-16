@@ -70,12 +70,12 @@ public class RomDetail
     
     public static RomDetail lookupByCrc( String crc )
     {
-        return new RomDetail( sCrcMap.get( crc ), null );
+        return new RomDetail( sCrcMap.get( crc ), null, crc );
     }
     
-    public static RomDetail lookupByMd5( String md5 )
+    public static RomDetail lookupByMd5( String md5, String crc )
     {
-        return new RomDetail( sConfigFile.get( md5 ), md5 );
+        return new RomDetail( sConfigFile.get( md5 ), md5, crc );
     }
     
     public static String computeMd5( File file )
@@ -124,7 +124,7 @@ public class RomDetail
         return returnVal.toUpperCase( Locale.US );
     }
     
-    private RomDetail( ConfigSection section, String computedMd5 )
+    private RomDetail( ConfigSection section, String computedMd5, String computedCrc )
     {
         // Never query the database before initializing it
         if( sConfigFile == null )
@@ -146,7 +146,9 @@ public class RomDetail
         if( section != null )
         {
             // Record the MD5 if it was accurately provided; otherwise null
-            _md5 = section.name.equals( computedMd5 ) ? computedMd5 : null;
+            // Hey, what about unknown games?
+            // Temporary solution: Assign 0 and allow section to be null
+            _md5 = section.name.equals( computedMd5 ) ? computedMd5 : "0";
             _crc = section.get( "CRC" );
             
             // Use an empty goodname (not null) for certain homebrew ROMs
@@ -186,10 +188,16 @@ public class RomDetail
                 _rumble = "Yes".equals( section.get( "Rumble" ) );
             }
         }
+        else
+        {
+            _md5 = computedMd5;
+            _crc = computedCrc;
+            _players = 4; // Assume 4
+        }
         
         // Assign the final fields; assign goodname only if MD5 is valid
         md5 = _md5;
-        goodName = _md5 == null ? null : _goodName;
+        goodName = _md5.equals("0") ? null : _goodName;
         baseName = _baseName;
         artName = _artName;
         artUrl = _artUrl;

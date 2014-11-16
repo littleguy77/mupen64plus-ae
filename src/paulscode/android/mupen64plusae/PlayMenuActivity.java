@@ -111,6 +111,7 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
             throw new Error( "ROM path and MD5 must be passed via the extras bundle" );
         mRomPath = extras.getString( Keys.Extras.ROM_PATH );
         String romMd5 = extras.getString( Keys.Extras.ROM_MD5 );
+        String romCRC = extras.getString( Keys.Extras.ROM_CRC ); 
         if( TextUtils.isEmpty( mRomPath ) || TextUtils.isEmpty( romMd5 ) )
             throw new Error( "ROM path and MD5 must be passed via the extras bundle" );
         
@@ -125,7 +126,7 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
         mPrefs = getSharedPreferences( mGamePrefs.sharedPrefsName, MODE_PRIVATE );
         
         // Get the detailed info about the ROM
-        mRomDetail = RomDetail.lookupByMd5( romMd5 );
+        mRomDetail = RomDetail.lookupByMd5( romMd5, romCRC );
         
         // Load user preference menu structure from XML and update view
         getPreferenceManager().setSharedPreferencesName( mGamePrefs.sharedPrefsName );
