@@ -44,6 +44,7 @@ public class EmulationProfileActivity extends ProfileActivity
     private static final String CATEGORY_RICE = "categoryRice";
     private static final String CATEGORY_GLN64 = "categoryGln64";
     private static final String CATEGORY_GLIDE64 = "categoryGlide64";
+    private static final String CATEGORY_ARA = "categoryAra";
     private static final String VIDEO_PLUGIN = "videoPlugin";
     private static final String VIDEO_HARDWARE_TYPE = "videoHardwareType";
     private static final String VIDEO_POLYGON_OFFSET = "videoPolygonOffset";
@@ -53,6 +54,7 @@ public class EmulationProfileActivity extends ProfileActivity
     private static final String LIBGLIDE64_SO = "libmupen64plus-video-glide64mk2.so";
     private static final String LIBRICE_SO = "libmupen64plus-video-rice.so";
     private static final String LIBGLN64_SO = "libmupen64plus-video-gln64.so";
+    private static final String LIBARA_SO = "libmupen64plus-video-arachnoid.so";
     private static final String VIDEO_HARDWARE_TYPE_CUSTOM = "999";
     
     // Preference menu items
@@ -60,6 +62,7 @@ public class EmulationProfileActivity extends ProfileActivity
     private Preference mCategoryN64 = null;
     private Preference mCategoryRice = null;
     private Preference mCategoryGlide64 = null;
+    private Preference mCategoryAra = null;
     
     @Override
     protected int getPrefsResId()
@@ -89,6 +92,7 @@ public class EmulationProfileActivity extends ProfileActivity
         mCategoryN64 = findPreference( CATEGORY_GLN64 );
         mCategoryRice = findPreference( CATEGORY_RICE );
         mCategoryGlide64 = findPreference( CATEGORY_GLIDE64 );
+        mCategoryAra = findPreference( CATEGORY_ARA );
     }
     
     @Override
@@ -128,6 +132,11 @@ public class EmulationProfileActivity extends ProfileActivity
             mScreenRoot.addPreference( mCategoryGlide64 );
         else
             mScreenRoot.removePreference( mCategoryGlide64 );
+        
+        if( LIBARA_SO.equals( videoPlugin ) )
+            mScreenRoot.addPreference( mCategoryAra );
+        else
+            mScreenRoot.removePreference( mCategoryAra );
     }
     
     private void processTexturePak( final String filename )

@@ -198,7 +198,7 @@ public class GameLifecycleHandler implements View.OnKeyListener, SurfaceHolder.C
         mOverlay = (GameOverlay) mActivity.findViewById( R.id.gameOverlay );
         
         // Initialize the objects and data files interfacing to the emulator core
-        CoreInterface.initialize( mActivity, mSurface, mRomPath, mRomMd5, mCheatArgs, mDoRestart );
+        CoreInterface.initialize( mActivity, mSurface, mRomPath, mRomMd5, mCheatArgs, mDoRestart, mGamePrefs.videoPlugin.name.equals( "libmupen64plus-video-arachnoid.so" ) );
         
         // Listen to game surface events (created, changed, destroyed)
         mSurface.getHolder().addCallback( this );

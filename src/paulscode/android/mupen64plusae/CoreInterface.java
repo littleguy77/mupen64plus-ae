@@ -130,7 +130,7 @@ public class CoreInterface
     private static String sAutoSavePath = null;
     private static String sManualSaveDir = null;
     
-    public static void initialize( Activity activity, GameSurface surface, String romPath, String romMd5, String cheatArgs, boolean isRestarting )
+    public static void initialize( Activity activity, GameSurface surface, String romPath, String romMd5, String cheatArgs, boolean isRestarting, boolean arachnoid )
     {
         sRomPath = romPath;
         sCheatOptions = cheatArgs;
@@ -138,6 +138,7 @@ public class CoreInterface
         
         sActivity = activity;
         sSurface = surface;
+        sSurface.setForceGl11 = arachnoid;
         sAppData = new AppData( sActivity );
         sUserPrefs = new UserPrefs( sActivity );
         sGamePrefs = new GamePrefs( sActivity, romMd5 );
