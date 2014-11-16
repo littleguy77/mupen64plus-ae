@@ -43,6 +43,8 @@
 
 static void uc1_vertex()
 {
+Check_FrameSkip;
+
   int v0 = (rdp.cmd0 >> 17) & 0x7F;     // Current vertex
   int n = (rdp.cmd0 >> 10) & 0x3F;    // Number to copy
   rsp_vertex(v0, n);
@@ -54,6 +56,8 @@ static void uc1_vertex()
 
 static void uc1_tri1()
 {
+Check_FrameSkip;
+
   if (rdp.skip_drawing)
   {
     LRDP("uc1:tri1. skipped\n");
@@ -75,6 +79,8 @@ static void uc1_tri1()
 
 static void uc1_tri2 ()
 {
+Check_FrameSkip;
+
   if (rdp.skip_drawing)
   {
     LRDP("uc1:tri2. skipped\n");
@@ -104,6 +110,8 @@ static void uc1_tri2 ()
 
 static void uc1_line3d()
 {
+Check_FrameSkip;
+
   if (!settings.force_quad3d && ((rdp.cmd1&0xFF000000) == 0) && ((rdp.cmd0&0x00FFFFFF) == 0))
   {
     wxUint16 width = (wxUint16)(rdp.cmd1&0xFF) + 3;

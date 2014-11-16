@@ -120,6 +120,10 @@ extern wxUint32 frame_count; // frame counter
 #define DECLAREALIGN16VAR(var) float (var) __attribute__ ((aligned(16)))
 #endif
 
+#ifdef __ARM_NEON__
+#include "arm_neon.h"
+#endif
+
 // Vertex structure
 typedef struct
 {
@@ -211,7 +215,7 @@ typedef struct {
   int buff_clear;
   int swapmode;
   int lodmode;
-#ifdef ANDROID_EDITION
+#ifdef PAULSCODE
   int autoframeskip;
   int maxframeskip;
 #endif

@@ -51,6 +51,8 @@
 
 static void rsp_vertex(int v0, int n)
 {
+Check_FrameSkip;
+
   wxUint32 addr = segoffset(rdp.cmd1) & 0x00FFFFFF;
   int i;
   float x, y, z;
@@ -150,6 +152,8 @@ static void rsp_vertex(int v0, int n)
 
 static void rsp_tri1(VERTEX **v, wxUint16 linew = 0)
 {
+Check_FrameSkip;
+
   if (cull_tri(v))
     rdp.tri_n ++;
   else
@@ -162,6 +166,8 @@ static void rsp_tri1(VERTEX **v, wxUint16 linew = 0)
 
 static void rsp_tri2 (VERTEX **v)
 {
+Check_FrameSkip;
+
   int updated = 0;
 
   if (cull_tri(v))
@@ -541,6 +547,8 @@ static void uc0_displaylist()
 //
 static void uc0_tri1()
 {
+Check_FrameSkip;
+
   FRDP("uc0:tri1 #%d - %d, %d, %d\n", rdp.tri_n,
     ((rdp.cmd1>>16) & 0xFF) / 10,
     ((rdp.cmd1>>8) & 0xFF) / 10,
@@ -1044,6 +1052,8 @@ static void uc0_cleargeometrymode()
 
 static void uc0_line3d()
 {
+Check_FrameSkip;
+
   wxUint32 v0 = ((rdp.cmd1 >> 16) & 0xff) / 10;
   wxUint32 v1 = ((rdp.cmd1 >>  8) & 0xff) / 10;
   wxUint16 width = (wxUint16)(rdp.cmd1 & 0xFF) + 3;
@@ -1066,6 +1076,8 @@ static void uc0_line3d()
 
 static void uc0_tri4 ()
 {
+Check_FrameSkip;
+
   // c0: 0000 0123, c1: 456789ab
   // becomes: 405 617 829 a3b
 

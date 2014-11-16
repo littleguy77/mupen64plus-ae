@@ -81,6 +81,27 @@ static vertexi * max_vtx;                   // Max y vertex (ending vertex)
 static vertexi * start_vtx, * end_vtx;      // First and last vertex in array
 static vertexi * right_vtx, * left_vtx;     // Current right and left vertex
 
+#ifdef HAVE_GLES
+// using float should be faster than int in fact, especialy if using NEON
+static float right_height, left_height;
+static float right_x, right_dxdy, left_x, left_dxdy;
+static float left_z, left_dzdy;
+
+__inline float iceil(int x)
+{
+	return cellf((float)x*(1.0f/65536.0f));
+}
+__inline float i2float(int x)
+{
+	return (float)x*(1.0f/65536.0f);
+}
+__inline int float2i(float x)
+{
+	return x*65536.0f;
+}
+
+#else
+
 static int right_height, left_height;
 static int right_x, right_dxdy, left_x, left_dxdy;
 static int left_z, left_dzdy;
@@ -129,6 +150,7 @@ __inline int iceil(int x)
   x +=  0xffff;
   return (x >> 16);
 }
+#endif
 
 static void RightSection(void)
 {
@@ -149,6 +171,9 @@ static void RightSection(void)
   
   // Guard against possible div overflows
   
+  #ifdef HAVE_GLES
+  right_dxdy  = i2float(v2->x - v1->x)/i2float(v2->y - v1->y);
+  #else
   if(right_height > 1) {
     // OK, no worries, we have a section that is at least
     // one pixel high. Calculate slope as usual.
@@ -164,11 +189,17 @@ static void RightSection(void)
     int inv_height = (0x10000 << 14) / (v2->y - v1->y);  
     right_dxdy = imul14(v2->x - v1->x, inv_height);
   }
+  #endif
   
   // Prestep initial values
   
+  #ifdef HAVE_GLES
+  float prestep = iceil(v1->y) - i2float(v1->y);
+  right_x = i2float(v1->x) + prestep*right_dxdy;
+  #else
   int prestep = (iceil(v1->y) << 16) - v1->y;
   right_x = v1->x + imul16(prestep, right_dxdy);
+  #endif
 }
 
 static void LeftSection(void)
@@ -190,6 +221,11 @@ static void LeftSection(void)
   
   // Guard against possible div overflows
   
+  #ifdef HAVE_GLES
+  float invheight = 1.0f/i2float(v2->y - v1->y)
+  left_dxdy  = i2float(v2->x - v1->x)*invheight;
+  left_dzdy  = i2float(v2->z - v1->z)*invheight;
+  #else
   if(left_height > 1) {
     // OK, no worries, we have a section that is at least
     // one pixel high. Calculate slope as usual.
@@ -207,12 +243,19 @@ static void LeftSection(void)
     left_dxdy = imul14(v2->x - v1->x, inv_height);
     left_dzdy = imul14(v2->z - v1->z, inv_height);
   }
+  #endif
   
   // Prestep initial values
   
+  #ifdef HAVE_GLES
+  float prestep = iceil(v1->y) - i2float(v1->y);
+  left_x = i2float(v1->x) + prestep*left_dxdy;
+  left_z = i2float(v1->z) + prestep*left_dzdy;
+  #else
   int prestep = (iceil(v1->y) << 16) - v1->y;
   left_x = v1->x + imul16(prestep, left_dxdy);
   left_z = v1->z + imul16(prestep, left_dzdy);
+  #endif
 }
 
 
@@ -278,13 +321,18 @@ void Rasterize(vertexi * vtx, int vertices, int dzdx)
     int width = iceil(right_x) - x1;
     if (x1+width >= (int)rdp.scissor_o.lr_x)
       width = rdp.scissor_o.lr_x - x1 - 1;
-    
+
     if(width > 0 && y1 >= (int)rdp.scissor_o.ul_y) {
-      
+  
+        
       // Prestep initial z
       
+	  #ifdef HAVE_GLES
+      float z = left_z + (x1 - left_x)*dzdx;
+	  #else
       int prestep = (x1 << 16) - left_x;
       int z = left_z + imul16(prestep, dzdx);
+	  #endif
       
       shift = x1 + y1*rdp.zi_width;
       //draw to depth buffer
@@ -293,7 +341,11 @@ void Rasterize(vertexi * vtx, int vertices, int dzdx)
       wxUint16 encodedZ;
       for (int x = 0; x < width; x++)
       {
+		#ifdef HAVE_GLES
+		trueZ = (int)(z*8.0f);
+		#else
         trueZ = z/8192;
+		#endif
         if (trueZ < 0) trueZ = 0;
         else if (trueZ > 0x3FFFF) trueZ = 0x3FFFF;
         encodedZ = zLUT[trueZ];

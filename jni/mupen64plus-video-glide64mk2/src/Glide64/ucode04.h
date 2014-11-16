@@ -43,6 +43,8 @@
 
 static void uc4_vertex()
 {
+Check_FrameSkip;
+
   int v0 = 0;     // Current vertex
   int n = ((rdp.cmd0 >> 4) & 0xFFF) / 33 + 1; // Number of vertices to copy
   rsp_vertex(v0, n);
@@ -50,6 +52,8 @@ static void uc4_vertex()
 
 static void uc4_tri1()
 {
+Check_FrameSkip;
+
   int v1 = ((rdp.cmd1 >> 16) & 0xFF) / 5;
   int v2 = ((rdp.cmd1 >> 8) & 0xFF) / 5;
   int v3 = (rdp.cmd1 & 0xFF) / 5;
@@ -67,6 +71,8 @@ static void uc4_tri1()
 
 static void uc4_quad3d()
 {
+Check_FrameSkip;
+
   FRDP("uc4:quad3d #%d, #%d\n", rdp.tri_n, rdp.tri_n+1);
 
   VERTEX *v[6] = {

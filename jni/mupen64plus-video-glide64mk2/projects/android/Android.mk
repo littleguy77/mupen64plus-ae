@@ -81,11 +81,13 @@ LOCAL_CFLAGS :=         \
     $(COMMON_CFLAGS)    \
     -DANDROID           \
     -DANDROID_EDITION   \
+    -DPAULSCODE \
     -DNOSSE             \
+    -O3 \
     -DNO_ASM            \
     -fsigned-char       \
     
-LOCAL_CPPFLAGS := $(COMMON_CPPFLAGS)
+LOCAL_CPPFLAGS := $(COMMON_CPPFLAGS) -O3
     
 LOCAL_CPP_FEATURES := exceptions
 
@@ -99,7 +101,7 @@ LOCAL_LDLIBS :=         \
 
 ifeq ($(TARGET_ARCH_ABI), armeabi-v7a)
     # Use for ARM7a:
-    LOCAL_CFLAGS += -mfpu=vfp
+    LOCAL_CFLAGS += -mfpu=neon
     LOCAL_CFLAGS += -mfloat-abi=softfp
     
 else ifeq ($(TARGET_ARCH_ABI), armeabi)

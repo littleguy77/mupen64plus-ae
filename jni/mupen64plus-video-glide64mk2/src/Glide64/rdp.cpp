@@ -51,9 +51,18 @@
 #include "FBtoScreen.h"
 #include "CRC.h"
 
-#ifdef ANDROID_EDITION
+#ifdef PAULSCODE
 #include "FrameSkipper.h"
 extern FrameSkipper frameSkipper;
+#endif
+
+#ifdef PERFORMANCE
+#include "ticks.h"
+#endif
+
+#ifdef __ARM_NEON__
+#include "arm_neon.h"
+//#include "ticks.h"
 #endif
 
 /*
@@ -206,6 +215,12 @@ static void ys_memrect();
 wxUint8 microcode[4096];
 wxUint32 uc_crc;
 void microcheck ();
+
+#ifdef PAULSCODE
+#define Check_FrameSkip  if (frameSkipper.willSkipNext()) return
+#else
+#define Check_FrameSkip	 {}
+#endif
 
 // ** UCODE FUNCTIONS **
 #include "ucode00.h"
@@ -468,6 +483,7 @@ static void CopyFrameBuffer (GrBuffer_t buffer = GR_BUFFER_BACKBUFFER)
       height -= rdp.ci_upper_bound;
   }
   FRDP ("width: %d, height: %d...  ", width, height);
+//printf("CopyFrameBuffer width: %d, height: %d...  ", width, height);
 
   if (rdp.scale_x < 1.1f)
   {
@@ -524,6 +540,7 @@ static void CopyFrameBuffer (GrBuffer_t buffer = GR_BUFFER_BACKBUFFER)
       float scale_y = (settings.scr_res_y - rdp.offset_y*2.0f) / max(height, rdp.vi_height);
 
       FRDP("width: %d, height: %d, ul_y: %d, lr_y: %d, scale_x: %f, scale_y: %f, ci_width: %d, ci_height: %d\n",width, height, rdp.ci_upper_bound, rdp.ci_lower_bound, scale_x, scale_y, rdp.ci_width, rdp.ci_height);
+//printf("CopyFrameBuffer width: %d, height: %d, ul_y: %d, lr_y: %d, scale_x: %f, scale_y: %f, ci_width: %d, ci_height: %d\n",width, height, rdp.ci_upper_bound, rdp.ci_lower_bound, scale_x, scale_y, rdp.ci_width, rdp.ci_height);
       GrLfbInfo_t info;
       info.size = sizeof(GrLfbInfo_t);
 
@@ -633,18 +650,27 @@ extern "C" {
 
 EXPORT void CALL ProcessDList(void)
 {
-  SoftLocker lock(mutexProcessDList);
-#ifdef ANDROID_EDITION
-  if (frameSkipper.willSkipNext() || !lock.IsOk()) //mutex is busy
+//  SoftLocker lock(mutexProcessDList);
+#ifdef PAULSCODE
+//printf("ProcessDList()\n");
+//  frameSkipper.newFrame();
+  if (0)
+//  if (frameSkipper.willSkipNext())
 #else
-  if (!lock.IsOk()) //mutex is busy
+  if (/*!lock.IsOk()*/0) //mutex is busy
 #endif
   {
-    if (!fullscreen)
-      drawNoFullscreenMessage();
+// printf("Frameskip, reason=%s\n", (lock.IsOk())?"lock":"frameskip");
+ /*   if (!fullscreen)
+      drawNoFullscreenMessage();*/
     // Set an interrupt to allow the game to continue
-    *gfx.MI_INTR_REG |= 0x20;
+    *(gfx.MI_INTR_REG) |= 0x20;
     gfx.CheckInterrupts();
+	*(gfx.MI_INTR_REG) |= 0x01;
+	gfx.CheckInterrupts();
+//	rdp.updatescreen = 1;
+//	no_dlist = true;
+//    rdp_fullsync();
     return;
   }
 
@@ -661,7 +687,7 @@ EXPORT void CALL ProcessDList(void)
 #endif
 
   VLOG ("ProcessDList ()\n");
-
+/*
   if (!fullscreen)
   {
     drawNoFullscreenMessage();
@@ -669,7 +695,7 @@ EXPORT void CALL ProcessDList(void)
     *gfx.MI_INTR_REG |= 0x20;
     gfx.CheckInterrupts();
   }
-
+*/
   if (reset)
   {
     reset = 0;
@@ -756,7 +782,7 @@ EXPORT void CALL ProcessDList(void)
   d_lr_x = 0;
   d_lr_y = 0;
   depth_buffer_fog = TRUE;
-
+//printf("ProcessDList\n");
   //analize possible frame buffer usage
   if (fb_emulation_enabled)
     DetectFrameBufferUsage();
@@ -769,10 +795,6 @@ EXPORT void CALL ProcessDList(void)
   wxUint32 dlist_length = *(wxUint32*)(gfx.DMEM+0xFF4);
   FRDP("--- NEW DLIST --- crc: %08lx, ucode: %d, fbuf: %08lx, fbuf_width: %d, dlist start: %08lx, dlist_length: %d, x_scale: %f, y_scale: %f\n", uc_crc, settings.ucode, *gfx.VI_ORIGIN_REG, *gfx.VI_WIDTH_REG, dlist_start, dlist_length, (*gfx.VI_X_SCALE_REG & 0xFFF)/1024.0f, (*gfx.VI_Y_SCALE_REG & 0xFFF)/1024.0f);
   FRDP_E("--- NEW DLIST --- crc: %08lx, ucode: %d, fbuf: %08lx\n", uc_crc, settings.ucode, *gfx.VI_ORIGIN_REG);
-
-  // Do nothing if dlist is empty
-  if (dlist_start == 0)
-      return;
 
   if (cpu_fb_write == TRUE)
     DrawPartFrameBufferToScreen();
@@ -789,6 +811,7 @@ EXPORT void CALL ProcessDList(void)
   rdp.dl_count = -1;
   rdp.halt = 0;
   wxUint32 a;
+  
 
   // catches exceptions so that it doesn't freeze
 #ifdef CATCH_EXCEPTIONS
@@ -822,7 +845,7 @@ EXPORT void CALL ProcessDList(void)
         rdp.pc[rdp.pc_i] = (a+8) & BMASK;
 
 #ifdef PERFORMANCE
-        perf_cur = wxDateTime::UNow();
+        perf_cur = ticksGetTicks();
 #endif
         // Process this instruction
         gfx_instruction[settings.ucode][rdp.cmd0>>24] ();
@@ -841,9 +864,13 @@ EXPORT void CALL ProcessDList(void)
         }
 
 #ifdef PERFORMANCE
-        perf_next = wxDateTime::UNow();
-        sprintf (out_buf, "perf %08lx: %016I64d\n", a-8, (perf_next-perf_cur).Format(_T("%l")).mb_str());
+        perf_next = ticksGetTicks();
+        sprintf (out_buf, "perf %08x: %lli\n", a-8, (perf_next-perf_cur));
+#ifdef RDP_LOGGING
         rdp_log << out_buf;
+#else
+		printf(out_buf);
+#endif
 #endif
 
       } while (!rdp.halt);
@@ -874,6 +901,9 @@ EXPORT void CALL ProcessDList(void)
     rdp.scale_x = rdp.scale_x_bak;
     rdp.scale_y = rdp.scale_y_bak;
   }
+#ifdef PAULSCODE
+  if (!frameSkipper.willSkipNext())
+#endif
   if (settings.frame_buffer & fb_ref)
     CopyFrameBuffer ();
   if (rdp.cur_image)
@@ -2733,11 +2763,15 @@ static wxUint32 swapped_addr = 0;
 
 static void rdp_setcolorimage()
 {
+//unsigned int ticks = ticksGetTicks();
+//bool showdeb = false;
   if (fb_emulation_enabled && (rdp.num_of_ci < NUMTEXBUF))
   {
     COLOR_IMAGE & cur_fb = rdp.frame_buffers[rdp.ci_count];
     COLOR_IMAGE & prev_fb = rdp.frame_buffers[rdp.ci_count?rdp.ci_count-1:0];
     COLOR_IMAGE & next_fb = rdp.frame_buffers[rdp.ci_count+1];
+//if (cur_fb.status==ci_aux) showdeb = true;
+//if (showdeb) printf("rp_setcolorimage, status=%i\n", cur_fb.status);
     switch (cur_fb.status)
     {
     case ci_main:
@@ -2876,6 +2910,7 @@ static void rdp_setcolorimage()
       */
     case ci_aux:
       {
+//unsigned int tticks = ticksGetTicks();
         if (!fb_hwfbe_enabled && cur_fb.format != 0)
           rdp.skip_drawing = TRUE;
         else
@@ -2901,6 +2936,8 @@ static void rdp_setcolorimage()
           }
         }
         cur_fb.status = ci_aux;
+//tticks = ticksGetTicks() - ticks;
+//printf("intermediary: %u ms\n", tticks);
       }
       break;
     case ci_zimg:
@@ -3044,6 +3081,9 @@ static void rdp_setcolorimage()
   rdp.ci_end = rdp.cimg + ((rdp.ci_width*rdp.ci_height)<<(rdp.ci_size-1));
   FRDP("setcolorimage - %08lx, width: %d,  height: %d, format: %d, size: %d\n", rdp.cmd1, rdp.ci_width, rdp.ci_height, format, rdp.ci_size);
   FRDP("cimg: %08lx, ocimg: %08lx, SwapOK: %d\n", rdp.cimg, rdp.ocimg, SwapOK);
+  
+//if (showdeb) printf("setcolorimage - %08x, width: %d,  height: %d, format: %d, size: %d\n", rdp.cmd1, rdp.ci_width, rdp.ci_height, format, rdp.ci_size);
+//if (showdeb) printf("cimg: %08x, ocimg: %08x, SwapOK: %d\n", rdp.cimg, rdp.ocimg, SwapOK);
 
   if (format != 0) //can't draw into non RGBA buffer
   {
@@ -3097,6 +3137,8 @@ static void rdp_setcolorimage()
       }
     }
   }
+//ticks = ticksGetTicks() - ticks;
+//if (showdeb) printf("time = %u\n", ticks);
 }
 
 static void rsp_reserved0()
@@ -3409,10 +3451,6 @@ void DetectFrameBufferUsage ()
 
   wxUint32 dlist_start = *(wxUint32*)(gfx.DMEM+0xFF0);
   wxUint32 a;
-
-  // Do nothing if dlist is empty
-  if (dlist_start == 0)
-      return;
 
   int tidal = FALSE;
   if ((settings.hacks&hack_PMario) && (rdp.copy_ci_index || rdp.frame_buffers[rdp.copy_ci_index].status == ci_copy_self))
@@ -4217,20 +4255,20 @@ static void rdphalf_1()
   }
   else
   {
+#ifdef EXTREME_LOGGING
     LRDP("rdphalf_1 - IGNORED\n");
+#endif
   }
 }
 
 static void rdphalf_2()
 {
   RDP_E("rdphalf_2 - IGNORED\n");
-  LRDP("rdphalf_2 - IGNORED\n");
 }
 
 static void rdphalf_cont()
 {
   RDP_E("rdphalf_cont - IGNORED\n");
-  LRDP("rdphalf_cont - IGNORED\n");
 }
 
 /******************************************************************
@@ -4245,11 +4283,12 @@ extern "C" {
 #endif
 EXPORT void CALL ProcessRDPList(void)
 {
-  LOG ("ProcessRDPList ()\n");
+#ifdef EXTREME_LOGGING
   LRDP("ProcessRDPList ()\n");
+#endif
 
-  SoftLocker lock(mutexProcessDList);
-  if (!lock.IsOk()) //mutex is busy
+ // SoftLocker lock(mutexProcessDList);
+  if (/*!lock.IsOk()*/0) //mutex is busy
   {
     if (!fullscreen)
       drawNoFullscreenMessage();

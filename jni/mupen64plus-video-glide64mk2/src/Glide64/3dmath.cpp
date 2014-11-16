@@ -46,7 +46,7 @@ extern "C" {
 
 #include <math.h>
 #include "3dmath.h"
-
+#define __ARM_NEON__
 void calc_light (VERTEX *v)
 {
   float light_intensity = 0.0f;
@@ -188,6 +188,7 @@ void InverseTransformVectorC (float *src, float *dst, float mat[4][4])
   dst[2] = mat[2][0]*src[0] + mat[2][1]*src[1] + mat[2][2]*src[2];
 }
 
+/*
 void MulMatricesC(float m1[4][4],float m2[4][4],float r[4][4])
 {
   for (int i=0; i<4; i++)
@@ -201,16 +202,133 @@ void MulMatricesC(float m1[4][4],float m2[4][4],float r[4][4])
     }
   }
 }
+*/
+void MulMatricesC(float m1[4][4],float m2[4][4],float r[4][4])
+{
+  for (int j=0; j<4; j++)
+  {
+      r[0][j] = m1[0][0] * m2[0][j] +
+                m1[0][1] * m2[1][j] +
+                m1[0][2] * m2[2][j] +
+                m1[0][3] * m2[3][j];
+      r[1][j] = m1[1][0] * m2[0][j] +
+                m1[1][1] * m2[1][j] +
+                m1[1][2] * m2[2][j] +
+                m1[1][3] * m2[3][j];
+      r[2][j] = m1[2][0] * m2[0][j] +
+                m1[2][1] * m2[1][j] +
+                m1[2][2] * m2[2][j] +
+                m1[2][3] * m2[3][j];
+      r[3][j] = m1[3][0] * m2[0][j] +
+                m1[3][1] * m2[1][j] +
+                m1[3][2] * m2[2][j] +
+                m1[3][3] * m2[3][j];
+  }
+}
+
+#ifdef __ARM_NEON__
+void MultMatrix_neon( float m0[4][4], float m1[4][4], float dest[4][4])
+{
+    asm volatile (
+	"vld1.32 		{d0, d1}, [%1]!			\n\t"	//q0 = m1
+	"vld1.32 		{d2, d3}, [%1]!	    	\n\t"	//q1 = m1+4
+	"vld1.32 		{d4, d5}, [%1]!	    	\n\t"	//q2 = m1+8
+	"vld1.32 		{d6, d7}, [%1]	    	\n\t"	//q3 = m1+12
+	"vld1.32 		{d16, d17}, [%0]!		\n\t"	//q8 = m0
+	"vld1.32 		{d18, d19}, [%0]!   	\n\t"	//q9 = m0+4
+	"vld1.32 		{d20, d21}, [%0]!   	\n\t"	//q10 = m0+8
+	"vld1.32 		{d22, d23}, [%0]    	\n\t"	//q11 = m0+12
+
+	"vmul.f32 		q12, q8, d0[0] 			\n\t"	//q12 = q8 * d0[0]
+	"vmul.f32 		q13, q8, d2[0] 		    \n\t"	//q13 = q8 * d2[0]
+	"vmul.f32 		q14, q8, d4[0] 		    \n\t"	//q14 = q8 * d4[0]
+	"vmul.f32 		q15, q8, d6[0]	 		\n\t"	//q15 = q8 * d6[0]
+	"vmla.f32 		q12, q9, d0[1] 			\n\t"	//q12 = q9 * d0[1]
+	"vmla.f32 		q13, q9, d2[1] 		    \n\t"	//q13 = q9 * d2[1]
+	"vmla.f32 		q14, q9, d4[1] 		    \n\t"	//q14 = q9 * d4[1]
+	"vmla.f32 		q15, q9, d6[1] 		    \n\t"	//q15 = q9 * d6[1]
+	"vmla.f32 		q12, q10, d1[0] 		\n\t"	//q12 = q10 * d0[0]
+	"vmla.f32 		q13, q10, d3[0] 		\n\t"	//q13 = q10 * d2[0]
+	"vmla.f32 		q14, q10, d5[0] 		\n\t"	//q14 = q10 * d4[0]
+	"vmla.f32 		q15, q10, d7[0] 		\n\t"	//q15 = q10 * d6[0]
+	"vmla.f32 		q12, q11, d1[1] 		\n\t"	//q12 = q11 * d0[1]
+	"vmla.f32 		q13, q11, d3[1] 		\n\t"	//q13 = q11 * d2[1]
+	"vmla.f32 		q14, q11, d5[1] 		\n\t"	//q14 = q11 * d4[1]
+	"vmla.f32 		q15, q11, d7[1]	 	    \n\t"	//q15 = q11 * d6[1]
+
+	"vst1.32 		{d24, d25}, [%2]! 		\n\t"	//d = q12
+	"vst1.32 		{d26, d27}, [%2]! 	    \n\t"	//d+4 = q13
+	"vst1.32 		{d28, d29}, [%2]! 	    \n\t"	//d+8 = q14
+	"vst1.32 		{d30, d31}, [%2] 	    \n\t"	//d+12 = q15
+
+	:"+r"(m1), "+r"(m0), "+r"(dest):
+    : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7",
+    "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23",
+    "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31",
+    "memory"
+	);
+}
+
+void Normalize_neon(float v[3])
+{
+	asm volatile (
+	"vld1.32 		{d4}, [%0]!	    		\n\t"	//d4={x,y}
+	"flds    		s10, [%0]   	    	\n\t"	//d5[0] = z
+	"sub    		%0, %0, #8   	    	\n\t"	//d5[0] = z
+	"vmul.f32 		d0, d4, d4				\n\t"	//d0= d4*d4
+	"vpadd.f32 		d0, d0, d0				\n\t"	//d0 = d[0] + d[1]
+    "vmla.f32 		d0, d5, d5				\n\t"	//d0 = d0 + d5*d5
+
+	"vmov.f32 		d1, d0					\n\t"	//d1 = d0
+	"vrsqrte.f32 	d0, d0					\n\t"	//d0 = ~ 1.0 / sqrt(d0)
+	"vmul.f32 		d2, d0, d1				\n\t"	//d2 = d0 * d1
+	"vrsqrts.f32 	d3, d2, d0				\n\t"	//d3 = (3 - d0 * d2) / 2
+	"vmul.f32 		d0, d0, d3				\n\t"	//d0 = d0 * d3
+	"vmul.f32 		d2, d0, d1				\n\t"	//d2 = d0 * d1
+	"vrsqrts.f32 	d3, d2, d0				\n\t"	//d3 = (3 - d0 * d3) / 2
+	"vmul.f32 		d0, d0, d3				\n\t"	//d0 = d0 * d4
+
+	"vmul.f32 		q2, q2, d0[0]			\n\t"	//d0= d2*d4
+	"vst1.32 		{d4}, [%0]!  			\n\t"	//d2={x0,y0}, d3={z0, w0}
+	"fsts    		s10, [%0]     			\n\t"	//d2={x0,y0}, d3={z0, w0}
+
+	:"+r"(v) :
+    : "d0", "d1", "d2", "d3", "d4", "d5", "memory"
+	);
+}
+
+float DotProduct_neon( float v0[3], float v1[3] )
+{
+    float dot;
+	asm volatile (
+	"vld1.32 		{d8}, [%1]!			\n\t"	//d8={x0,y0}
+	"vld1.32 		{d10}, [%2]!		\n\t"	//d10={x1,y1}
+	"flds 			s18, [%1, #0]	    \n\t"	//d9[0]={z0}
+	"flds 			s22, [%2, #0]	    \n\t"	//d11[0]={z1}
+	"vmul.f32 		d12, d8, d10		\n\t"	//d0= d2*d4
+	"vpadd.f32 		d12, d12, d12		\n\t"	//d0 = d[0] + d[1]
+	"vmla.f32 		d12, d9, d11		\n\t"	//d0 = d0 + d3*d5
+    "fmrs	        %0, s24	    		\n\t"	//r0 = s0
+	: "=r"(dot), "+r"(v0), "+r"(v1):
+    : "d8", "d9", "d10", "d11", "d12"
+
+	);
+    return dot;
+}
+
+#endif
 
 // 2008.03.29 H.Morii - added SSE 3DNOW! 3x3 1x3 matrix multiplication
 //                      and 3DNOW! 4x4 4x4 matrix multiplication
 // 2011-01-03 Balrog - removed because is in NASM format and not 64-bit compatible
 // This will need fixing.
+#ifndef __ARM_NEON__
 MULMATRIX MulMatrices = MulMatricesC;
 TRANSFORMVECTOR TransformVector = TransformVectorC;
 TRANSFORMVECTOR InverseTransformVector = InverseTransformVectorC;
 DOTPRODUCT DotProduct = DotProductC;
 NORMALIZEVECTOR NormalizeVector = NormalizeVectorC;
+#endif
 
 void MulMatricesSSE(float m1[4][4],float m2[4][4],float r[4][4])
 {
@@ -361,6 +479,7 @@ void MulMatricesSSE(float m1[4][4],float m2[4][4],float r[4][4])
 
   void math_init()
   {
+#ifndef __ARM_NEON__
 #ifndef _DEBUG
     int IsSSE = FALSE;
 #if defined(__GNUC__) && !defined(NO_ASM) && !defined(NOSSE)
@@ -429,4 +548,5 @@ void MulMatricesSSE(float m1[4][4],float m2[4][4],float r[4][4])
       }
 
 #endif //_DEBUG
+#endif	//__ARM_NEON__
     }

@@ -106,6 +106,8 @@ extern "C" {
 // ** TAKE OUT BEFORE RELEASE!!! **
 //#define LOGGING			// log of spec functions called
 //#define LOG_KEY			// says "Key!!!" in the log when space bar is pressed
+//#define EXT_LOGGING
+//#define PERFORMANCE
 
 //#define LOG_UCODE
 
@@ -120,15 +122,15 @@ extern "C" {
 
 #define FPS					// fps counter able? (not enabled necessarily)
 
-#define LOGNOTKEY			 // Log if not pressing:
-#define LOGKEY		0x11 // this key (CONTROL)
+//#define LOGNOTKEY			 // Log if not pressing:
+//#define LOGKEY		0x11 // this key (CONTROL)
 
 //#define LOG_COMMANDS		// log the whole 64-bit command as (0x........, 0x........)
 
 #define CATCH_EXCEPTIONS	// catch exceptions so it doesn't freeze and will report
 							// "The gfx plugin has caused an exception" instead.
 
-#define FLUSH				// flush the file buffer. slower logging, but makes sure
+//#define FLUSH				// flush the file buffer. slower logging, but makes sure
 							//  the command is logged before continuing (in case of
 							//  crash or exception, the log will not be cut short)
 #ifndef _ENDUSER_RELEASE_
@@ -144,7 +146,7 @@ extern "C" {
 
 
 // Usually enabled
-#define LARGE_TEXTURE_HANDLING	// allow large-textured objects to be split?
+//#define LARGE_TEXTURE_HANDLING	// allow large-textured objects to be split?
 
 #ifdef ALTTAB_FIX
 extern HHOOK hhkLowLevelKybd;
@@ -189,7 +191,6 @@ extern wxUint32 resolutions[0x18][2];
 
 int CheckKeyPressed(int key, int mask);
 
-//#define PERFORMANCE
 #ifdef PERFORMANCE
 extern int64 perf_cur;
 extern int64 perf_next;
