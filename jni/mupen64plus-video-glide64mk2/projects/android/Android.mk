@@ -103,7 +103,9 @@ ifeq ($(TARGET_ARCH_ABI), armeabi-v7a)
     # Use for ARM7a:
     LOCAL_CFLAGS += -mfpu=neon
     LOCAL_CFLAGS += -mfloat-abi=softfp
-    
+    LOCAL_CFLAGS += -fno-associative-math
+    LOCAL_CPPFLAGS += -fno-associative-math
+
 else ifeq ($(TARGET_ARCH_ABI), armeabi)
     # Use for pre-ARM7a:
     
