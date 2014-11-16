@@ -39,6 +39,29 @@
 #include "SecondaryColorExt.h"
 
 
+#ifdef HAVE_GLES
+// save of arrays
+GLint	glsav_col_size;
+GLenum	glsav_col_type;
+GLsizei	glsav_col_stride;
+GLvoid*	glsav_col_array;
+
+GLint	glsav_vtx_size;
+GLenum	glsav_vtx_type;
+GLsizei	glsav_vtx_stride;
+GLvoid*	glsav_vtx_array;
+
+GLint	glsav_tex_size;
+GLenum	glsav_tex_type;
+GLsizei	glsav_tex_stride;
+GLvoid*	glsav_tex_array;
+
+GLint	glsav_tex1_size;
+GLenum	glsav_tex1_type;
+GLsizei	glsav_tex1_stride;
+GLvoid*	glsav_tex1_array;
+#endif
+
 using std::max;
 
 #ifndef GL_CLAMP_TO_EDGE
@@ -112,6 +135,30 @@ bool OpenGLRenderer::initialize(RSP* rsp, RDP* rdp, TextureCache* textureCache, 
     m_fogMgr->setFogCoordPointer(GL_FLOAT, sizeof(GLVertex), &m_vertices[0].fog);
     m_fogMgr->enableFogCoordArray();
     m_fogMgr->setLinearFog();
+	
+#ifdef HAVE_GLES
+	// save of arrays
+	glsav_col_size = 4;
+	glsav_col_type = GL_FLOAT;
+	glsav_col_stride = sizeof(GLVertex);
+	glsav_col_array = &m_vertices[0].color.r;
+
+	glsav_vtx_size = 4;
+	glsav_vtx_type = GL_FLOAT;
+	glsav_vtx_stride = sizeof(GLVertex);
+	glsav_vtx_array = &m_vertices[0].x;
+
+	glsav_tex_size = 2;
+	glsav_tex_type = GL_FLOAT;
+	glsav_tex_stride = sizeof(GLVertex);
+	glsav_tex_array = &m_vertices[0].s0;
+
+	glsav_tex1_size = 2;
+	glsav_tex1_type = GL_FLOAT;
+	glsav_tex1_stride = sizeof(GLVertex);
+	glsav_tex1_array = &m_vertices[0].s1;
+#endif
+
 
     return true;
 }
@@ -362,6 +409,50 @@ void OpenGLRenderer::renderTexRect( float ulx, float uly,   //Upper left vertex
     m_rdp->getCombinerMgr()->getSecondaryCombinerColor(&rect[0].secondaryColor.r);
     //    SetConstant( rect[0].secondaryColor, combiner.vertex.secondaryColor, combiner.vertex.alpha );
 
+#ifdef HAVE_GLES
+	GLfloat col[] = {
+		rect[0].color.r, rect[0].color.g, rect[0].color.b, rect[0].color.a,
+		rect[0].color.r, rect[0].color.g, rect[0].color.b, rect[0].color.a,
+		rect[0].color.r, rect[0].color.g, rect[0].color.b, rect[0].color.a,
+		rect[0].color.r, rect[0].color.g, rect[0].color.b, rect[0].color.a
+	};
+	
+	GLfloat tex[] = {
+		rect[0].s0, rect[0].t0,
+		rect[1].s0, rect[0].t0,
+		rect[1].s0, rect[1].t0,
+		rect[0].s0, rect[1].t0
+	};
+	GLfloat tex1[] = {
+		rect[0].s1, rect[0].t1,
+		rect[1].s1, rect[0].t1,
+		rect[1].s1, rect[1].t1,
+		rect[0].s1, rect[1].t1
+	};
+	
+	GLfloat vtx[] = {
+		rect[0].x, rect[0].y, rect[0].z, 1.0f,
+		rect[1].x, rect[0].y, rect[0].z, 1.0f,
+		rect[1].x, rect[1].y, rect[0].z, 1.0f,
+		rect[0].x, rect[1].y, rect[0].z, 1.0f
+	};
+	// Setup pointer array
+    glColorPointer(4, GL_FLOAT, 0, &col );
+    glVertexPointer(4,GL_FLOAT, 0,&vtx);
+    glClientActiveTexture( GL_TEXTURE1 );
+    glTexCoordPointer(2, GL_FLOAT, 0, &tex1);
+    glClientActiveTexture( GL_TEXTURE0 );
+    glTexCoordPointer(2, GL_FLOAT, 0, &tex);
+	// Draw
+    glDrawArrays(GL_TRIANGLE_FAN,0,4);
+	// Restaure default pointer
+    glVertexPointer(4, GL_FLOAT, sizeof(GLVertex), &m_vertices[0].x );
+    glColorPointer(4, GL_FLOAT, sizeof(GLVertex), &m_vertices[0].color.r);
+    glClientActiveTexture( GL_TEXTURE1 );
+    glTexCoordPointer( 2, GL_FLOAT, sizeof( GLVertex ), &m_vertices[0].s1 );
+    glClientActiveTexture( GL_TEXTURE0 ); 
+    glTexCoordPointer( 2, GL_FLOAT, sizeof( GLVertex ), &m_vertices[0].s0 );
+#else
     glBegin( GL_QUADS );
 
         glColor4f( rect[0].color.r, rect[0].color.g, rect[0].color.b, rect[0].color.a );
@@ -436,6 +527,7 @@ void OpenGLRenderer::renderTexRect( float ulx, float uly,   //Upper left vertex
         }
     glEnd();
 
+#endif
     glLoadIdentity();
     //OGL_UpdateCullFace();
     //OGL_UpdateViewport();

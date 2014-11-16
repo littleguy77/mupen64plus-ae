@@ -65,6 +65,40 @@ void OpenGL2DRenderer::renderQuad( const float color[4],
 
     //Render Quad
     glColor4fv(color);
+#ifdef HAVE_GLES
+		GLfloat vtx[] = {
+			x0, y0, depth,
+			x1, y0, depth,
+			x1, y1, depth,
+			x0, y1, depth
+		};
+		
+		GLboolean glcol = glIsEnabled(GL_COLOR_ARRAY);
+		if (glcol) glDisableClientState(GL_COLOR_ARRAY);
+		GLboolean glvtx = glIsEnabled(GL_VERTEX_ARRAY);		
+		if (!glvtx)
+			glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3,GL_FLOAT, 0,&vtx);
+		glActiveTexture( GL_TEXTURE1 );
+		GLboolean gltex1 = glIsEnabled(GL_TEXTURE_2D);
+		if (gltex1) glDisable(GL_TEXTURE_2D);
+		glActiveTexture( GL_TEXTURE0 );
+		GLboolean gltex = glIsEnabled(GL_TEXTURE_2D);
+		if (gltex) glDisable(GL_TEXTURE_2D);
+		// draw
+		glDrawArrays(GL_TRIANGLE_FAN,0,4);
+		// restaure
+		if (glcol) glEnableClientState(GL_COLOR_ARRAY);
+		glActiveTexture( GL_TEXTURE1 );
+		if (gltex1) glEnable(GL_TEXTURE_2D);
+		glActiveTexture( GL_TEXTURE0 );
+		if (gltex) glEnable(GL_TEXTURE_2D);
+		if (!glvtx)
+			glDisableClientState(GL_VERTEX_ARRAY);
+		else
+			glVertexPointer(glsav_vtx_size, glsav_vtx_type, glsav_vtx_stride, glsav_vtx_array );
+
+#else
     glBegin(GL_QUADS);
         glVertex3f(x0, y0, depth);
         glVertex3f(x1, y0, depth);
@@ -72,6 +106,7 @@ void OpenGL2DRenderer::renderQuad( const float color[4],
         glVertex3f(x0, y1, depth);
     glEnd();
 
+#endif
     //Reset Projection Matrix
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -122,6 +157,52 @@ void OpenGL2DRenderer::renderTexturedQuad( const float color[4],
     //Set Color
     glColor4fv( color );
 
+#ifdef HAVE_GLES
+		GLfloat tex[] = {
+			t0s0, t0t0,
+			t0s1, t0t0,
+			t0s1, t0t1,
+			t0s0, t0t1
+		};
+		GLfloat tex1[] = {
+			t1s0, t1t0,
+			t1s1, t1t0,
+			t1s1, t1t1,
+			t1s0, t1t1
+		};
+		GLfloat vtx[] = {
+			x0, y0, depth,
+			x1, y0, depth,
+			x1, y1, depth,
+			x0, y1, depth
+		};
+		
+		GLboolean glcol = glIsEnabled(GL_COLOR_ARRAY);
+		if (glcol) glDisableClientState(GL_COLOR_ARRAY);
+		GLboolean glvtx = glIsEnabled(GL_VERTEX_ARRAY);		
+		if (!glvtx)
+			glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3,GL_FLOAT, 0,&vtx);
+/*		glActiveTexture( GL_TEXTURE1 );
+		GLboolean gltex1 = glIsEnabled(GL_TEXTURE_2D);
+		if (gltex1) glDisable(GL_TEXTURE_2D);*/
+		glClientActiveTexture( GL_TEXTURE1 );
+		glTexCoordPointer(2, GL_FLOAT, 0, &tex1);
+		glClientActiveTexture( GL_TEXTURE0 );
+		glTexCoordPointer(2, GL_FLOAT, 0, &tex);
+		// draw
+		glDrawArrays(GL_TRIANGLE_FAN,0,4);
+		// restaure
+		if (glcol) glEnableClientState(GL_COLOR_ARRAY);
+//		if (gltex1) glEnable(GL_TEXTURE_2D);
+		if (!glvtx)
+			glDisableClientState(GL_VERTEX_ARRAY);
+		if (glsav_vtx_type==GL_FLOAT) glVertexPointer(glsav_vtx_size, glsav_vtx_type, glsav_vtx_stride, glsav_vtx_array );
+		glClientActiveTexture( GL_TEXTURE1 );
+		if (glsav_tex1_type==GL_FLOAT) glTexCoordPointer( glsav_tex1_size, glsav_tex1_type, glsav_tex1_stride, glsav_tex1_array );
+		glClientActiveTexture( GL_TEXTURE0 );
+		if (glsav_tex_type==GL_FLOAT) glTexCoordPointer( glsav_tex_size, glsav_tex_type, glsav_tex_stride, glsav_tex_array );
+#else
     //Render Rectangle
     glBegin(GL_QUADS);
     {    
@@ -143,6 +224,7 @@ void OpenGL2DRenderer::renderTexturedQuad( const float color[4],
     }
     glEnd();
     
+#endif
     //Reset Projection Matrix
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -194,6 +276,50 @@ void OpenGL2DRenderer::renderFlippedTexturedQuad( const float color[4],
     glColor4fv( color );
 
     //Render Rectangle
+#ifdef HAVE_GLES
+		GLfloat tex[] = {
+			t0s0, t0t0,
+			t0s0, t0t1,
+			t0s1, t0t1,
+			t0s1, t0t0
+		};
+		GLfloat tex1[] = {
+			t1s0, t1t0,
+			t1s0, t1t1,
+			t1s1, t1t1,
+			t1s1, t1t0
+		};
+		GLfloat vtx[] = {
+			x0, y0, depth,
+			x1, y0, depth,
+			x1, y1, depth,
+			x0, y1, depth
+		};
+		
+		GLboolean glcol = glIsEnabled(GL_COLOR_ARRAY);
+		if (glcol) glDisableClientState(GL_COLOR_ARRAY);
+		GLboolean glvtx = glIsEnabled(GL_VERTEX_ARRAY);		
+		if (!glvtx)
+			glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3,GL_FLOAT, 0,&vtx);
+/*		glActiveTexture( GL_TEXTURE1 );
+		GLboolean gltex1 = glIsEnabled(GL_TEXTURE_2D);
+		if (gltex1) glDisable(GL_TEXTURE_2D);*/
+		glClientActiveTexture( GL_TEXTURE1 );
+		glTexCoordPointer(2, GL_FLOAT, 0, &tex1);
+		glClientActiveTexture( GL_TEXTURE0 );
+		glTexCoordPointer(2, GL_FLOAT, 0, &tex);
+		// draw
+		glDrawArrays(GL_TRIANGLE_FAN,0,4);
+		// restaure
+		if (glcol) glEnableClientState(GL_COLOR_ARRAY);
+//		if (gltex1) glEnable(GL_TEXTURE_2D);
+		glVertexPointer(glsav_vtx_size, glsav_vtx_type, glsav_vtx_stride, glsav_vtx_array );
+		glClientActiveTexture( GL_TEXTURE1 );
+		glTexCoordPointer( glsav_tex1_size, glsav_tex1_type, glsav_tex1_stride, glsav_tex1_array );
+		glClientActiveTexture( GL_TEXTURE0 );
+		glTexCoordPointer( glsav_tex_size, glsav_tex_type, glsav_tex_stride, glsav_tex_array );
+#else    //Render Rectangle
     glBegin(GL_QUADS);
     {    
         //Vertex 00
@@ -214,6 +340,7 @@ void OpenGL2DRenderer::renderFlippedTexturedQuad( const float color[4],
     }
     glEnd();
     
+#endif
     //Reset Projection Matrix
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();

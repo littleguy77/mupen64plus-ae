@@ -139,8 +139,10 @@ void OpenGLManager::endRendering()
     glFinish();
     if (m_renderingCallback)
         m_renderingCallback(m_drawFlag);
+    if (m_drawFlag) {
 	m_drawFlag = 0;
     CoreVideo_GL_SwapBuffers();
+    }
     //glFlush();
 }
 
@@ -150,6 +152,7 @@ void OpenGLManager::endRendering()
 void OpenGLManager::setWireFrame(bool wireframe)
 {
     m_wireframe = wireframe;
+#ifndef HAVE_GLES
     if ( wireframe )
     {
         glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -158,6 +161,7 @@ void OpenGLManager::setWireFrame(bool wireframe)
     {
         glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------

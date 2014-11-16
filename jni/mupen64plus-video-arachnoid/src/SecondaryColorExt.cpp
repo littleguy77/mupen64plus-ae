@@ -23,6 +23,7 @@
 #include "ExtensionChecker.h"
 
 // EXT_secondary_color functions
+#ifndef HAVE_GLES
 #ifndef GL_GLEXT_VERSION
 PFNGLSECONDARYCOLOR3BEXTPROC glSecondaryColor3bEXT;
 PFNGLSECONDARYCOLOR3BVEXTPROC glSecondaryColor3bvEXT;
@@ -40,11 +41,13 @@ PFNGLSECONDARYCOLOR3UIEXTPROC glSecondaryColor3uiEXT;
 PFNGLSECONDARYCOLOR3UIVEXTPROC glSecondaryColor3uivEXT;
 PFNGLSECONDARYCOLOR3USEXTPROC glSecondaryColor3usEXT;
 PFNGLSECONDARYCOLOR3USVEXTPROC glSecondaryColor3usvEXT;
-PFNGLSECONDARYCOLORPOINTEREXTPROC glSecondaryColorPointerEXT;
 #endif
+#endif
+PFNGLSECONDARYCOLORPOINTEREXTPROC glSecondaryColorPointerEXT;
 
 bool initializeSecondaryColorExtension()
 {
+#ifndef HAVE_GLES
     if ( isExtensionSupported( "GL_EXT_secondary_color" ))
     {
 #ifndef GL_GLEXT_VERSION
@@ -68,5 +71,6 @@ bool initializeSecondaryColorExtension()
 #endif
         return true;
     }
+#endif
     return false;
 }

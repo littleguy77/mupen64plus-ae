@@ -107,8 +107,13 @@ AdvancedTexEnvCombiner::~AdvancedTexEnvCombiner()
 //-----------------------------------------------------------------------------
 void AdvancedTexEnvCombiner::initialize()
 {
+#ifdef HAVE_GLES
+    ARB_texture_env_combine  = true;
+    ARB_texture_env_crossbar = true;
+#else
     ARB_texture_env_combine  = isExtensionSupported( "GL_ARB_texture_env_combine" );
     ARB_texture_env_crossbar = isExtensionSupported( "GL_ARB_texture_env_crossbar" );
+#endif
     ATI_texture_env_combine3 = isExtensionSupported( "GL_ATI_texture_env_combine3" );
     ATIX_texture_env_route   = isExtensionSupported( "GL_ATIX_texture_env_route" );
     NV_texture_env_combine4  = isExtensionSupported( "GL_NV_texture_env_combine4" );;

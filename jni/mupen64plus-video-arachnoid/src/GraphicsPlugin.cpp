@@ -34,6 +34,11 @@
 #include "Logger.h"              //Debug logger
 #include "RomDetector.h"
 #include <ctime>
+#ifdef HAVE_GLES
+#include <EGL/egl.h>
+#include <SDL.h>
+#include <SDL_opengles.h>
+#endif
 
 //FrameBuffer framebuffer01;
 //FrameBuffer framebuffer02;
@@ -259,6 +264,9 @@ void renderQuad()
     glPushMatrix();
    // glRotatef(dt, 0, 1, 0);
     {
+#ifdef HAVE_GLES
+//*SEB* *TODO*
+#else
         glBegin(GL_QUADS);
         {
             glColor3f(1,0,0);   glVertex3f(-1,-1,0);
@@ -267,6 +275,7 @@ void renderQuad()
             glColor3f(0,0,1);   glVertex3f(-1, 1,0);
         }
         glEnd();
+#endif
     }
     glPopMatrix();
 }
@@ -279,6 +288,9 @@ void renderRedBox(float x, float y, float z, float width, float height,  float l
     x = x - width  / 2;
     y = y - height / 2;
     z = z - length / 2;
+#ifdef HAVE_GLES
+//*SEB* *TODO*
+#else
     glBegin(GL_QUADS);                
         glColor3f(1,0,0);        
         glVertex3f(x,         y,          z);
@@ -307,6 +319,7 @@ void renderRedBox(float x, float y, float z, float width, float height,  float l
         glVertex3f(x + width, y + height, z);
         glColor3f(1,1,1);
     glEnd();
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -422,10 +435,12 @@ void GraphicsPlugin::takeScreenshot(void *dest, int *width, int *height, int fro
     *height = m_config->windowHeight;
     if (dest)
     {
+#ifndef HAVE_GLES
         if (front)
             glReadBuffer(GL_FRONT);
         else
             glReadBuffer(GL_BACK);
+#endif
         glReadPixels(0, 0, *width, *height, GL_RGB, GL_UNSIGNED_BYTE, dest);
     }
 }

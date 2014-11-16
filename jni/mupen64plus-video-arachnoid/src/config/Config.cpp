@@ -64,6 +64,7 @@ bool Config::initialize()
 #else
     ConfigSetDefaultInt(m_videoArachnoidSection, "ScreenUpdateSetting", SCREEN_UPDATE_VI, "When to update the screen: 1 - on VI, 2 - on first CI");
 #endif
+    ConfigSetDefaultBool(m_videoArachnoidSection, "FrameSkip", false, "Use FrameSkipping?");
     return true;
 }
 
@@ -82,4 +83,5 @@ void Config::load()
     m_cfg.multiSampling         = ConfigGetParamBool(m_videoArachnoidSection, "MultiSampling");
     m_cfg.mipmapping             = ConfigGetParamInt(m_videoArachnoidSection, "Mipmapping");
     m_cfg.screenUpdateSetting   = ConfigGetParamInt(m_videoArachnoidSection, "ScreenUpdateSetting");
+    m_cfg.frameSkip             = ConfigGetParamBool(m_videoArachnoidSection, "FrameSkip");
 }

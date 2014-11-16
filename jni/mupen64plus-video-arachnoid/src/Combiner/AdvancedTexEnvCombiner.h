@@ -30,6 +30,7 @@ struct TexEnvCombiner;
 #ifndef GL_ARB_texture_env_combine
 #define GL_ARB_texture_env_combine  1
 
+#ifndef HAVE_GLES
     #define GL_COMBINE_ARB        0x8570
     #define GL_COMBINE_RGB_ARB    0x8571
     #define GL_COMBINE_ALPHA_ARB  0x8572
@@ -54,6 +55,7 @@ struct TexEnvCombiner;
     #define GL_SUBTRACT_ARB       0x84E7
 #endif
 
+#endif
 #define SetColorCombinerValues( n, a, s, o ) \
     envCombiner->color[n].a.source = s; \
     envCombiner->color[n].a.operand = o

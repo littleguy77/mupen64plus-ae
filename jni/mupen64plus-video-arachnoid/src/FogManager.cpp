@@ -31,7 +31,7 @@
     //-----------------------------------------------------------------------------
     #ifndef GL_EXT_fog_coord
     #define GL_EXT_fog_coord 1
-        #ifdef GL_GLEXT_PROTOTYPES
+        #if defined(GL_GLEXT_PROTOTYPES) && !defined(HAVE_GLES)
             extern void APIENTRY glFogCoordfEXT (GLfloat);
             extern void APIENTRY glFogCoordfvEXT (const GLfloat *);
             extern void APIENTRY glFogCoorddEXT (GLdouble);
@@ -55,6 +55,10 @@
     PFNGLFOGCOORDDEXTPROC glFogCoorddEXT;
     PFNGLFOGCOORDDVEXTPROC glFogCoorddvEXT;
     PFNGLFOGCOORDPOINTEREXTPROC glFogCoordPointerEXT;
+#endif
+
+#ifdef HAVE_GLES
+#define glFogi	glFogf
 #endif
 
 //-----------------------------------------------------------------------------
@@ -92,6 +96,7 @@ void FogManager::initialize()
     static bool fogExtensionInitialized = false;
     if ( !fogExtensionInitialized )
     {
+#ifndef HAVE_GLES
         m_fogExtensionsSupported = isExtensionSupported("GL_EXT_fog_coord");
         if ( m_fogExtensionsSupported )
         {
@@ -104,9 +109,12 @@ void FogManager::initialize()
 #endif
             fogExtensionInitialized  = true;
         }        
+#endif
     }
 
+#ifndef HAVE_GLES
     glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FOG_COORDINATE_EXT);
+#endif
 }
 
 //-----------------------------------------------------------------------------

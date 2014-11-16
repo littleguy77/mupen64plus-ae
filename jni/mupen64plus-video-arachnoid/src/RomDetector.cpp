@@ -128,11 +128,11 @@ N64_ROM_ID ROMDetector::_getRomID(char romName[20])
     {
         return GOLDEN_EYE;
     }
-    //else if ( !strncmp(romName, "PAPER MARIO", 11) )
-    //{
-    //    m_clearType = CT_NEVER;
-    //    return PAPER_MARIO;
-    //}
+    else if ( !strncmp(romName, "PAPER MARIO", 11) )
+    {
+        m_clearType = CT_NEVER;
+        return PAPER_MARIO;
+    }
     else
     {
         return UNKNOWN_ROM;

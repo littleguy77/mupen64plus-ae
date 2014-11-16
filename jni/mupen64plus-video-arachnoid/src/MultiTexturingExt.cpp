@@ -24,7 +24,7 @@
 
 
 //Multi Texturing functions
-#ifndef GL_GLEXT_VERSION
+#if !defined(GL_GLEXT_VERSION) && !defined(HAVE_GLES)
 PFNGLACTIVETEXTUREARBPROC glActiveTextureARB;
 PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB;
 PFNGLMULTITEXCOORD2FARBPROC glMultiTexCoord2fARB;
@@ -37,6 +37,10 @@ bool g_MultiTextureARBSupport = false;
 bool initializeMultiTexturingExtensions()
 {
     //Initialize Extentions
+#ifdef HAVE_GLES
+	g_MultiTextureARBSupport = true;
+	return true;
+#else
     g_MultiTextureARBSupport = isExtensionSupported("GL_ARB_multitexture");
     if ( g_MultiTextureARBSupport )
     {
@@ -48,4 +52,5 @@ bool initializeMultiTexturingExtensions()
         return true;
     }
     return false;
+#endif
 }

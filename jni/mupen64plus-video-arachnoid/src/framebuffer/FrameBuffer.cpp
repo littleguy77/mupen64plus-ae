@@ -24,11 +24,13 @@
 #include "OpenGL.h"
 
 #ifndef GL_GLEXT_VERSION
+#ifndef HAVE_GLES
     //-----------------------------------------------------------------------------
     //OpenGL Texture Definitions
     //-----------------------------------------------------------------------------
     typedef GLvoid (APIENTRY *PFNGLACTIVETEXTUREPROC) (GLenum texture);
     PFNGLACTIVETEXTUREPROC      glActiveTexture = NULL;
+#endif
 #endif
 
 #ifndef GL_TEXTURE0
@@ -75,7 +77,14 @@ void FrameBuffer::initialize(int width, int height)
     glBindTexture(GL_TEXTURE_2D, m_id);                    
 
     //Create the texture and store it on the video card
+#ifdef HAVE_GLES
+    if (channels == 3)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);    
+    else
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);    
+#else
     glTexImage2D(GL_TEXTURE_2D, 0, channels, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);    
+#endif
         
     //No texure filtering
     //glPixelStorei(GL_UNPACK_ALIGNMENT, 1 );            
@@ -178,6 +187,48 @@ void FrameBuffer::render()
     //Render QUAD (using framebuffer texture)
     _activate();
     {
+#ifdef HAVE_GLES
+		GLfloat tex[] = {
+			0, 0,
+			1, 0,
+			1, 1,
+			0, 1
+		};
+		GLfloat vtx[] = {
+			-1, -1, 0,
+			0, -1, 0,
+			0, 0, 0,
+			-1, 0, 0
+		};
+		glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+		
+		GLboolean glcol = glIsEnabled(GL_COLOR_ARRAY);
+		if (glcol) glDisableClientState(GL_COLOR_ARRAY);
+		GLboolean glvtx = glIsEnabled(GL_VERTEX_ARRAY);
+		if (!glvtx)
+			glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3,GL_FLOAT, 0,&vtx);
+		glActiveTexture( GL_TEXTURE1 );
+		GLboolean gltex1 = glIsEnabled(GL_TEXTURE_2D);
+		if (gltex1) glDisable(GL_TEXTURE_2D);
+		glActiveTexture( GL_TEXTURE0 );
+		glClientActiveTexture( GL_TEXTURE0 );
+		glTexCoordPointer(2, GL_FLOAT, 0, &tex);
+		// draw
+		glDrawArrays(GL_TRIANGLE_FAN,0,4);
+		// restaure
+		if (glcol) glEnableClientState(GL_COLOR_ARRAY);
+		glActiveTexture( GL_TEXTURE1 );
+		if (gltex1) glEnable(GL_TEXTURE_2D);
+		if (!glvtx)
+			glDisableClientState(GL_VERTEX_ARRAY);
+		else
+			glVertexPointer(glsav_vtx_size, glsav_vtx_type, glsav_vtx_stride, glsav_vtx_array );
+		glActiveTexture( GL_TEXTURE0 );
+		glTexCoordPointer( glsav_tex_size, glsav_tex_type, glsav_tex_stride, glsav_tex_array );
+		
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
         glBegin(GL_QUADS);
         {
             glColor3f(0.0f, 0.0f, 1.0f);
@@ -192,6 +243,7 @@ void FrameBuffer::render()
             glColor3f(1.0f, 1.0f, 1.0f);
         }
         glEnd();
+#endif
     }
     _deactivate();
 
@@ -224,6 +276,47 @@ void FrameBuffer::render2()
     //Render QUAD (using framebuffer texture)
     _activate();
     {
+#ifdef HAVE_GLES
+		GLfloat tex[] = {
+			0, 0,
+			1, 0,
+			1, 1,
+			0, 1
+		};
+		GLfloat vtx[] = {
+			-1, -1, 0,
+			0, -1, 0,
+			0, 0, 0,
+			-1, 0, 0
+		};
+		
+		GLboolean glcol = glIsEnabled(GL_COLOR_ARRAY);
+		if (glcol) glDisableClientState(GL_COLOR_ARRAY);
+		GLboolean glvtx = glIsEnabled(GL_VERTEX_ARRAY);		
+		if (!glvtx)
+			glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3,GL_FLOAT, 0,&vtx);
+		glActiveTexture( GL_TEXTURE1 );
+		GLboolean gltex1 = glIsEnabled(GL_TEXTURE_2D);
+		if (gltex1) glDisable(GL_TEXTURE_2D);
+		glActiveTexture( GL_TEXTURE0 );
+		glClientActiveTexture( GL_TEXTURE0 );
+		glTexCoordPointer(2, GL_FLOAT, 0, &tex);
+		// draw
+		glDrawArrays(GL_TRIANGLE_FAN,0,4);
+		// restaure
+		if (glcol) glEnableClientState(GL_COLOR_ARRAY);
+		glActiveTexture( GL_TEXTURE1 );
+		if (gltex1) glEnable(GL_TEXTURE_2D);
+		if (!glvtx)
+			glDisableClientState(GL_VERTEX_ARRAY);
+		else 
+			glVertexPointer(glsav_vtx_size, glsav_vtx_type, glsav_vtx_stride, glsav_vtx_array );
+		glActiveTexture( GL_TEXTURE0 );
+		glTexCoordPointer( glsav_tex_size, glsav_tex_type, glsav_tex_stride, glsav_tex_array );
+		
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+#else
         glBegin(GL_QUADS);
         {
             glTexCoord2f(0,0);
@@ -237,6 +330,7 @@ void FrameBuffer::render2()
             glColor3f(1.0f, 1.0f, 1.0f);
         }
         glEnd();
+#endif
     }
     _deactivate();
 
@@ -255,9 +349,11 @@ void FrameBuffer::_activate()
 {
     //Activate Texture (so we can copy to it)
 #ifndef GL_GLEXT_VERSION
+#ifndef HAVE_GLES
     if ( glActiveTexture == 0 ) {
         glActiveTexture = (PFNGLACTIVETEXTUREPROC) CoreVideo_GL_GetProcAddress("glActiveTexture");
     }
+#endif
 #endif
     glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);

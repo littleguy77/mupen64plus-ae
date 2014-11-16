@@ -28,7 +28,7 @@
 
 #ifndef GL_GLEXT_VERSION
     //Multi Texturing Definitions
-    #ifndef GL_ARB_multitexture
+    #if !defined(GL_ARB_multitexture) && !defined(HAVE_GLES)
         #define GL_TEXTURE0_ARB                   0x84C0
         #define GL_TEXTURE1_ARB                   0x84C1
         #define GL_TEXTURE2_ARB                   0x84C2
@@ -67,7 +67,7 @@
     #endif
 
     //Multitexturing Functions
-    #ifndef GL_ARB_multitexture
+    #if !defined(GL_ARB_multitexture) && !defined(HAVE_GLES)
     #define GL_ARB_multitexture 1
         #ifdef GL_GLEXT_PROTOTYPES
             extern void APIENTRY glActiveTextureARB (GLenum);

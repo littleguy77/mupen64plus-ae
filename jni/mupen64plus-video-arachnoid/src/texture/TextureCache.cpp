@@ -399,7 +399,11 @@ void TextureCache::_loadTexture(CachedTexture* texture)
     }
 
     //Send Texture to OpenGL
+#ifdef HAVE_GLES
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, texture->realWidth, texture->realHeight, 0, GL_RGBA, imageType, dest );
+#else
     glTexImage2D( GL_TEXTURE_2D, 0, internalFormat, texture->realWidth, texture->realHeight, 0, GL_RGBA, imageType, dest );
+#endif
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     delete[] dest;
