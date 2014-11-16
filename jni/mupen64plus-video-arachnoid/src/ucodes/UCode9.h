@@ -23,7 +23,7 @@
 #define UCODE_9_H_
 
 //Includes
-#include "UCodeDefs.h"
+#include "../UCodeDefs.h"
 
 class GBI;
 class RSP;

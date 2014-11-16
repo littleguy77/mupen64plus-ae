@@ -20,8 +20,8 @@
  *****************************************************************************/
 
 #include "FrameBuffer.h"
-#include "m64p.h"
-#include "OpenGL.h"
+#include "../m64p.h"
+#include "../OpenGL.h"
 
 #ifndef GL_GLEXT_VERSION
 #ifndef HAVE_GLES

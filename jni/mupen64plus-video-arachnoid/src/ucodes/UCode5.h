@@ -23,7 +23,7 @@
 #define UCODE_5_H_
 
 //Includes
-#include "UCodeDefs.h"
+#include "../UCodeDefs.h"
 
 //Forward declaration
 class GBI;

@@ -23,14 +23,14 @@
 #include "UCode0.h"
 
 //Forward declaration
-#include "GBI.h"
-#include "RSP.h"
-#include "RDP.h"
-#include "Memory.h"
+#include "../GBI/GBI.h"
+#include "../RSP/RSP.h"
+#include "../RDP/RDP.h"
+#include "../Memory.h"
 
-#include "UCodeDefs.h"
-#include "GBIDefs.h"
-#include "Logger.h"
+#include "../UCodeDefs.h"
+#include "../GBI/GBIDefs.h"
+#include "../log/Logger.h"
 
 //-----------------------------------------------------------------------------
 // Static Variables

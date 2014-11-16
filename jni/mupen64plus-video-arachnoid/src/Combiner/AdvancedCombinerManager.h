@@ -22,7 +22,7 @@
 #ifndef ADVANCED_COMBINER_MANAGER_H_
 #define ADVANCED_COMBINER_MANAGER_H_
 
-#include "GBIDefs.h"
+#include "../GBI/GBIDefs.h"
 #include "CombinerStructs.h"
 #include "CombinerCache.h"
 

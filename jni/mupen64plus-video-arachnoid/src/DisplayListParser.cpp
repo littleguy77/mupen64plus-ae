@@ -21,11 +21,11 @@
 
 #include "DisplayListParser.h"
 #include "Memory.h"
-#include "GBI.h"
-#include "RSP.h"
-#include "RDP.h"
-#include "OpenGLRenderer.h"
-#include "GBIDefs.h"
+#include "GBI/GBI.h"
+#include "RSP/RSP.h"
+#include "RDP/RDP.h"
+#include "renderer/OpenGLRenderer.h"
+#include "GBI/GBIDefs.h"
 
 //-----------------------------------------------------------------------------
 //* Task

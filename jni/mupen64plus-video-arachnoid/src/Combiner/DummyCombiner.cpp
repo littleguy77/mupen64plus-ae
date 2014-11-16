@@ -21,8 +21,8 @@
 
 #include "DummyCombiner.h"
 #include "CombinerStructs.h"
-#include "ExtensionChecker.h"
-#include "MultiTexturingExt.h"
+#include "../ExtensionChecker.h"
+#include "../MultiTexturingExt.h"
 
 //-----------------------------------------------------------------------------
 //* Initialize

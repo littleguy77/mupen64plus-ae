@@ -25,10 +25,10 @@
 //Includes
 #define M64P_PLUGIN_PROTOTYPES 1
 #include "m64p_plugin.h"
-#include "UCodeDefs.h"
-#include "GBI.h"
-#include "GBIDefs.h"
-#include "TextureLoader.h"
+#include "../UCodeDefs.h"
+#include "../GBI/GBI.h"
+#include "../GBI/GBIDefs.h"
+#include "../texture/TextureLoader.h"
 
 //Forward declaration
 class RSP;

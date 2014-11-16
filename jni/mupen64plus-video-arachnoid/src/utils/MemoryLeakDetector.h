@@ -22,7 +22,7 @@
 #ifndef MEMORY_LEAK_DETECTOR_H
 #define MEMORY_LEAK_DETECTOR_H
 
-#include "m64p.h"
+#include "../m64p.h"
 #include <cstdio>
 #if defined(WIN32) && !defined(__MINGW32__)
 #include <crtdbg.h>

@@ -20,24 +20,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *****************************************************************************/
 
-#include "m64p.h"
+#include "../m64p.h"
 
 #include <cmath>
 #include <algorithm>
 #include "OpenGLRenderer.h"
-#include "OpenGLManager.h"
-#include "RSP.h"
-#include "RDP.h"
-#include "TextureCache.h"
-#include "VI.h"
-#include "Logger.h"
+#include "../OpenGLManager.h"
+#include "../RSP/RSP.h"
+#include "../RDP/RDP.h"
+#include "../texture/TextureCache.h"
+#include "../VI.h"
+#include "../log/Logger.h"
 //#include "CombinerManager.h"
-#include "AdvancedCombinerManager.h"
-#include "FogManager.h"
-#include "ExtensionChecker.h"
-#include "MultiTexturingExt.h"
-#include "SecondaryColorExt.h"
-
+#include "../Combiner/AdvancedCombinerManager.h"
+#include "../FogManager.h"
+#include "../ExtensionChecker.h"
+#include "../MultiTexturingExt.h"
+#include "../SecondaryColorExt.h"
 
 #ifdef HAVE_GLES
 // save of arrays

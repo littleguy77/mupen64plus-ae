@@ -22,7 +22,7 @@
 #ifndef RSP_MATRIX_MANAGER_H_
 #define RSP_MATRIX_MANAGER_H_
 
-#include "Matrix4.h"
+#include "../math/Matrix4.h"
 
 //Forward Declarations
 class Memory;

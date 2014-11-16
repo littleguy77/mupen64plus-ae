@@ -20,13 +20,13 @@
  *****************************************************************************/
 
 #include "UCodeSelector.h"
-#include "Memory.h"
-#include "CRCCalculator.h"
+#include "../Memory.h"
+#include "../hash/CRCCalculator.h"
 #include "UCodeIdentificationData.h"
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include "Logger.h"
+#include "../log/Logger.h"
 
 #ifndef WIN32
 #define strnicmp strncasecmp

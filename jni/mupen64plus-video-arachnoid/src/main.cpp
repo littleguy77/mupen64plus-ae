@@ -25,8 +25,8 @@
 #include "m64p.h"
 #include "GraphicsPlugin.h"        //Main class
 #include "config/Config.h"         //Configuration   
-#include "Logger.h"                //Debug logger
-#include "MemoryLeakDetector.h"    //For detecting memory leaks
+#include "log/Logger.h"                //Debug logger
+#include "utils/MemoryLeakDetector.h"    //For detecting memory leaks
 
 #include "m64p_types.h"
 #include "m64p_common.h"

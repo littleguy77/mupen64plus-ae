@@ -20,10 +20,10 @@
  *****************************************************************************/
 
 #include "RSPLightManager.h"
-#include "Memory.h"
-#include "MathLib.h"
-#include "GBI.h"
-#include "Logger.h"
+#include "../Memory.h"
+#include "../math/MathLib.h"
+#include "../GBI/GBI.h"
+#include "../log/Logger.h"
 
 #define RGBA_GETALPHA(rgb)      ((rgb) >> 24)
 #define RGBA_GETRED(rgb)        (((rgb) >> 16) & 0xff)

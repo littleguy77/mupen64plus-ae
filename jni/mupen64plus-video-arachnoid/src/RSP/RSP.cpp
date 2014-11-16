@@ -23,17 +23,16 @@
 #include "../UCodeDefs.h"
 #include "../RDP/RDP.h"
 #include <cmath>
-#include "GBIDefs.h"
-#include "VI.h"
-#include "Memory.h"
-#include "Logger.h"
-#include "OpenGLRenderer.h"
-#include "OpenGLManager.h"
+#include "../GBI/GBIDefs.h"
+#include "../VI.h"
+#include "../Memory.h"
+#include "../log/Logger.h"
+#include "../renderer/OpenGLRenderer.h"
+#include "../OpenGLManager.h"
 #include "RSPLightManager.h"
-#include "FogManager.h"
-#include "DisplayListParser.h"
-#include "MathLib.h"
-#include "MathLib.h"
+#include "../FogManager.h"
+#include "../DisplayListParser.h"
+#include "../math/MathLib.h"
 
 #define MI_INTR_SP                 0x00000001  //!< RSP Interrupt signal
 

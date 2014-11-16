@@ -20,9 +20,9 @@
  *****************************************************************************/
 
 #include "RomDetector.h"
-#include "assembler.h"   //swapRomHeaderBytes
+#include "assembler/assembler.h"   //swapRomHeaderBytes
 #include <string.h>      //memcpy
-#include "StringFunctions.h"
+#include "config/StringFunctions.h"
 
 //-----------------------------------------------------------------------------
 //! Constructor

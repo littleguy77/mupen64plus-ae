@@ -20,15 +20,15 @@
  *****************************************************************************/
 
 #include "RSPVertexManager.h"
-#include "OpenGLManager.h"
-#include "Memory.h"
+#include "../OpenGLManager.h"
+#include "../Memory.h"
 #include "RSPMatrixManager.h"
 #include "RSPLightManager.h"
-#include "OpenGLRenderer.h"
-#include "GBIDefs.h"   //hmm
-#include "MathLib.h"   //Transform, Vec3Normalize
+#include "../renderer/OpenGLRenderer.h"
+#include "../GBI/GBIDefs.h"   //hmm
+#include "../math/MathLib.h"   //Transform, Vec3Normalize
 #include <cmath> //sqrt
-#include "Logger.h"
+#include "../log/Logger.h"
 
 //Vertex
 struct Vertex

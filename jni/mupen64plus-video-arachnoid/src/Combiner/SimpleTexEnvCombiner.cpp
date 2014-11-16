@@ -21,10 +21,10 @@
 
 #include "SimpleTexEnvCombiner.h"
 #include "CombinerStructs.h"
-#include "MultiTexturingExt.h"
-#include "ExtensionChecker.h"
-#include "m64p.h"
-#include "OpenGL.h"
+#include "../MultiTexturingExt.h"
+#include "../ExtensionChecker.h"
+#include "../m64p.h"
+#include "../OpenGL.h"
 
 //-----------------------------------------------------------------------------
 //! Constructor

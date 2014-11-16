@@ -20,13 +20,13 @@
  *****************************************************************************/
 
 #include "TextureLoader.h"
-#include "Memory.h"
+#include "../Memory.h"
 #include "TextureCache.h"
-#include "GBIDefs.h"
-#include "assembler.h"
-#include "Logger.h"
-#include "RDP.h"
-#include "CRCCalculator2.h"
+#include "../GBI/GBIDefs.h"
+#include "../assembler/assembler.h"
+#include "../log/Logger.h"
+#include "../RDP/RDP.h"
+#include "../hash/CRCCalculator2.h"
 
 //-----------------------------------------------------------------------------
 //! Constructor

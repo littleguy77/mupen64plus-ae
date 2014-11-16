@@ -22,7 +22,7 @@
 #ifndef RDP_INSTRUCTIONS_H_
 #define RDP_INSTRUCTIONS_H_
 
-#include "UCodeDefs.h"
+#include "../UCodeDefs.h"
 
 //Forward declarations
 class RDP;

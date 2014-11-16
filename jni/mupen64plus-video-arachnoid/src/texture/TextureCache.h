@@ -23,7 +23,7 @@
 #define TEXTURE_CACHE_H_
 
 #include "CachedTexture.h"
-#include "CRCCalculator2.h"
+#include "../hash/CRCCalculator2.h"
 #include "ImageFormatSelector.h"
 #include <list>
 

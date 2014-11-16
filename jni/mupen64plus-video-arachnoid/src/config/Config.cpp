@@ -22,8 +22,8 @@
 
 #include "Config.h"
 #include <cstdio> 
-#include "GraphicsPlugin.h"
-#include "Logger.h"
+#include "../GraphicsPlugin.h"
+#include "../log/Logger.h"
 
 //-----------------------------------------------------------------------------
 //! Constructor

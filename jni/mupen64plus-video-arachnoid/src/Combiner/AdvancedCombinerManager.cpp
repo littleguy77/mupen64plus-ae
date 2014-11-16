@@ -21,16 +21,16 @@
 
 #include "AdvancedCombinerManager.h"
 #include "CombinerStructs.h"
-#include "ExtensionChecker.h"
-#include "MultiTexturingExt.h"
+#include "../ExtensionChecker.h"
+#include "../MultiTexturingExt.h"
 #include "AdvancedTexEnvCombiner.h"
 #include "SimpleTexEnvCombiner.h"
 #include "DummyCombiner.h"
 #include "CombinerStageMerger.h"
 #include "CombinerStageCreator.h"
-#include "RomDetector.h"
-#include "m64p.h"
-#include "OpenGL.h"
+#include "../RomDetector.h"
+#include "../m64p.h"
+#include "../OpenGL.h"
 
 static int saRGBExpanded[] = 
 {

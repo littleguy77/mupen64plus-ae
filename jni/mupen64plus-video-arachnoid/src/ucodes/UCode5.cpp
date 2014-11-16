@@ -21,14 +21,14 @@
 
 #include "UCode5.h"
 #include "UCode0.h"
-#include "GBI.h"
-#include "RSP.h"
-#include "RDP.h"
-#include "Memory.h"
-#include "UCodeDefs.h"
-#include "GBIDefs.h"
-#include "Logger.h"
-#include "DisplayListParser.h"
+#include "../GBI/GBI.h"
+#include "../RSP/RSP.h"
+#include "../RDP/RDP.h"
+#include "../Memory.h"
+#include "../UCodeDefs.h"
+#include "../GBI/GBIDefs.h"
+#include "../log/Logger.h"
+#include "../DisplayListParser.h"
 
 
 #define F3DEX2_MTX_STACKSIZE       18

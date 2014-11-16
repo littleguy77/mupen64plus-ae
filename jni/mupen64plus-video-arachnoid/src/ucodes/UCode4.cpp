@@ -21,11 +21,11 @@
 
 #include "UCode4.h"
 #include "UCode0.h"
-#include "GBI.h"
-#include "RSP.h"
-#include "UCodeDefs.h"
-#include "GBIDefs.h"
-#include "Logger.h"
+#include "../GBI/GBI.h"
+#include "../RSP/RSP.h"
+#include "../UCodeDefs.h"
+#include "../GBI/GBIDefs.h"
+#include "../log/Logger.h"
 
 #define F3DWRUS_TRI2        0xB1
 

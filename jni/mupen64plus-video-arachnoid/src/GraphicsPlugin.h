@@ -23,10 +23,10 @@
 #ifndef GRAPHICS_PLUGIN_H_
 #define GRAPHICS_PLUGIN_H_
 
-#include "TextureCache.h"
+#include "texture/TextureCache.h"
 #include "OpenGLManager.h"         //Initializes OpenGL and handles OpenGL states
-#include "RSP.h"
-#include "RDP.h"
+#include "RSP/RSP.h"
+#include "RDP/RDP.h"
 
 //Forward declarations
 //struct GFX_INFO;

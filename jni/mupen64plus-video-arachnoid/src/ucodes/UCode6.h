@@ -23,7 +23,7 @@
 #define UCODE_6_H_
 
 //Includes
-#include "UCodeDefs.h"
+#include "../UCodeDefs.h"
 
 #define F3DDKR_VTX_APPEND       0x00010000
 #define F3DDKR_DMA_MTX          0x01

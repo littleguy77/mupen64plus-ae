@@ -22,8 +22,8 @@
 #include "RDPInstructions.h"
 #include "RDPUCodeStructs.h"
 #include "RDP.h"
-#include "DisplayListParser.h"
-#include "Logger.h"
+#include "../DisplayListParser.h"
+#include "../log/Logger.h"
 
 //-----------------------------------------------------------------------------
 // Static Variables

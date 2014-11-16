@@ -22,7 +22,7 @@
 #ifndef TEXTURE_LOADER_H_
 #define TEXTURE_LOADER_H_
 
-#include "GBIDefs.h"
+#include "../GBI/GBIDefs.h"
 
 //Forward declarations
 class Memory;

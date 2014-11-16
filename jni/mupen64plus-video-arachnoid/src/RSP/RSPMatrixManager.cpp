@@ -20,10 +20,10 @@
  *****************************************************************************/
 
 #include "RSPMatrixManager.h"
-#include "Memory.h"
+#include "../Memory.h"
 #include <cmath>      //modff
-#include "GBI.h"      //SHIFT
-#include "GBIDefs.h"  //_FIXED2FLOAT
+#include "../GBI/GBI.h"      //SHIFT
+#include "../GBI/GBIDefs.h"  //_FIXED2FLOAT
 //-----------------------------------------------------------------------------
 //! Constructor
 //-----------------------------------------------------------------------------

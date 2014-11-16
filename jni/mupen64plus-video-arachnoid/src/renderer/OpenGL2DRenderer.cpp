@@ -20,9 +20,9 @@
  *****************************************************************************/
 
 #include "OpenGL2DRenderer.h"
-#include "VI.h"
-#include "m64p.h"
-#include "OpenGL.h"
+#include "../VI.h"
+#include "../m64p.h"
+#include "../OpenGL.h"
 
 //-----------------------------------------------------------------------------
 //* Initialize

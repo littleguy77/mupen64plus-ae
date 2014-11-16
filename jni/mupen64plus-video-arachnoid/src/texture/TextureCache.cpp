@@ -21,23 +21,23 @@
 
 #include "TextureCache.h"
 
-#include "RDP.h"
-#include "RSP.h"
+#include "../RDP/RDP.h"
+#include "../RSP/RSP.h"
 #include "CachedTexture.h"
-#include "MathLib.h"
+#include "../math/MathLib.h"
 #include <algorithm>
     using std::min;
-#include "m64p.h"
-#include "OpenGL.h"
-#include "Memory.h"
-#include "OpenGLRenderer.h"
-#include "MultiTexturingExt.h"    
+#include "../m64p.h"
+#include "../OpenGL.h"
+#include "../Memory.h"
+#include "../renderer/OpenGLRenderer.h"
+#include "../MultiTexturingExt.h"    
     //gSPBgRect1Cyc
 //gSPBgRectCopy
 #define GL_CLAMP_TO_EDGE                  0x812F
 #define GL_GENERATE_MIPMAP                0x8191
 
-#include "Logger.h"
+#include "../log/Logger.h"
 #include <iostream>
 
 //-----------------------------------------------------------------------------

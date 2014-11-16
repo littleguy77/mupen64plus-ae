@@ -23,15 +23,15 @@
 #include "GraphicsPlugin.h"
 #include "VI.h"                  //Video interface
 #include "Memory.h"              //Access to memory (RDRAM, Texture Memory)
-#include "OpenGLRenderer.h"      //Renderer
-#include "FrameBuffer.h"         //Framebuffer
+#include "renderer/OpenGLRenderer.h"      //Renderer
+#include "framebuffer/FrameBuffer.h"         //Framebuffer
 #include "DisplayListParser.h"   //Displaylist parser
 #include "FogManager.h"          //Fog 
-#include "RSP.h"                 //Reality Signal Processor
-#include "RDP.h"                 //Reality Drawing Processor
-#include "GBI.h"                 //Graphics Binary Interface 
-#include "ConfigMap.h"           //Configuration
-#include "Logger.h"              //Debug logger
+#include "RSP/RSP.h"                 //Reality Signal Processor
+#include "RDP/RDP.h"                 //Reality Drawing Processor
+#include "GBI/GBI.h"                 //Graphics Binary Interface 
+#include "config/ConfigMap.h"           //Configuration
+#include "log/Logger.h"              //Debug logger
 #include "RomDetector.h"
 #include <ctime>
 #ifdef HAVE_GLES

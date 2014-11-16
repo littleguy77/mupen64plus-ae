@@ -21,13 +21,13 @@
 
 #include "GBI.h"
 #include "GBIDefs.h"
-#include "RSP.h"
-#include "RDP.h"
-#include "UCodeSelector.h"
-#include "UCodeIdentificationData.h"
-#include "OpenGLManager.h"
-#include "Logger.h"
-#include "m64p.h"
+#include "../RSP/RSP.h"
+#include "../RDP/RDP.h"
+#include "../ucodes/UCodeSelector.h"
+#include "../ucodes/UCodeIdentificationData.h"
+#include "../OpenGLManager.h"
+#include "../log/Logger.h"
+#include "../m64p.h"
 
 //-----------------------------------------------------------------------------
 //! Static Variables

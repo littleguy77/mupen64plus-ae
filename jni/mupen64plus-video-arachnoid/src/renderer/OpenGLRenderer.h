@@ -22,8 +22,8 @@
 #ifndef OPEN_GL_RENDERER_H_
 #define OPEN_GL_RENDERER_H_
 
-#include "m64p.h"
-#include "OpenGL.h"
+#include "../m64p.h"
+#include "../OpenGL.h"
 
 //Forward Declarations
 struct SPVertex;
@@ -33,7 +33,7 @@ class TextureCache;
 class VI;
 class FogManager;
 
-#include "MultiTexturingExt.h"
+#include "../MultiTexturingExt.h"
 
 
 //*****************************************************************************

@@ -22,13 +22,13 @@
 #include "UCode7.h"
 #include "UCode0.h"
 #include "UCode1.h"
-#include "GBI.h"
-#include "RSP.h"
-#include "RDP.h"
-#include "Memory.h"
-#include "UCodeDefs.h"
-#include "GBIDefs.h"
-#include "Logger.h"
+#include "../GBI/GBI.h"
+#include "../RSP/RSP.h"
+#include "../RDP/RDP.h"
+#include "../Memory.h"
+#include "../UCodeDefs.h"
+#include "../GBI/GBIDefs.h"
+#include "../log/Logger.h"
 
 #define    S2DEX_BG_1CYC            0x01
 #define    S2DEX_BG_COPY            0x02
