@@ -20,7 +20,13 @@
  */
 package paulscode.android.mupen64plusae;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Locale;
 
 import paulscode.android.mupen64plusae.input.DiagnosticActivity;
 import paulscode.android.mupen64plusae.persistent.AppData;
@@ -30,6 +36,7 @@ import paulscode.android.mupen64plusae.profile.ManageEmulationProfilesActivity;
 import paulscode.android.mupen64plusae.profile.ManageTouchscreenProfilesActivity;
 import paulscode.android.mupen64plusae.util.ChangeLog;
 import paulscode.android.mupen64plusae.util.DeviceUtil;
+import paulscode.android.mupen64plusae.util.FileUtil;
 import paulscode.android.mupen64plusae.util.Notifier;
 import paulscode.android.mupen64plusae.util.Prompt;
 import paulscode.android.mupen64plusae.util.Prompt.PromptFileListener;
@@ -192,8 +199,70 @@ public class GalleryActivity extends Activity implements OnClickListener
         }
     }
     
+    private String handleZip( String romPath )
+    {
+        if( romPath.toLowerCase( Locale.US ).endsWith( ".zip" ) )
+        {
+            if( new File( "/sdcard/mupen64plus/zipTemp" ).exists() )
+            {
+                BufferedReader br = null;
+                String sCurrentLine = "";
+                try
+                {
+                    br = new BufferedReader( new FileReader( "/sdcard/mupen64plus/zipTemp/.mupenmeta" ) );
+                    sCurrentLine = br.readLine();
+                    br.close();
+                }
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+                if( !sCurrentLine.equals( romPath ) )
+                {
+                    System.out.println( "zip doesn't match" );
+                    FileUtil.deleteFolder( new File( "/sdcard/mupen64plus/zipTemp" ) );
+                    Utility.unzipAll( new File( romPath ), "/sdcard/mupen64plus/zipTemp" );
+                }
+                else
+                {
+                    System.out.println( "Already unzipped" );
+                }
+            }
+            else
+            {
+                System.out.println( "No zip temp" );
+                Utility.unzipAll( new File( romPath ), "/sdcard/mupen64plus/zipTemp" );
+            }
+            
+            for( File f : new File( "/sdcard/mupen64plus/zipTemp" ).listFiles() )
+            {
+                String name = f.getName();
+                int dot = name.lastIndexOf( '.' );
+                if( dot != -1 )
+                {
+                    if( "*.v64*.z64*.n64*.rom*.bin*".contains( "*" + name.substring( dot ) + "*" ) )
+                    {
+                        try
+                        {
+                            BufferedWriter bw = new BufferedWriter( new FileWriter( new File(
+                                                "/sdcard/mupen64plus/zipTemp/.mupenMeta" ), false ) );
+                            bw.write( romPath );
+                            bw.close();
+                        }
+                        catch ( Exception e )
+                        {
+                        }
+                        return f.getAbsolutePath();
+                    }
+                }
+            }
+        }
+        return romPath;
+    }
+    
     private void launchPlayMenuActivity( final String romPath )
     {
+        final String newPath = handleZip( romPath );
         // Asynchronously compute MD5 and launch play menu when finished
         Notifier.showToast( this, String.format( getString( R.string.toast_loadingGameInfo ) ) );
         new AsyncTask<Void, Void, String[]>()
@@ -201,8 +270,8 @@ public class GalleryActivity extends Activity implements OnClickListener
             @Override
             protected String[] doInBackground( Void... params )
             {
-                RomHeader header = new RomHeader( new File( romPath ) );
-                String[] hashes = { RomDetail.computeMd5( new File( romPath ) ), header.crc };
+                RomHeader header = new RomHeader( new File( newPath ) );
+                String[] hashes = { RomDetail.computeMd5( new File( newPath ) ), header.crc };
                 return hashes;
             }
             
@@ -212,7 +281,7 @@ public class GalleryActivity extends Activity implements OnClickListener
                 if( !TextUtils.isEmpty( hashes[1] ) || !TextUtils.isEmpty( hashes[0] ) )
                 {
                     Intent intent = new Intent( GalleryActivity.this, PlayMenuActivity.class );
-                    intent.putExtra( Keys.Extras.ROM_PATH, romPath );
+                    intent.putExtra( Keys.Extras.ROM_PATH, newPath );
                     intent.putExtra( Keys.Extras.ROM_MD5, hashes[0] );
                     intent.putExtra( Keys.Extras.ROM_CRC, hashes[1] );
                     startActivity( intent );
@@ -243,7 +312,7 @@ public class GalleryActivity extends Activity implements OnClickListener
                     }
                 }
             }
-        } );
+        }, "*.v64*.z64*.n64*.rom*.bin*.zip*" );
     }
 
     private void popupFaq()

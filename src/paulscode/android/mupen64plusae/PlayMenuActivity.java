@@ -346,7 +346,7 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
             return;
         }
         ArrayList<Cheat> cheats = new ArrayList<Cheat>();
-        cheats.addAll( CheatUtils.populate( crc, mupencheat_txt, true, this ) );
+        cheats.addAll( CheatUtils.populate( crc, mupencheat_txt, false, this ) );
         CheatUtils.reset();
         
         // Layout the menu, populating it with appropriate cheat options
@@ -431,7 +431,7 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
     @SuppressWarnings( "deprecation" )
     private String getCheatArgs()
     {
-        String cheatArgs = null;
+        StringBuilder cheatArgs = new StringBuilder();
         
         PreferenceCategory cheatsCategory = (PreferenceCategory) findPreference( CATEGORY_CHEATS );
         if( cheatsCategory != null )
@@ -441,16 +441,13 @@ public class PlayMenuActivity extends PreferenceActivity implements OnPreference
                 CheatPreference pref = (CheatPreference) cheatsCategory.getPreference( i );
                 if( pref.isCheatEnabled() )
                 {
-                    if( cheatArgs == null )
-                        cheatArgs = ""; // First time through
-                    else
-                        cheatArgs += ",";
-                    
-                    cheatArgs += pref.getCheatCodeString( i );
+                    if( cheatArgs.length() >0 )
+                        cheatArgs.append( ',' );
+                    cheatArgs.append( pref.getCheatCodeString( i ) );
                 }
             }
         }
         
-        return cheatArgs;
+        return cheatArgs.toString();
     }
 }

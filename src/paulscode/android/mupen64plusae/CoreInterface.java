@@ -358,8 +358,21 @@ public class CoreInterface
             @Override
             public void onDialogClosed( CharSequence text, int which )
             {
+                String name = text.toString();
+                int dotPosition;
+                if( ( dotPosition = name.lastIndexOf( '.' ) ) != -1 )
+                {
+                    if( !"*.sav*.st0*.st1*.st2*.st3*.st4*.st5*.st6*.st7*.st8*.st9*".contains( "*" + name.substring(dotPosition) + "*" ) )
+                    {
+                        name+=".sav";
+                    }
+                }
+                else
+                {
+                    name += ".sav";
+                }
                 if( which == DialogInterface.BUTTON_POSITIVE )
-                    saveState( text.toString() );
+                    saveState( name );
                 CoreInterface.resumeEmulator();
             }
         } );
@@ -379,7 +392,7 @@ public class CoreInterface
                     loadState( file );
                 CoreInterface.resumeEmulator();
             }
-        } );
+        }, "*.sav*.st0*.st1*.st2*.st3*.st4*.st5*.st6*.st7*.st8*.st9*" );
     }
     
     public static void saveState( final String filename )
