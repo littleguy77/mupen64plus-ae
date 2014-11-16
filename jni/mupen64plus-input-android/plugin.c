@@ -248,6 +248,7 @@ JNIEXPORT void JNICALL Java_paulscode_android_mupen64plusae_jni_NativeInput_setS
 JNIEXPORT void JNICALL JNI_Rumble(int controllerNum, int active)
 {
     JNIEnv *env = Android_JNI_GetEnv();
+	//__android_log_print(ANDROID_LOG_ERROR, "Rumble is ","Ramble a %d b %d c %d d %d e %d",active, c,b, d, e );
     jboolean a = active == 0 ? JNI_FALSE : JNI_TRUE;
     (*env)->CallStaticVoidMethod(env, _jniClass, _jniRumble, controllerNum, a);
 }
@@ -368,8 +369,9 @@ EXPORT void CALL ControllerCommand(int controllerNum, unsigned char* command)
 {
     if (controllerNum < 0)
         return;
-
+	//__android_log_print(ANDROID_LOG_ERROR, "Rumble is ","Ramble a %d b %d c %d d %d e %d f %d g %d",command[0], command[1],command[2], command[3], command[4],command[5],command[6] );
     unsigned char* data = command + 5;
+
     unsigned int dwAddress = (command[3] << 8) + (command[4] & 0xE0);
     switch (command[2])
     {

@@ -22,7 +22,7 @@
 #include <pthread.h>
 #include "SDL.h"
 #include "ae_imports.h"
-
+#include <android/log.h>
 /*******************************************************************************
  Globals used internally
  *******************************************************************************/
@@ -48,12 +48,19 @@ static jmethodID midGetCustomPolygonOffset;
 static void Android_JNI_ThreadDestroyed(void* value)
 {
     /* The thread is being destroyed, detach it from the Java VM and set the mThreadKey value to NULL as required */
+	__android_log_print(ANDROID_LOG_ERROR,"Imports","Thread is dying");
     JNIEnv *env = (JNIEnv*) value;
+	__android_log_print(ANDROID_LOG_ERROR,"Imports","Located an env");
     if (env != NULL)
     {
+		__android_log_print(ANDROID_LOG_ERROR,"Imports","Env isn't null");
         mJavaVM->DetachCurrentThread();
-        pthread_setspecific(mThreadKey, NULL);
+		__android_log_print(ANDROID_LOG_ERROR,"Imports","Detached thread");
     }
+	pthread_setspecific(mThreadKey, NULL);
+		__android_log_print(ANDROID_LOG_ERROR,"Imports","Set a specific thread");
+		pthread_key_delete(mThreadKey);
+		__android_log_print(ANDROID_LOG_ERROR,"Imports","Deleted a thing");
 }
 
 static JNIEnv* Android_JNI_GetEnv(void)

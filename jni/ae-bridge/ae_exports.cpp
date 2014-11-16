@@ -136,23 +136,37 @@ extern "C" DECLSPEC void SDLCALL Java_paulscode_android_mupen64plusae_jni_Native
 
     // Nullify function pointers
     aeiInit         = NULL;
+	LOGI("Unloading native libraries a");
     sdlInit         = NULL;
+	LOGI("Unloading native libraries b");
     sdlSetScreen    = NULL;
+	LOGI("Unloading native libraries c");
     sdlMainReady    = NULL;
+	LOGI("Unloading native libraries d");
     coreDoCommand   = NULL;
+	LOGI("Unloading native libraries e");
     frontMain       = NULL;
+	LOGI("Unloading native libraries f");
 
     // Close shared libraries
     if (handleFront) dlclose(handleFront);
+	LOGI("Unloading native libraries g");
     if (handleCore)  dlclose(handleCore);
+	LOGI("Unloading native libraries h");
     if (handleSDL)   dlclose(handleSDL);
+	LOGI("Unloading native libraries i");
     if (handleAEI)   dlclose(handleAEI);
+	LOGI("Unloading native libraries j");
 
     // Nullify handles
-    handleFront     = NULL;
+    handleFront     = NULL; // crashed here possibly
+	LOGI("Unloading native libraries k");
     handleCore      = NULL;
+	LOGI("Unloading native libraries L");
     handleSDL       = NULL;
+	LOGI("Unloading native libraries M");
     handleAEI       = NULL;
+	LOGI("Unloading native libraries N");
 }
 
 extern "C" DECLSPEC void SDLCALL Java_paulscode_android_mupen64plusae_jni_NativeExports_emuStart(JNIEnv* env, jclass cls, jstring juserDataPath, jstring juserCachePath, jobjectArray jargv)
