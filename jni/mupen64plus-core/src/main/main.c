@@ -761,7 +761,7 @@ void new_vi(void)
         prev_factor = l_SpeedFactor;
     }
 
-    start_section(IDLE_SECTION);
+    timed_section_start(TIMED_SECTION_IDLE);
 
 #ifdef DBG
     if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
@@ -794,7 +794,7 @@ void new_vi(void)
         SDL_Delay(time);
     }
 
-    end_section(IDLE_SECTION);
+    timed_section_end(TIMED_SECTION_IDLE);
 }
 
 /*********************************************************************************************************
