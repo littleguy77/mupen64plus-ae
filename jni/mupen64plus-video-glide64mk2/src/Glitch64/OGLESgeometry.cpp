@@ -61,6 +61,11 @@ void vbo_init()
   
 }
 
+void vbo_reset()
+{
+	vertex_buffer_count = 0;
+}
+
 void vbo_draw()
 {
   if(vertex_buffer_count)

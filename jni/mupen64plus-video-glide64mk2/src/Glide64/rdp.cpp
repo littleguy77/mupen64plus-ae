@@ -56,6 +56,12 @@
 extern FrameSkipper frameSkipper;
 #endif
 
+#ifdef USE_GLES
+void vbo_reset();
+#else
+#define vbo_reset
+#endif
+
 /*
 const int NumOfFormats = 3;
 SCREEN_SHOT_FORMAT ScreenShotFormats[NumOfFormats] = { {wxT("BMP"), wxT("bmp"), wxBITMAP_TYPE_BMP}, {wxT("PNG"), wxT("png"), wxBITMAP_TYPE_PNG}, {wxT("JPEG"), wxT("jpeg"), wxBITMAP_TYPE_JPEG} };
@@ -588,6 +594,7 @@ EXPORT void CALL ProcessDList(void)
   if (!lock.IsOk()) //mutex is busy
 #endif
   {
+    vbo_reset();
     if (!fullscreen)
       drawNoFullscreenMessage();
     // Set an interrupt to allow the game to continue
