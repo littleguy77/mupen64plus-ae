@@ -103,9 +103,9 @@ public class OffsetFinderActivity extends Activity
         private float[] mMVPMatrix = new float[16];
         
         /** Store our model data in a float buffer. */
-        private final FloatBuffer mTriangle1Vertices;
-        private final FloatBuffer mTriangle2Vertices;
-        private final FloatBuffer mTriangle3Vertices;
+        private final FloatBuffer mRedVertices;
+        private final FloatBuffer mBlueVertices;
+        private final FloatBuffer mGreenVertices;
         
         /** This will be used to pass in the transformation matrix. */
         private int mMVPMatrixHandle;
@@ -139,118 +139,86 @@ public class OffsetFinderActivity extends Activity
          */
         public Renderer()
         {
-            // Define points for equilateral triangles.
+            final float a = 1;
+            final float b = 1;//a * 1.01f;
+            // @formatter:off
+            final float[] redVerticesData = {
+            //   X,  Y,  Z,   R, G, B, A,
+                -a, -a,  a,   1, 0, 0, 1,
+                -a, -a, -a,   1, 0, 0, 1,
+                 a, -a,  a,   1, 0, 0, 1,
+                 a, -a, -a,   1, 0, 0, 1,
+                 a,  a,  a,   1, 0, 0, 1,
+                 a,  a, -a,   1, 0, 0, 1,
+                -a,  a,  a,   1, 0, 0, 1,
+                -a,  a, -a,   1, 0, 0, 1,
+                -a, -a,  a,   1, 0, 0, 1,
+                -a, -a, -a,   1, 0, 0, 1,
+                };
+            final float[] blueVerticesData = {
+            //   X,  Y,  Z,   R, G, B, A,
+                -b,  b, -b,   0, 0, 1, 1,
+                -b, -b, -b,   0, 0, 1, 1,
+                -b,  b,  b,   0, 0, 1, 1,
+                -b, -b,  b,   0, 0, 1, 1,
+                 b,  b,  b,   0, 0, 1, 1,
+                 b, -b,  b,   0, 0, 1, 1,
+                 b,  b, -b,   0, 0, 1, 1,
+                 b, -b, -b,   0, 0, 1, 1,
+                -b,  b, -b,   0, 0, 1, 1,
+                -b, -b, -b,   0, 0, 1, 1,
+                };
+            final float[] greenVerticesData = {
+            //   X,  Y,  Z,   R, G, B, A,
+                 a, -a, -a,   0, 1, 0, 1,
+                -a, -a, -a,   0, 1, 0, 1,
+                 a,  a, -a,   0, 1, 0, 1,
+                -a,  a, -a,   0, 1, 0, 1,
+                 a,  a,  a,   0, 1, 0, 1,
+                -a,  a,  a,   0, 1, 0, 1,
+                 a, -a,  a,   0, 1, 0, 1,
+                -a, -a,  a,   0, 1, 0, 1,
+                 a, -a, -a,   0, 1, 0, 1,
+                -a, -a, -a,   0, 1, 0, 1,
+                };
+            // @formatter:on
             
-            // This triangle is red, green, and blue.
-            final float[] triangle1VerticesData = {
-                // X, Y, Z,
-                // R, G, B, A
-                -0.5f,
-                -0.25f,
-                0.0f,
-                1.0f,
-                0.0f,
-                0.0f,
-                1.0f,
-                
-                0.5f,
-                -0.25f,
-                0.0f,
-                0.0f,
-                0.0f,
-                1.0f,
-                1.0f,
-                
-                0.0f,
-                0.559016994f,
-                0.0f,
-                0.0f,
-                1.0f,
-                0.0f,
-                1.0f };
-            
-            // This triangle is yellow, cyan, and magenta.
-            final float[] triangle2VerticesData = {
-                // X, Y, Z,
-                // R, G, B, A
-                -0.5f,
-                -0.25f,
-                0.0f,
-                1.0f,
-                1.0f,
-                0.0f,
-                1.0f,
-                
-                0.5f,
-                -0.25f,
-                0.0f,
-                0.0f,
-                1.0f,
-                1.0f,
-                1.0f,
-                
-                0.0f,
-                0.559016994f,
-                0.0f,
-                1.0f,
-                0.0f,
-                1.0f,
-                1.0f };
-            
-            // This triangle is white, gray, and black.
-            final float[] triangle3VerticesData = {
-                // X, Y, Z,
-                // R, G, B, A
-                -0.5f,
-                -0.25f,
-                0.0f,
-                1.0f,
-                1.0f,
-                1.0f,
-                1.0f,
-                
-                0.5f,
-                -0.25f,
-                0.0f,
-                0.5f,
-                0.5f,
-                0.5f,
-                1.0f,
-                
-                0.0f,
-                0.559016994f,
-                0.0f,
-                0.0f,
-                0.0f,
-                0.0f,
-                1.0f };
             
             // Initialize the buffers.
-            mTriangle1Vertices = ByteBuffer
-                    .allocateDirect( triangle1VerticesData.length * mBytesPerFloat )
+            mRedVertices = ByteBuffer
+                    .allocateDirect( redVerticesData.length * mBytesPerFloat )
                     .order( ByteOrder.nativeOrder() ).asFloatBuffer();
-            mTriangle2Vertices = ByteBuffer
-                    .allocateDirect( triangle2VerticesData.length * mBytesPerFloat )
+            mBlueVertices = ByteBuffer
+                    .allocateDirect( blueVerticesData.length * mBytesPerFloat )
                     .order( ByteOrder.nativeOrder() ).asFloatBuffer();
-            mTriangle3Vertices = ByteBuffer
-                    .allocateDirect( triangle3VerticesData.length * mBytesPerFloat )
+            mGreenVertices = ByteBuffer
+                    .allocateDirect( greenVerticesData.length * mBytesPerFloat )
                     .order( ByteOrder.nativeOrder() ).asFloatBuffer();
             
-            mTriangle1Vertices.put( triangle1VerticesData ).position( 0 );
-            mTriangle2Vertices.put( triangle2VerticesData ).position( 0 );
-            mTriangle3Vertices.put( triangle3VerticesData ).position( 0 );
+            mRedVertices.put( redVerticesData ).position( 0 );
+            mBlueVertices.put( blueVerticesData ).position( 0 );
+            mGreenVertices.put( greenVerticesData ).position( 0 );
         }
         
         @Override
         public void onSurfaceCreated( GL10 glUnused, EGLConfig config )
         {
-            // Set the background clear color to gray.
-            GLES20.glClearColor( 0.5f, 0.5f, 0.5f, 0.5f );
+            // Set the background clear color to black.
+            GLES20.glClearColor( 0, 0, 0, 0 );
+            
+            // Enable cull face.
+            GLES20.glEnable( GLES20.GL_CULL_FACE );
+            //GLES20.glCullFace( GLES20.GL_CCW );
+            
+            // Enable depth test.
+            GLES20.glEnable( GLES20.GL_DEPTH_TEST );
+            GLES20.glDepthFunc( GLES20.GL_LEQUAL );
+            GLES20.glDepthMask( true );
             
             // Position the eye behind the origin.
             final float eyeX = 0.0f;
             final float eyeY = 0.0f;
-            final float eyeZ = 1.5f;
+            final float eyeZ = 5.0f;
             
             // We are looking toward the distance
             final float lookX = 0.0f;
@@ -427,32 +395,30 @@ public class OffsetFinderActivity extends Activity
             long time = SystemClock.uptimeMillis() % 10000L;
             float angleInDegrees = ( 360.0f / 10000.0f ) * ( (int) time );
             
-            // Draw the triangle facing straight on.
+            // Draw the red polygons.
             Matrix.setIdentityM( mModelMatrix, 0 );
-            Matrix.rotateM( mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f );
-            drawTriangle( mTriangle1Vertices );
+            Matrix.rotateM( mModelMatrix, 0, angleInDegrees, 1.0f, 1.0f, 1.0f );
+            drawTriangleStrip( mRedVertices );
             
-            // Draw one translated a bit down and rotated to be flat on the ground.
-            Matrix.setIdentityM( mModelMatrix, 0 );
-            Matrix.translateM( mModelMatrix, 0, 0.0f, -1.0f, 0.0f );
-            Matrix.rotateM( mModelMatrix, 0, 90.0f, 1.0f, 0.0f, 0.0f );
-            Matrix.rotateM( mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f );
-            drawTriangle( mTriangle2Vertices );
+            // Draw the blue polygons with offset.
+            GLES20.glPolygonOffset( 1.5f, 1.5f );
+            GLES20.glEnable( GLES20.GL_POLYGON_OFFSET_FILL );
+            drawTriangleStrip( mBlueVertices );
+            GLES20.glDisable( GLES20.GL_POLYGON_OFFSET_FILL );
             
-            // Draw one translated a bit to the right and rotated to be facing to the left.
-            Matrix.setIdentityM( mModelMatrix, 0 );
-            Matrix.translateM( mModelMatrix, 0, 1.0f, 0.0f, 0.0f );
-            Matrix.rotateM( mModelMatrix, 0, 90.0f, 0.0f, 1.0f, 0.0f );
-            Matrix.rotateM( mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f );
-            drawTriangle( mTriangle3Vertices );
+            // Draw the green polygons with offset.
+            GLES20.glPolygonOffset( -1.5f, -1.5f );
+            GLES20.glEnable( GLES20.GL_POLYGON_OFFSET_FILL );
+            drawTriangleStrip( mGreenVertices );
+            GLES20.glDisable( GLES20.GL_POLYGON_OFFSET_FILL );
         }
         
         /**
-         * Draws a triangle from the given vertex data.
+         * Draws a triangle strip from the given vertex data.
          * 
          * @param aTriangleBuffer The buffer containing the vertex data.
          */
-        private void drawTriangle( final FloatBuffer aTriangleBuffer )
+        private void drawTriangleStrip( final FloatBuffer aTriangleBuffer )
         {
             // Pass in the position information
             aTriangleBuffer.position( mPositionOffset );
@@ -477,7 +443,7 @@ public class OffsetFinderActivity extends Activity
             Matrix.multiplyMM( mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0 );
             
             GLES20.glUniformMatrix4fv( mMVPMatrixHandle, 1, false, mMVPMatrix, 0 );
-            GLES20.glDrawArrays( GLES20.GL_TRIANGLES, 0, 3 );
+            GLES20.glDrawArrays( GLES20.GL_TRIANGLE_STRIP, 0, 10 );
         }
     }
 }
