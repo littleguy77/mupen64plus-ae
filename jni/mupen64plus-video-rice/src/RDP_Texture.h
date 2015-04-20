@@ -19,9 +19,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // Texture related ucode
 
-#include <stdlib.h>
 #include <algorithm>
 
+#include <stdlib.h>
 #include "Render.h"
 
 uint32 g_TmemFlag[16];
@@ -48,9 +48,9 @@ uint32 sizeBytes[4] = {0,1,2,4};
 inline uint32 Txl2Words(uint32 width, uint32 size)
 {
     if( size == TXT_SIZE_4b )
-        return std::max(1u, width/16);
+        return max(1, width/16);
     else
-        return std::max(1u, width*sizeBytes[size]/8);
+        return max(1, width*sizeBytes[size]/8);
 }
 
 inline uint32 CalculateImgSize(uint32 width, uint32 height, uint32 size)
@@ -748,7 +748,7 @@ bool CalculateTileSizes_method_2(int tileno, TMEMLoadMapInfo *info, TxtrInfo &gt
         if( gti.WidthToLoad > gti.HeightToLoad )
         {
             uint32 newheight = (dwPitch << 1 )>> tile.dwSize;
-            tile.dwWidth = gti.WidthToLoad = gti.WidthToCreate = std::min(newheight, (gti.WidthToLoad&0xFFFFFFFE));
+            tile.dwWidth = gti.WidthToLoad = gti.WidthToCreate = min(newheight, (gti.WidthToLoad&0xFFFFFFFE));
             tile.dwHeight = gti.HeightToCreate = gti.HeightToLoad = ((0x200 - tile.dwTMem) << (4-tile.dwSize)) / gti.WidthToLoad;
         }
         else
@@ -961,30 +961,30 @@ bool CalculateTileSizes_method_1(int tileno, TMEMLoadMapInfo *info, TxtrInfo &gt
 
     if( tile.dwMaskS == 0 || tile.bClampS )
     {
-        gti.WidthToLoad = linewidth ? std::min( linewidth, maskwidth ? std::min(clampwidth,maskwidth) : clampwidth ) : clampwidth;
+        gti.WidthToLoad = linewidth ? min( linewidth, maskwidth ? min(clampwidth,maskwidth) : clampwidth ) : clampwidth;
         if( tile.dwMaskS && clampwidth < maskwidth )
             tile.dwWidth = gti.WidthToCreate = clampwidth;
         else
-            tile.dwWidth = gti.WidthToCreate = std::max(clampwidth,maskwidth);
+            tile.dwWidth = gti.WidthToCreate = max(clampwidth,maskwidth);
     }
     else
     {
-        gti.WidthToLoad = loadwidth > 2 ? std::min(loadwidth,maskwidth) : maskwidth;
-        if( linewidth ) gti.WidthToLoad = std::min( linewidth, (int)gti.WidthToLoad );
+        gti.WidthToLoad = loadwidth > 2 ? min(loadwidth,maskwidth) : maskwidth;
+        if( linewidth ) gti.WidthToLoad = min( linewidth, (int)gti.WidthToLoad );
         tile.dwWidth = gti.WidthToCreate = maskwidth;
     }
 
     if( tile.dwMaskT == 0 || tile.bClampT )
     {
-        gti.HeightToLoad = maskheight ? std::min(clampheight,maskheight) : clampheight;
+        gti.HeightToLoad = maskheight ? min(clampheight,maskheight) : clampheight;
         if( tile.dwMaskT && clampheight < maskheight )
             tile.dwHeight = gti.HeightToCreate = clampheight;
         else
-            tile.dwHeight = gti.HeightToCreate = std::max(clampheight,maskheight);
+            tile.dwHeight = gti.HeightToCreate = max(clampheight,maskheight);
     }
     else
     {
-        gti.HeightToLoad = loadheight > 2 ? std::min(loadheight,maskheight) : maskheight;
+        gti.HeightToLoad = loadheight > 2 ? min(loadheight,maskheight) : maskheight;
         tile.dwHeight = gti.HeightToCreate = maskheight;
     }
 
@@ -1005,7 +1005,7 @@ bool CalculateTileSizes_method_1(int tileno, TMEMLoadMapInfo *info, TxtrInfo &gt
         if( gti.WidthToLoad > gti.HeightToLoad )
         {
             uint32 newheight = (tile.dwPitch << 1 )>> tile.dwSize;
-            tile.dwWidth = gti.WidthToLoad = gti.WidthToCreate = std::min(newheight, (gti.WidthToLoad&0xFFFFFFFE));
+            tile.dwWidth = gti.WidthToLoad = gti.WidthToCreate = min(newheight, (gti.WidthToLoad&0xFFFFFFFE));
             tile.dwHeight = gti.HeightToCreate = gti.HeightToLoad = ((0x200 - tile.dwTMem) << (4-tile.dwSize)) / gti.WidthToLoad;
         }
         else
@@ -1118,9 +1118,7 @@ TxtrCacheEntry* LoadTexture(uint32 tileno)
 
 void PrepareTextures()
 {
-    if( gRDP.textureIsChanged || !currentRomOptions.bFastTexCRC ||
-        CRender::g_pRender->m_pColorCombiner->m_pDecodedMux->m_ColorTextureFlag[0] ||
-        CRender::g_pRender->m_pColorCombiner->m_pDecodedMux->m_ColorTextureFlag[1] )
+    if( gRDP.textureIsChanged || !currentRomOptions.bFastTexCRC )
     {
         status.UseLargerTile[0]=false;
         status.UseLargerTile[1]=false;
@@ -1141,45 +1139,36 @@ void PrepareTextures()
         {
             if( tilenos[i] < 0 )    continue;
 
-            if( CRender::g_pRender->m_pColorCombiner->m_pDecodedMux->m_ColorTextureFlag[i] )
+            TxtrCacheEntry *pEntry = LoadTexture(tilenos[i]);
+            if (pEntry && pEntry->pTexture )
             {
-                TxtrCacheEntry *pEntry = gTextureManager.GetConstantColorTexture(CRender::g_pRender->m_pColorCombiner->m_pDecodedMux->m_ColorTextureFlag[i]);
-                CRender::g_pRender->SetCurrentTexture( tilenos[i], pEntry->pTexture, 4, 4, pEntry);
+                if( pEntry->txtrBufIdx <= 0 )
+                {
+                    if( pEntry->pEnhancedTexture && pEntry->dwEnhancementFlag == TEXTURE_EXTERNAL && !options.bLoadHiResTextures )
+                    {
+                        SAFE_DELETE(pEntry->pEnhancedTexture);
+                    }
+
+                    if( options.bLoadHiResTextures && (pEntry->pEnhancedTexture == NULL || pEntry->dwEnhancementFlag < TEXTURE_EXTERNAL ) )
+                    {
+                        LoadHiresTexture(*pEntry);
+                    }
+
+                    if( pEntry->pEnhancedTexture == NULL || (pEntry->dwEnhancementFlag != options.textureEnhancement && pEntry->dwEnhancementFlag < TEXTURE_EXTERNAL ) )
+                    {
+                        EnhanceTexture(pEntry);
+                    }
+                }
+
+                CRender::g_pRender->SetCurrentTexture( tilenos[i], 
+                    (pEntry->pEnhancedTexture)?pEntry->pEnhancedTexture:pEntry->pTexture,
+                    pEntry->ti.WidthToLoad, pEntry->ti.HeightToLoad, pEntry);
             }
             else
             {
-                TxtrCacheEntry *pEntry = LoadTexture(tilenos[i]);
-                if (pEntry && pEntry->pTexture )
-                {
-                    if( pEntry->txtrBufIdx <= 0 )
-                    {
-                        if( pEntry->pEnhancedTexture && pEntry->dwEnhancementFlag == TEXTURE_EXTERNAL && !options.bLoadHiResTextures )
-                        {
-                            SAFE_DELETE(pEntry->pEnhancedTexture);
-                        }
-
-                        if( options.bLoadHiResTextures && (pEntry->pEnhancedTexture == NULL || pEntry->dwEnhancementFlag < TEXTURE_EXTERNAL ) )
-                        {
-                            LoadHiresTexture(*pEntry);
-                        }
-
-                        if( pEntry->pEnhancedTexture == NULL || (pEntry->dwEnhancementFlag != options.textureEnhancement && pEntry->dwEnhancementFlag < TEXTURE_EXTERNAL ) )
-                        {
-                            EnhanceTexture(pEntry);
-                        }
-                    }
-
-                    CRender::g_pRender->SetCurrentTexture( tilenos[i], 
-                        (pEntry->pEnhancedTexture)?pEntry->pEnhancedTexture:pEntry->pTexture,
-                        pEntry->ti.WidthToLoad, pEntry->ti.HeightToLoad, pEntry);
-                }
-                else
-                {
-                    pEntry = gTextureManager.GetBlackTexture();
-                    CRender::g_pRender->SetCurrentTexture( tilenos[i], pEntry->pTexture, 4, 4, pEntry);
-                    _VIDEO_DisplayTemporaryMessage("Fail to load texture, use black to replace");
-                }
-
+                pEntry = gTextureManager.GetBlackTexture();
+                CRender::g_pRender->SetCurrentTexture( tilenos[i], pEntry->pTexture, 4, 4, pEntry);
+                _VIDEO_DisplayTemporaryMessage("Fail to load texture, use black to replace");
             }
         }
 
@@ -1928,7 +1917,7 @@ void DLParser_TexRect(Gfx *gfx)
         }
     }
 
-    if( status.bHandleN64RenderTexture )    g_pRenderTextureInfo->maxUsedHeight = std::max(g_pRenderTextureInfo->maxUsedHeight,(int)dwYH);
+    if( status.bHandleN64RenderTexture )    g_pRenderTextureInfo->maxUsedHeight = max(g_pRenderTextureInfo->maxUsedHeight,(int)dwYH);
 
     ForceMainTextureIndex(curTile);
 }
@@ -1998,7 +1987,7 @@ void DLParser_TexRectFlip(Gfx *gfx)
     CRender::g_pRender->TexRectFlip(dwXL, dwYL, dwXH, dwYH, t0u0, t0v0, t0u1, t0v1);
     status.dwNumTrisRendered += 2;
 
-    if( status.bHandleN64RenderTexture )    g_pRenderTextureInfo->maxUsedHeight = std::max(g_pRenderTextureInfo->maxUsedHeight,int(dwYL+(dwXH-dwXL)));
+    if( status.bHandleN64RenderTexture )    g_pRenderTextureInfo->maxUsedHeight = max(g_pRenderTextureInfo->maxUsedHeight,int(dwYL+(dwXH-dwXL)));
 
     ForceMainTextureIndex(curTile);
 }

@@ -449,8 +449,6 @@ void DLParser_Bomberman2TextRect(Gfx *gfx)
     uint32 dwTile   = gRSP.curTile;
 
     PrepareTextures();
-    
-    //CRender::g_pRender->SetCombinerAndBlender();
 
     uObjTxSprite drawinfo;
     memcpy( &(drawinfo.sprite), info, sizeof(uObjSprite));
@@ -562,11 +560,6 @@ void RSP_DMA_Tri_DKR(Gfx *gfx)
             CRender::g_pRender->SetVtxTextureCoord(dwV1, s1, t1);
             CRender::g_pRender->SetVtxTextureCoord(dwV2, s2, t2);
 
-            if( !bTrisAdded )
-            {
-                CRender::g_pRender->SetCombinerAndBlender();
-            }
-
             bTrisAdded = true;
             PrepareTriangle(dwV0, dwV1, dwV2);
         }
@@ -577,6 +570,7 @@ void RSP_DMA_Tri_DKR(Gfx *gfx)
 
     if (bTrisAdded) 
     {
+        CRender::g_pRender->SetCombinerAndBlender();
         CRender::g_pRender->DrawTriangles();
     }
     gRSP.DKRVtxCount=0;
@@ -638,11 +632,6 @@ void RSP_Tri4_PD(Gfx *gfx)
                     InitVertexTextureConstants();
                 }
 
-                if( !bTrisAdded )
-                {
-                    CRender::g_pRender->SetCombinerAndBlender();
-                }
-
                 bTrisAdded = true;
                 PrepareTriangle(v0, v2, v1);
             }
@@ -662,6 +651,7 @@ void RSP_Tri4_PD(Gfx *gfx)
 
     if (bTrisAdded) 
     {
+        CRender::g_pRender->SetCombinerAndBlender();
         CRender::g_pRender->DrawTriangles();
     }
 
@@ -716,11 +706,6 @@ void DLParser_Tri4_Conker(Gfx *gfx)
                     InitVertexTextureConstants();
                 }
 
-                if( !bTrisAdded )
-                {
-                    CRender::g_pRender->SetCombinerAndBlender();
-                }
-
                 bTrisAdded = true;
                 PrepareTriangle(v0, v1, v2);
             }
@@ -740,6 +725,7 @@ void DLParser_Tri4_Conker(Gfx *gfx)
 
     if (bTrisAdded) 
     {
+        CRender::g_pRender->SetCombinerAndBlender();
         CRender::g_pRender->DrawTriangles();
     }
 
@@ -899,7 +885,7 @@ void DLParser_RS_Color_Buffer(Gfx *gfx)
         DebuggerAppendMsg("Vtx_Color at PC=%08X: 0x%08x 0x%08x\n", dwPC-8, (gfx->words.w0), (gfx->words.w1));
         if( dwAddr < g_dwRamSize )
         {
-            DumpHex(dwAddr, std::min(64, g_dwRamSize-dwAddr));
+            DumpHex(dwAddr, min(64, g_dwRamSize-dwAddr));
         }
     }
 #endif
@@ -929,7 +915,7 @@ void DLParser_RS_Vtx_Buffer(Gfx *gfx)
         DebuggerAppendMsg("Vtx_XYZ at PC=%08X: 0x%08x 0x%08x\n", dwPC-8, (gfx->words.w0), (gfx->words.w1));
         if( dwAddr < g_dwRamSize )
         {
-            DumpHex(dwAddr, std::min(64, g_dwRamSize-dwAddr));
+            DumpHex(dwAddr, min(64, g_dwRamSize-dwAddr));
         }
     }
 #endif
@@ -1724,7 +1710,7 @@ void DLParser_TexRect_Last_Legion(Gfx *gfx)
     }
 
     if( status.bHandleN64RenderTexture ) 
-        g_pRenderTextureInfo->maxUsedHeight = std::max(g_pRenderTextureInfo->maxUsedHeight,(int)dwYH);
+        g_pRenderTextureInfo->maxUsedHeight = max(g_pRenderTextureInfo->maxUsedHeight,(int)dwYH);
 
     ForceMainTextureIndex(curTile);
 }

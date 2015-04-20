@@ -25,14 +25,11 @@
 // POSSESSION, USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <setjmp.h>
+#include "BMGDLL.h"
+#include "BMGUtils.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "../osal_preproc.h"
-#include "BMGDLL.h"
-#include "BMGImage.h"
-#include "BMGUtils.h"
+#include <setjmp.h>
 
 #ifndef _WIN32
 #include <string.h>

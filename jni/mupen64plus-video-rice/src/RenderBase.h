@@ -20,12 +20,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef _RICE_RENDER_BASE_H
 #define _RICE_RENDER_BASE_H
 
+#include "osal_preproc.h"
 #include "Debugger.h"
 #include "RSP_Parser.h"
-#include "VectorMath.h"
 #include "Video.h"
-#include "osal_preproc.h"
-#include "typedefs.h"
 
 /*
  *  Global variables defined in this file were moved out of Render class
@@ -165,9 +163,6 @@ typedef struct
     bool    bNearClip;
     bool    bRejectVtx;
 
-    bool    bProcessDiffuseColor;
-    bool    bProcessSpecularColor;
-
     float   vtxXMul;
     float   vtxXAdd;
     float   vtxYMul;
@@ -197,9 +192,19 @@ typedef struct {
     uint32  keyRGB;
     uint32  keyRGBA;
     float   fKeyA;
+    uint8   keyCenterR;
+    uint8   keyCenterB;
+    uint8   keyCenterG;
+    uint8   keyScaleR;
+    uint8   keyScaleG;
+    uint8   keyScaleB;
+    uint16  keyWidthR;
+    uint16  keyWidthG;
+    uint16  keyWidthB;
     
     bool    bFogEnableInBlender;
 
+    uint32  blendColor;
     uint32  fogColor;
     uint32  primitiveColor;
     uint32  envColor;
@@ -207,8 +212,11 @@ typedef struct {
     uint32  primLODMin;
     uint32  primLODFrac;
     uint32  LODFrac;
+    uint8   K5;
+    uint8   K4;
 
     float   fPrimitiveDepth;
+    float   fvBlendColor[4];
     float   fvFogColor[4];
     float   fvPrimitiveColor[4];
     float   fvEnvColor[4];
@@ -225,8 +233,7 @@ typedef struct {
     ScissorType scissor;
 
     bool    textureIsChanged;
-    bool    texturesAreReloaded;
-    bool    colorsAreReloaded;
+
 } RDP_Options;
 
 extern ALIGN(16, RDP_Options gRDP)
@@ -246,7 +253,6 @@ void ProcessVertexDataSSE(uint32 dwAddr, uint32 dwV0, uint32 dwNum);
 #endif
 void ProcessVertexDataNoSSE(uint32 dwAddr, uint32 dwV0, uint32 dwNum);
 void ProcessVertexDataExternal(uint32 dwAddr, uint32 dwV0, uint32 dwNum);
-void SetPrimitiveColor(uint32 dwCol, uint32 LODMin, uint32 LODFrac);
 void SetPrimitiveDepth(uint32 z, uint32 dwDZ);
 void SetVertexXYZ(uint32 vertex, float x, float y, float z);
 void ModifyVertexInfo(uint32 where, uint32 vertex, uint32 val);
@@ -275,15 +281,6 @@ inline float GetPrimitiveDepth() { return gRDP.fPrimitiveDepth; }
 inline uint32 GetPrimitiveColor() { return gRDP.primitiveColor; }
 inline float* GetPrimitiveColorfv() { return gRDP.fvPrimitiveColor; }
 inline uint32 GetLODFrac() { return gRDP.LODFrac; }
-inline void SetEnvColor(uint32 dwCol) 
-{ 
-    gRDP.colorsAreReloaded = true;
-    gRDP.envColor = dwCol; 
-    gRDP.fvEnvColor[0] = ((dwCol>>16)&0xFF)/255.0f;     //r
-    gRDP.fvEnvColor[1] = ((dwCol>>8)&0xFF)/255.0f;      //g
-    gRDP.fvEnvColor[2] = ((dwCol)&0xFF)/255.0f;         //b
-    gRDP.fvEnvColor[3] = ((dwCol>>24)&0xFF)/255.0f;     //a
-}
 inline uint32 GetEnvColor() { return gRDP.envColor; }
 inline float* GetEnvColorfv() { return gRDP.fvEnvColor; }
 

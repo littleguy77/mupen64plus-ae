@@ -18,26 +18,44 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 /* This source file contains code for assigning function pointers to some OpenGL functions */
 /* This is only necessary because Windows does not contain development support for OpenGL versions beyond 1.1 */
-#ifndef USE_GLES
-#include "osal_opengl.h"
-#include <stddef.h>
 
+#include "osal_opengl.h"
 #include "OGLExtensions.h"
 #include "Video.h"
-#include "m64p_types.h"
 
 static void APIENTRY EmptyFunc(void) { return; }
 
-PFUNCGLACTIVETEXTUREPROC             pglActiveTexture = (PFUNCGLACTIVETEXTUREPROC) EmptyFunc;
-PFUNCGLMULTITEXCOORD2FPROC           pglMultiTexCoord2f = (PFUNCGLMULTITEXCOORD2FPROC) EmptyFunc;
-PFUNCGLMULTITEXCOORD2FVPROC          pglMultiTexCoord2fv = (PFUNCGLMULTITEXCOORD2FVPROC) EmptyFunc;
-PFUNCGLDELETEPROGRAMSARBPROC         pglDeleteProgramsARB = (PFUNCGLDELETEPROGRAMSARBPROC) EmptyFunc;
-PFUNCGLPROGRAMSTRINGARBPROC          pglProgramStringARB = (PFUNCGLPROGRAMSTRINGARBPROC) EmptyFunc;
-PFUNCGLBINDPROGRAMARBPROC            pglBindProgramARB = (PFUNCGLBINDPROGRAMARBPROC) EmptyFunc;
-PFUNCGLGENPROGRAMSARBPROC            pglGenProgramsARB = (PFUNCGLGENPROGRAMSARBPROC) EmptyFunc;
-PFUNCGLPROGRAMENVPARAMETER4FVARBPROC pglProgramEnvParameter4fvARB = (PFUNCGLPROGRAMENVPARAMETER4FVARBPROC) EmptyFunc;
-PFUNCGLFOGCOORDPOINTERPROC           pglFogCoordPointer = (PFUNCGLFOGCOORDPOINTERPROC) EmptyFunc;
-PFUNCGLCLIENTACTIVETEXTUREPROC       pglClientActiveTexture = (PFUNCGLCLIENTACTIVETEXTUREPROC) EmptyFunc;
+#ifndef USE_GLES
+#ifdef WIN32
+PFNGLACTIVETEXTUREPROC            glActiveTexture            = (PFNGLACTIVETEXTUREPROC) EmptyFunc;
+#endif
+PFNGLCREATESHADERPROC             glCreateShader             = (PFNGLCREATESHADERPROC) EmptyFunc;
+PFNGLSHADERSOURCEPROC             glShaderSource             = (PFNGLSHADERSOURCEPROC) EmptyFunc;
+PFNGLCOMPILESHADERPROC            glCompileShader            = (PFNGLCOMPILESHADERPROC) EmptyFunc;
+PFNGLGETSHADERIVPROC              glGetShaderiv              = (PFNGLGETSHADERIVPROC) EmptyFunc;
+PFNGLGETSHADERINFOLOGPROC         glGetShaderInfoLog         = (PFNGLGETSHADERINFOLOGPROC) EmptyFunc;
+PFNGLCREATEPROGRAMPROC            glCreateProgram            = (PFNGLCREATEPROGRAMPROC) EmptyFunc;
+PFNGLATTACHSHADERPROC             glAttachShader             = (PFNGLATTACHSHADERPROC) EmptyFunc;
+PFNGLBINDATTRIBLOCATIONPROC       glBindAttribLocation       = (PFNGLBINDATTRIBLOCATIONPROC) EmptyFunc;
+PFNGLLINKPROGRAMPROC              glLinkProgram              = (PFNGLLINKPROGRAMPROC) EmptyFunc;
+PFNGLGETPROGRAMIVPROC             glGetProgramiv             = (PFNGLGETPROGRAMIVPROC) EmptyFunc;
+PFNGLGETPROGRAMINFOLOGPROC        glGetProgramInfoLog        = (PFNGLGETPROGRAMINFOLOGPROC) EmptyFunc;
+PFNGLDETACHSHADERPROC             glDetachShader             = (PFNGLDETACHSHADERPROC) EmptyFunc;
+PFNGLGETUNIFORMLOCATIONPROC       glGetUniformLocation       = (PFNGLGETUNIFORMLOCATIONPROC) EmptyFunc;
+PFNGLDELETESHADERPROC             glDeleteShader             = (PFNGLDELETESHADERPROC) EmptyFunc;
+PFNGLDELETEPROGRAMPROC            glDeleteProgram            = (PFNGLDELETEPROGRAMPROC) EmptyFunc;
+PFNGLISSHADERPROC                 glIsShader                 = (PFNGLISSHADERPROC) EmptyFunc;
+PFNGLISPROGRAMPROC                glIsProgram                = (PFNGLISPROGRAMPROC) EmptyFunc;
+PFNGLENABLEVERTEXATTRIBARRAYPROC  glEnableVertexAttribArray  = (PFNGLENABLEVERTEXATTRIBARRAYPROC) EmptyFunc;
+PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) EmptyFunc;
+PFNGLVERTEXATTRIBPOINTERPROC      glVertexAttribPointer      = (PFNGLVERTEXATTRIBPOINTERPROC) EmptyFunc;
+PFNGLUNIFORM4FPROC                glUniform4f                = (PFNGLUNIFORM4FPROC) EmptyFunc;
+PFNGLUNIFORM3FPROC                glUniform3f                = (PFNGLUNIFORM3FPROC) EmptyFunc;
+PFNGLUNIFORM2FPROC                glUniform2f                = (PFNGLUNIFORM2FPROC) EmptyFunc;
+PFNGLUNIFORM1FPROC                glUniform1f                = (PFNGLUNIFORM1FPROC) EmptyFunc;
+PFNGLUNIFORM1IPROC                glUniform1i                = (PFNGLUNIFORM1IPROC) EmptyFunc;
+PFNGLUSEPROGRAMPROC               glUseProgram               = (PFNGLUSEPROGRAMPROC) EmptyFunc;
+#endif /* not USE_GLES */
 
 #define INIT_ENTRY_POINT(type, funcname) \
   p##funcname = (type) CoreVideo_GL_GetProcAddress(#funcname); \
@@ -46,16 +64,37 @@ PFUNCGLCLIENTACTIVETEXTUREPROC       pglClientActiveTexture = (PFUNCGLCLIENTACTI
 
 void OGLExtensions_Init(void)
 {
-    INIT_ENTRY_POINT(PFUNCGLACTIVETEXTUREPROC,             glActiveTexture);
-    INIT_ENTRY_POINT(PFUNCGLMULTITEXCOORD2FPROC,           glMultiTexCoord2f);
-    INIT_ENTRY_POINT(PFUNCGLMULTITEXCOORD2FVPROC,          glMultiTexCoord2fv);
-    INIT_ENTRY_POINT(PFUNCGLDELETEPROGRAMSARBPROC,         glDeleteProgramsARB);
-    INIT_ENTRY_POINT(PFUNCGLPROGRAMSTRINGARBPROC,          glProgramStringARB);
-    INIT_ENTRY_POINT(PFUNCGLBINDPROGRAMARBPROC,            glBindProgramARB);
-    INIT_ENTRY_POINT(PFUNCGLGENPROGRAMSARBPROC,            glGenProgramsARB);
-    INIT_ENTRY_POINT(PFUNCGLPROGRAMENVPARAMETER4FVARBPROC, glProgramEnvParameter4fvARB);
-    INIT_ENTRY_POINT(PFUNCGLFOGCOORDPOINTERPROC,           glFogCoordPointer);
-    INIT_ENTRY_POINT(PFUNCGLCLIENTACTIVETEXTUREPROC,       glClientActiveTexture);
+#ifndef USE_GLES
+#ifdef WIN32
+    glActiveTexture            = (PFNGLACTIVETEXTUREPROC)            CoreVideo_GL_GetProcAddress("glActiveTexture");
+#endif
+    glCreateShader             = (PFNGLCREATESHADERPROC)             CoreVideo_GL_GetProcAddress("glCreateShader");
+    glShaderSource             = (PFNGLSHADERSOURCEPROC)             CoreVideo_GL_GetProcAddress("glShaderSource");
+    glCompileShader            = (PFNGLCOMPILESHADERPROC)            CoreVideo_GL_GetProcAddress("glCompileShader");
+    glGetShaderiv              = (PFNGLGETSHADERIVPROC)              CoreVideo_GL_GetProcAddress("glGetShaderiv");
+    glGetShaderInfoLog         = (PFNGLGETSHADERINFOLOGPROC)         CoreVideo_GL_GetProcAddress("glGetShaderInfoLog");
+    glCreateProgram            = (PFNGLCREATEPROGRAMPROC)            CoreVideo_GL_GetProcAddress("glCreateProgram");
+    glAttachShader             = (PFNGLATTACHSHADERPROC)             CoreVideo_GL_GetProcAddress("glAttachShader");
+    glBindAttribLocation       = (PFNGLBINDATTRIBLOCATIONPROC)       CoreVideo_GL_GetProcAddress("glBindAttribLocation");
+    glLinkProgram              = (PFNGLLINKPROGRAMPROC)              CoreVideo_GL_GetProcAddress("glLinkProgram");
+    glGetProgramiv             = (PFNGLGETPROGRAMIVPROC)             CoreVideo_GL_GetProcAddress("glGetProgramiv");
+    glGetProgramInfoLog        = (PFNGLGETPROGRAMINFOLOGPROC)        CoreVideo_GL_GetProcAddress("glGetProgramInfoLog");
+    glGetUniformLocation       = (PFNGLGETUNIFORMLOCATIONPROC)       CoreVideo_GL_GetProcAddress("glGetUniformLocation");
+    glDetachShader             = (PFNGLDETACHSHADERPROC)             CoreVideo_GL_GetProcAddress("glDetachShader");
+    glDeleteShader             = (PFNGLDELETESHADERPROC)             CoreVideo_GL_GetProcAddress("glDeleteShader");
+    glDeleteProgram            = (PFNGLDELETEPROGRAMPROC)            CoreVideo_GL_GetProcAddress("glDeleteProgram");
+    glIsShader                 = (PFNGLISSHADERPROC)                 CoreVideo_GL_GetProcAddress("glIsShader");
+    glIsProgram                = (PFNGLISPROGRAMPROC)                CoreVideo_GL_GetProcAddress("glIsProgram");
+    glEnableVertexAttribArray  = (PFNGLENABLEVERTEXATTRIBARRAYPROC)  CoreVideo_GL_GetProcAddress("glEnableVertexAttribArray");
+    glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) CoreVideo_GL_GetProcAddress("glDisableVertexAttribArray");
+    glVertexAttribPointer      = (PFNGLVERTEXATTRIBPOINTERPROC)      CoreVideo_GL_GetProcAddress("glVertexAttribPointer");
+    glUniform4f                = (PFNGLUNIFORM4FPROC)                CoreVideo_GL_GetProcAddress("glUniform4f");
+    glUniform3f                = (PFNGLUNIFORM3FPROC)                CoreVideo_GL_GetProcAddress("glUniform3f");
+    glUniform2f                = (PFNGLUNIFORM2FPROC)                CoreVideo_GL_GetProcAddress("glUniform2f");
+    glUniform1f                = (PFNGLUNIFORM1FPROC)                CoreVideo_GL_GetProcAddress("glUniform1f");
+    glUniform1i                = (PFNGLUNIFORM1IPROC)                CoreVideo_GL_GetProcAddress("glUniform1i");
+    glUseProgram               = (PFNGLUSEPROGRAMPROC)               CoreVideo_GL_GetProcAddress("glUseProgram");
+#endif /* not USE_GLES */
 }
-#endif  // USE_GLES
+
 

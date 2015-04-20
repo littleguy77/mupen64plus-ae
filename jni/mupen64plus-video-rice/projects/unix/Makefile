@@ -194,8 +194,8 @@ LDLIBS += $(LIBPNG_LDLIBS)
 
 # search for OpenGL libraries
 ifeq ($(VC), 1)
-  GL_CFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
-  GL_LDLIBS += -L/opt/vc/lib -lEGL -lbcm_host -lvcos -lvchiq_arm
+  CFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux
+  GL_LDLIBS += -lm -L/opt/vc/lib -lEGL -lbcm_host
   USE_GLES=1
 endif
 ifeq ($(USE_GLES), 1)
@@ -314,21 +314,15 @@ SOURCE = \
 	$(SRCDIR)/liblinux/pngrw.c \
 	$(SRCDIR)/Blender.cpp \
 	$(SRCDIR)/Combiner.cpp \
-	$(SRCDIR)/CombinerTable.cpp \
 	$(SRCDIR)/Config.cpp \
 	$(SRCDIR)/ConvertImage.cpp \
 	$(SRCDIR)/ConvertImage16.cpp \
 	$(SRCDIR)/Debugger.cpp \
-	$(SRCDIR)/DecodedMux.cpp \
 	$(SRCDIR)/DeviceBuilder.cpp \
 	$(SRCDIR)/FrameBuffer.cpp \
-	$(SRCDIR)/GeneralCombiner.cpp \
 	$(SRCDIR)/GraphicsContext.cpp \
 	$(SRCDIR)/OGLCombiner.cpp \
-	$(SRCDIR)/OGLDecodedMux.cpp \
-	$(SRCDIR)/OGLExtCombiner.cpp \
 	$(SRCDIR)/OGLExtensions.cpp \
-	$(SRCDIR)/OGLExtRender.cpp \
 	$(SRCDIR)/OGLGraphicsContext.cpp \
 	$(SRCDIR)/OGLRender.cpp \
 	$(SRCDIR)/OGLRenderExt.cpp \
@@ -347,14 +341,6 @@ SOURCE = \
 	$(SRCDIR)/TextureManager.cpp \
 	$(SRCDIR)/VectorMath.cpp \
 	$(SRCDIR)/Video.cpp
-
-ifeq ($(USE_GLES), 1)
-	SOURCE += \
-		$(SRCDIR)/OGLES2FragmentShaders.cpp
-else
-	SOURCE += \
-		$(SRCDIR)/OGLFragmentShaders.cpp
-endif
 
 ifeq ($(OS),MINGW)
 SOURCE += \

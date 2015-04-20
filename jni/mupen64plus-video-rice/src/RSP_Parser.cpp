@@ -17,30 +17,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include <SDL.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
 #include <algorithm>
+#include <SDL.h>
 
-#include "Config.h"
 #include "ConvertImage.h"
-#include "Debugger.h"
 #include "GraphicsContext.h"
-#include "RSP_Parser.h"
-#include "RSP_S2DEX.h"
 #include "Render.h"
-#include "RenderBase.h"
 #include "RenderTexture.h"
-#include "TextureManager.h"
-#include "Timing.h"
-#include "UcodeDefs.h"
-#include "VectorMath.h"
 #include "Video.h"
-#include "m64p_plugin.h"
-#include "osal_preproc.h"
-#include "typedefs.h"
 #include "ucode.h"
+#include <time.h>
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
@@ -272,13 +258,13 @@ uint16  g_wRDPTlut[0x200];
 uint32  g_dwRDPPalCrc[16];
 
 #include "FrameBuffer.h"
-#include "RDP_Texture.h"
 #include "RSP_GBI0.h"
 #include "RSP_GBI1.h"
 #include "RSP_GBI2.h"
 #include "RSP_GBI2_ext.h"
 #include "RSP_GBI_Others.h"
 #include "RSP_GBI_Sprite2D.h"
+#include "RDP_Texture.h"
 
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
@@ -1021,6 +1007,13 @@ void DLParser_SetKeyGB(Gfx *gfx)
     gRDP.keyG = ((gfx->words.w1)>>24)&0xFF;
     gRDP.keyA = (gRDP.keyR+gRDP.keyG+gRDP.keyB)/3;
     gRDP.fKeyA = gRDP.keyA/255.0f;
+    
+    gRDP.keyScaleB  = (gfx->words.w1)&0xFF;
+    gRDP.keyCenterB = (gfx->words.w1>>8)&0xFF;
+    gRDP.keyScaleG  = (gfx->words.w1>>16)&0xFF;
+    gRDP.keyCenterG = (gfx->words.w1>>24)&0xFF;
+    gRDP.keyWidthB  = (gfx->words.w0)&0xFFF;
+    gRDP.keyWidthG  = (gfx->words.w0>>12)&0xFFF;
 }
 void DLParser_SetKeyR(Gfx *gfx)
 {
@@ -1029,6 +1022,10 @@ void DLParser_SetKeyR(Gfx *gfx)
     gRDP.keyR = ((gfx->words.w1)>>8)&0xFF;
     gRDP.keyA = (gRDP.keyR+gRDP.keyG+gRDP.keyB)/3;
     gRDP.fKeyA = gRDP.keyA/255.0f;
+    
+    gRDP.keyScaleR  = (gfx->words.w1)&0xFF;
+    gRDP.keyCenterR = (gfx->words.w1>>8)&0xFF;
+    gRDP.keyWidthR  = (gfx->words.w1>>16)&0xFFF;
 }
 
 int g_convk0,g_convk1,g_convk2,g_convk3,g_convk4,g_convk5;
@@ -1063,6 +1060,9 @@ void DLParser_SetConvert(Gfx *gfx)
     g_convc2 = g_convk1/255.0f*g_convc0;
     g_convc3 = g_convk2/255.0f*g_convc0;
     g_convc4 = g_convk3/255.0f*g_convc0;
+    
+    gRDP.K5 = (uint8)(gfx->words.w1)&0x1FF;
+    gRDP.K4 = (uint8)(gfx->words.w1>>9)&0x1FF;
 }
 void DLParser_SetPrimDepth(Gfx *gfx)
 {
@@ -1330,12 +1330,12 @@ void DLParser_FillRect(Gfx *gfx)
     {
         if( !status.bCIBufferIsRendered ) g_pFrameBufferManager->ActiveTextureBuffer();
 
-        status.leftRendered = status.leftRendered<0 ? x0 : std::min((int)x0,status.leftRendered);
-        status.topRendered = status.topRendered<0 ? y0 : std::min((int)y0,status.topRendered);
-        status.rightRendered = status.rightRendered<0 ? x1 : std::max((int)x1,status.rightRendered);
-        status.bottomRendered = status.bottomRendered<0 ? y1 : std::max((int)y1,status.bottomRendered);
+        status.leftRendered = status.leftRendered<0 ? x0 : min((int)x0,status.leftRendered);
+        status.topRendered = status.topRendered<0 ? y0 : min((int)y0,status.topRendered);
+        status.rightRendered = status.rightRendered<0 ? x1 : max((int)x1,status.rightRendered);
+        status.bottomRendered = status.bottomRendered<0 ? y1 : max((int)y1,status.bottomRendered);
 
-        g_pRenderTextureInfo->maxUsedHeight = std::max(g_pRenderTextureInfo->maxUsedHeight,(int)y1);
+        g_pRenderTextureInfo->maxUsedHeight = max(g_pRenderTextureInfo->maxUsedHeight,(int)y1);
 
         if( status.bDirectWriteIntoRDRAM || ( x0==0 && y0==0 && (x1 == g_pRenderTextureInfo->N64Width || x1 == g_pRenderTextureInfo->N64Width-1 ) ) )
         {
@@ -1407,27 +1407,17 @@ void DLParser_FillRect(Gfx *gfx)
         {
             if( !status.bCIBufferIsRendered ) g_pFrameBufferManager->ActiveTextureBuffer();
 
-            status.leftRendered = status.leftRendered<0 ? x0 : std::min((int)x0,status.leftRendered);
-            status.topRendered = status.topRendered<0 ? y0 : std::min((int)y0,status.topRendered);
-            status.rightRendered = status.rightRendered<0 ? x1 : std::max((int)x1,status.rightRendered);
-            status.bottomRendered = status.bottomRendered<0 ? y1 : std::max((int)y1,status.bottomRendered);
+            status.leftRendered = status.leftRendered<0 ? x0 : min((int)x0,status.leftRendered);
+            status.topRendered = status.topRendered<0 ? y0 : min((int)y0,status.topRendered);
+            status.rightRendered = status.rightRendered<0 ? x1 : max((int)x1,status.rightRendered);
+            status.bottomRendered = status.bottomRendered<0 ? y1 : max((int)y1,status.bottomRendered);
         }
 
-        if( gRDP.otherMode.cycle_type == CYCLE_TYPE_FILL )
+        if( !status.bHandleN64RenderTexture || g_pRenderTextureInfo->CI_Info.dwSize == TXT_SIZE_16b )
         {
-            if( !status.bHandleN64RenderTexture || g_pRenderTextureInfo->CI_Info.dwSize == TXT_SIZE_16b )
-            {
-                CRender::g_pRender->FillRect(x0, y0, x1, y1, gRDP.fillColor);
-            }
+            CRender::g_pRender->FillRect(x0, y0, x1, y1, gRDP.fillColor);
         }
-        else
-        {
-            COLOR primColor = GetPrimitiveColor();
-            //if( RGBA_GETALPHA(primColor) != 0 )
-            {
-                CRender::g_pRender->FillRect(x0, y0, x1, y1, primColor);
-            }
-        }
+
         DEBUGGER_PAUSE_AND_DUMP_COUNT_N( NEXT_FLUSH_TRI,{TRACE0("Pause after FillRect\n");});
         DEBUGGER_PAUSE_AND_DUMP_COUNT_N( NEXT_FILLRECT, {DebuggerAppendMsg("FillRect: X0=%d, Y0=%d, X1=%d, Y1=%d, Color=0x%08X", x0, y0, x1, y1, gRDP.originalFillColor);
         DebuggerAppendMsg("Pause after FillRect: Color=%08X\n", gRDP.originalFillColor);});
@@ -1599,7 +1589,7 @@ void DLParser_SetCombine(Gfx *gfx)
     DP_Timing(DLParser_SetCombine);
     uint32 dwMux0 = (gfx->words.w0)&0x00FFFFFF;
     uint32 dwMux1 = (gfx->words.w1);
-    CRender::g_pRender->SetMux(dwMux0, dwMux1);
+    CRender::g_pRender->SetCombineMode(dwMux0, dwMux1);
 }
 
 void DLParser_SetFillColor(Gfx *gfx)
@@ -1622,21 +1612,40 @@ void DLParser_SetFogColor(Gfx *gfx)
 void DLParser_SetBlendColor(Gfx *gfx)
 {
     DP_Timing(DLParser_SetBlendColor);
-    CRender::g_pRender->SetAlphaRef(gfx->setcolor.a);
+    gRDP.blendColor      = gfx->setcolor.color; 
+    gRDP.fvBlendColor[0] = gfx->setcolor.r/255.0f;
+    gRDP.fvBlendColor[1] = gfx->setcolor.g/255.0f;
+    gRDP.fvBlendColor[2] = gfx->setcolor.b/255.0f;
+    gRDP.fvBlendColor[3] = gfx->setcolor.a/255.0f;
 }
 
 
 void DLParser_SetPrimColor(Gfx *gfx)
 {
     DP_Timing(DLParser_SetPrimColor);
-    SetPrimitiveColor( COLOR_RGBA(gfx->setcolor.r, gfx->setcolor.g, gfx->setcolor.b, gfx->setcolor.a), 
-        gfx->setcolor.prim_min_level, gfx->setcolor.prim_level);
+
+    gRDP.primitiveColor    = gfx->setcolor.color;
+    gRDP.primLODMin        = gfx->setcolor.prim_min_level;
+    gRDP.primLODFrac       = gfx->setcolor.prim_level;
+    if( gRDP.primLODFrac < gRDP.primLODMin )
+    {
+        gRDP.primLODFrac = gRDP.primLODMin;
+    }
+
+    gRDP.fvPrimitiveColor[0] = gfx->setcolor.r/255.0f;
+    gRDP.fvPrimitiveColor[1] = gfx->setcolor.g/255.0f;
+    gRDP.fvPrimitiveColor[2] = gfx->setcolor.b/255.0f;
+    gRDP.fvPrimitiveColor[3] = gfx->setcolor.a/255.0f;
 }
 
 void DLParser_SetEnvColor(Gfx *gfx)
 {
     DP_Timing(DLParser_SetEnvColor);
-    SetEnvColor( COLOR_RGBA(gfx->setcolor.r, gfx->setcolor.g, gfx->setcolor.b, gfx->setcolor.a) );
+    gRDP.envColor      = gfx->setcolor.color; 
+    gRDP.fvEnvColor[0] = gfx->setcolor.r/255.0f;
+    gRDP.fvEnvColor[1] = gfx->setcolor.g/255.0f;
+    gRDP.fvEnvColor[2] = gfx->setcolor.b/255.0f;
+    gRDP.fvEnvColor[3] = gfx->setcolor.a/255.0f;
 }
 
 

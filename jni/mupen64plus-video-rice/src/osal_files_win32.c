@@ -23,13 +23,13 @@
  * functions
  */
 
-#include <direct.h>
-#include <stdio.h>
+#include <windows.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <windows.h>
+#include <stdio.h>
+#include <direct.h>
 
 #include "osal_files.h"
 

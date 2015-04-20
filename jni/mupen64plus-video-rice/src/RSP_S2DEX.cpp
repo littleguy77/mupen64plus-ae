@@ -20,18 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // This file implements the S2DEX ucode, Yoshi story is using this ucodes
 
-#include <string.h>
-
-#include "Debugger.h"
-#include "RSP_Parser.h"
-#include "RSP_S2DEX.h"
-#include "Render.h"
-#include "RenderBase.h"
-#include "Timing.h"
 #include "UcodeDefs.h"
-#include "VectorMath.h"
-#include "Video.h"
-#include "typedefs.h"
+#include "Render.h"
+#include "Timing.h"
 
 uObjTxtr *gObjTxtr = NULL;
 uObjTxtrTLUT *gObjTlut = NULL;
@@ -87,7 +78,7 @@ void RSP_S2DEX_OBJ_RECTANGLE(Gfx *gfx)
             debuggerPause = true;
             TRACE3("Paused at RSP_S2DEX_OBJ_RECTANGLE\nptr=%08X, img=%08X, Tmem=%08X",
                 dwAddr,objtx.txtr.block.image, ptr->imageAdrs);
-            CGraphicsContext::g_pGraphicsContext->UpdateFrame();
+            CGraphicsContext::Get()->UpdateFrame();
         }
     }
 #endif
@@ -103,8 +94,6 @@ void RSP_S2DEX_OBJ_SPRITE(Gfx *gfx)
     status.bAllowLoadFromTMEM = false;  // Because we need to use TLUT loaded by ObjTlut cmd
     PrepareTextures();
     status.bAllowLoadFromTMEM = true;
-    
-    //CRender::g_pRender->SetCombinerAndBlender();
 
     uObjTxSprite drawinfo;
     memcpy( &(drawinfo.sprite), info, sizeof(uObjSprite));
@@ -126,7 +115,7 @@ void RSP_S2DEX_OBJ_SPRITE(Gfx *gfx)
         eventToPause = false;
         debuggerPause = true;
         TRACE0("Paused at RSP_S2DEX_OBJ_SPRITE");
-        CGraphicsContext::g_pGraphicsContext->UpdateFrame();
+        CGraphicsContext::Get()->UpdateFrame();
     }
 #endif
 }

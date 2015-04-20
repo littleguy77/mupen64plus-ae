@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <stdio.h>
 
-#include "osal_preproc.h"
 #include "typedefs.h"
 
 #define CONFIG_PARAM_VERSION 1
@@ -30,8 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 typedef enum
 {
     OGL_DEVICE,
-    OGL_1_1_DEVICE,
-    OGL_1_4_DEVICE,
     OGL_FRAGMENT_PROGRAM,
 } SupportedDeviceType;
 
@@ -216,6 +213,8 @@ typedef struct {
     BOOL    bForcePolygonOffset;
     float   polygonOffsetFactor;
     float   polygonOffsetUnits;
+
+    int rotate;
 
     HACK_FOR_GAMES  enableHackForGames;
 } GlobalOptions;

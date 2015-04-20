@@ -19,22 +19,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // ===========================================================================
 
-#include <string.h>
-#include <algorithm>
 #include <vector>
 
-#include "Config.h"
 #include "ConvertImage.h"
-#include "Debugger.h"
 #include "DeviceBuilder.h"
 #include "FrameBuffer.h"
-#include "GraphicsContext.h"
+#include "UcodeDefs.h"
 #include "RSP_Parser.h"
 #include "Render.h"
-#include "RenderBase.h"
-#include "UcodeDefs.h"
-#include "Video.h"
-#include "m64p_plugin.h"
 
 extern TMEMLoadMapInfo g_tmemLoadAddrMap[0x200];    // Totally 4KB TMEM;
 
@@ -492,8 +484,8 @@ void TexRectToFrameBuffer_8b(uint32 dwXL, uint32 dwYL, uint32 dwXH, uint32 dwYH,
     uint32 dwLeft = dwXL;
     uint32 dwTop = dwYL;
 
-    dwWidth = std::min(dwWidth, maxW-dwLeft);
-    dwHeight = std::min(dwHeight, maxH-dwTop);
+    dwWidth = min(dwWidth, maxW-dwLeft);
+    dwHeight = min(dwHeight, maxH-dwTop);
     
     if( maxH <= dwTop )
         return;
@@ -549,8 +541,8 @@ void TexRectToN64FrameBuffer_16b(uint32 x0, uint32 y0, uint32 width, uint32 heig
 
 #define FAST_CRC_CHECKING_INC_X 13
 #define FAST_CRC_CHECKING_INC_Y 11
-#define FAST_CRC_MIN_Y_INC      2u
-#define FAST_CRC_MIN_X_INC      2u
+#define FAST_CRC_MIN_Y_INC      2
+#define FAST_CRC_MIN_X_INC      2
 #define FAST_CRC_MAX_X_INC      7
 #define FAST_CRC_MAX_Y_INC      3
 extern uint32 dwAsmHeight;
@@ -570,7 +562,7 @@ uint32 CalculateRDRAMCRC(void *pPhysicalAddress, uint32 left, uint32 top, uint32
         uint32 xinc = realWidthInDWORD / FAST_CRC_CHECKING_INC_X;   
         if( xinc < FAST_CRC_MIN_X_INC )
         {
-            xinc = std::min(FAST_CRC_MIN_X_INC, width);
+            xinc = min(FAST_CRC_MIN_X_INC, width);
         }
         if( xinc > FAST_CRC_MAX_X_INC )
         {
@@ -580,7 +572,7 @@ uint32 CalculateRDRAMCRC(void *pPhysicalAddress, uint32 left, uint32 top, uint32
         uint32 yinc = height / FAST_CRC_CHECKING_INC_Y; 
         if( yinc < FAST_CRC_MIN_Y_INC ) 
         {
-            yinc = std::min(FAST_CRC_MIN_Y_INC, height);
+            yinc = min(FAST_CRC_MIN_Y_INC, height);
         }
         if( yinc > FAST_CRC_MAX_Y_INC )
         {
@@ -1648,14 +1640,14 @@ void FrameBufferManager::ActiveTextureBuffer(void)
 
             //Clear(CLEAR_COLOR_AND_DEPTH_BUFFER,0x80808080,1.0f);
             if( frameBufferOptions.bFillRectNextTextureBuffer )
-                CGraphicsContext::g_pGraphicsContext->Clear(CLEAR_COLOR_BUFFER,gRDP.fillColor,1.0f);
+                CGraphicsContext::Get()->Clear(CLEAR_COLOR_BUFFER,gRDP.fillColor,1.0f);
             else if( options.enableHackForGames == HACK_FOR_MARIO_TENNIS && g_pRenderTextureInfo->N64Width > 64 && g_pRenderTextureInfo->N64Width < 300 )
             {
-                CGraphicsContext::g_pGraphicsContext->Clear(CLEAR_COLOR_BUFFER,0,1.0f);
+                CGraphicsContext::Get()->Clear(CLEAR_COLOR_BUFFER,0,1.0f);
             }
             else if( options.enableHackForGames == HACK_FOR_MARIO_TENNIS && g_pRenderTextureInfo->N64Width < 64 && g_pRenderTextureInfo->N64Width > 32 )
             {
-                CGraphicsContext::g_pGraphicsContext->Clear(CLEAR_COLOR_BUFFER,0,1.0f);
+                CGraphicsContext::Get()->Clear(CLEAR_COLOR_BUFFER,0,1.0f);
             }
 
             m_curRenderTextureIndex = idxToUse;
@@ -2035,7 +2027,7 @@ void FrameBufferManager::SaveBackBuffer(int ciInfoIdx, RECT* pSrcRect, bool forc
 
     if( ciInfoIdx == 1 )    // to save the current front buffer
     {
-        CGraphicsContext::g_pGraphicsContext->UpdateFrame(true);
+        CGraphicsContext::Get()->UpdateFrame(true);
     }
 
     if( frameBufferOptions.bWriteBackBufToRDRAM || forceToSaveToRDRAM )
@@ -2055,7 +2047,7 @@ void FrameBufferManager::SaveBackBuffer(int ciInfoIdx, RECT* pSrcRect, bool forc
         g_uRecentCIInfoPtrs[ciInfoIdx]->bCopied = true;
         if( ciInfoIdx == 1 )    // to save the current front buffer
         {
-            CGraphicsContext::g_pGraphicsContext->UpdateFrame(true);
+            CGraphicsContext::Get()->UpdateFrame(true);
         }
         return;
     }

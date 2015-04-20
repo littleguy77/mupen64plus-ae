@@ -18,7 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include <cmath>
-
 #include "Render.h"
 #include "Timing.h"
 
@@ -282,11 +281,6 @@ void RSP_GBI1_Line3D(Gfx *gfx)
                     InitVertexTextureConstants();
                 }
 
-                if( !bTrisAdded )
-                {
-                    CRender::g_pRender->SetCombinerAndBlender();
-                }
-
                 bTrisAdded = true;
                 PrepareTriangle(dwV0, dwV1, dwV2);
             }
@@ -299,11 +293,6 @@ void RSP_GBI1_Line3D(Gfx *gfx)
                 {
                     PrepareTextures();
                     InitVertexTextureConstants();
-                }
-
-                if( !bTrisAdded )
-                {
-                    CRender::g_pRender->SetCombinerAndBlender();
                 }
 
                 bTrisAdded = true;
@@ -322,6 +311,7 @@ void RSP_GBI1_Line3D(Gfx *gfx)
 
         if (bTrisAdded) 
         {
+            CRender::g_pRender->SetCombinerAndBlender();
             CRender::g_pRender->DrawTriangles();
         }
     }
@@ -724,7 +714,6 @@ void RSP_GBI1_Tri1(Gfx *gfx)
                     PrepareTextures();
                     InitVertexTextureConstants();
                 }
-                CRender::g_pRender->SetCombinerAndBlender();
                 bTrisAdded = true;
             }
             PrepareTriangle(dwV0, dwV1, dwV2);
@@ -743,6 +732,7 @@ void RSP_GBI1_Tri1(Gfx *gfx)
 
     if (bTrisAdded) 
     {
+        CRender::g_pRender->SetCombinerAndBlender();
         CRender::g_pRender->DrawTriangles();
     }
 
@@ -783,11 +773,6 @@ void RSP_GBI0_Tri4(Gfx *gfx)
                     InitVertexTextureConstants();
                 }
 
-                if( !bTrisAdded )
-                {
-                    CRender::g_pRender->SetCombinerAndBlender();
-                }
-
                 bTrisAdded = true;
                 PrepareTriangle(v0, v2, v1);
             }
@@ -808,6 +793,7 @@ void RSP_GBI0_Tri4(Gfx *gfx)
 
     if (bTrisAdded) 
     {
+        CRender::g_pRender->SetCombinerAndBlender();
         CRender::g_pRender->DrawTriangles();
     }
     

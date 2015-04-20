@@ -25,13 +25,11 @@
 // POSSESSION, USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "BMGUtils.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "BMGImage.h"
-#include "BMGUtils.h"
 #ifdef _BMG_LIBPNG_STANDALONE
 #include "BMGLibPNG.h"
 #else

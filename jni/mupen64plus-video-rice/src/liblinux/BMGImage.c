@@ -27,9 +27,7 @@
 #include <memory.h>
 #include <setjmp.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "BMGImage.h"
 #include "BMGUtils.h"
 
 /* initializes a BMGImage to default values */

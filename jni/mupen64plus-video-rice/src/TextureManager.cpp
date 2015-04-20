@@ -17,18 +17,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 
-#include <cmath>
 #include <exception>
+#include <cmath>
 
-#include "CombinerDefs.h"
-#include "Config.h"
 #include "ConvertImage.h"
-#include "Debugger.h"
 #include "DeviceBuilder.h"
 #include "FrameBuffer.h"
-#include "RSP_Parser.h"
 #include "RenderBase.h"
-#include "RenderTexture.h"
 #include "TextureManager.h"
 
 CTextureManager gTextureManager;
@@ -101,10 +96,6 @@ CTextureManager::CTextureManager() :
         m_pCacheTxtrList[i] = NULL;
 
     memset(&m_blackTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_PrimColorTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_EnvColorTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_LODFracTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_PrimLODFracTextureEntry, 0, sizeof(TxtrCacheEntry));
 }
 
 CTextureManager::~CTextureManager()
@@ -135,15 +126,7 @@ bool CTextureManager::CleanUp()
     }
 
     if( m_blackTextureEntry.pTexture )      delete m_blackTextureEntry.pTexture;    
-    if( m_PrimColorTextureEntry.pTexture )  delete m_PrimColorTextureEntry.pTexture;
-    if( m_EnvColorTextureEntry.pTexture )   delete m_EnvColorTextureEntry.pTexture;
-    if( m_LODFracTextureEntry.pTexture )    delete m_LODFracTextureEntry.pTexture;
-    if( m_PrimLODFracTextureEntry.pTexture )    delete m_PrimLODFracTextureEntry.pTexture;
     memset(&m_blackTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_PrimColorTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_EnvColorTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_LODFracTextureEntry, 0, sizeof(TxtrCacheEntry));
-    memset(&m_PrimLODFracTextureEntry, 0, sizeof(TxtrCacheEntry));
 
     return true;
 }
@@ -522,11 +505,6 @@ TxtrCacheEntry * CTextureManager::CreateNewCacheEntry(uint32 dwAddr, uint32 dwWi
             _VIDEO_DisplayTemporaryMessage("Error to create an texture");
             TRACE2("Warning, unable to create %d x %d texture!", dwWidth, dwHeight);
         }
-        else
-        {
-            pEntry->pTexture->m_bScaledS = false;
-            pEntry->pTexture->m_bScaledT = false;
-        }
     }
     
     // Initialize
@@ -538,7 +516,6 @@ TxtrCacheEntry * CTextureManager::CreateNewCacheEntry(uint32 dwAddr, uint32 dwWi
     pEntry->dwTimeLastUsed = status.gRDPTime;
     pEntry->dwCRC = 0;
     pEntry->FrameLastUsed = status.gDlistCount;
-    pEntry->FrameLastUpdated = 0;
     pEntry->lastEntry = NULL;
     pEntry->bExternalTxtrChecked = false;
     pEntry->maxCI = -1;
@@ -567,8 +544,6 @@ TxtrCacheEntry * CTextureManager::GetTexture(TxtrInfo * pgti, bool fromTMEM, boo
 
     if( g_curRomInfo.bDisableTextureCRC )
         doCRCCheck = false;
-
-    gRDP.texturesAreReloaded = true;
 
     dwAsmCRC = 0;
     uint32 dwPalCRC = 0;
@@ -728,14 +703,10 @@ TxtrCacheEntry * CTextureManager::GetTexture(TxtrInfo * pgti, bool fromTMEM, boo
             if( pEntry->pTexture->m_dwCreatedTextureWidth < pgti->WidthToCreate )
             {
                 pEntry->ti.WidthToLoad = pEntry->pTexture->m_dwCreatedTextureWidth;
-                pEntry->pTexture->m_bScaledS = false;
-                pEntry->pTexture->m_bScaledT = false;
             }
             if( pEntry->pTexture->m_dwCreatedTextureHeight < pgti->HeightToCreate )
             {
                 pEntry->ti.HeightToLoad = pEntry->pTexture->m_dwCreatedTextureHeight;
-                pEntry->pTexture->m_bScaledT = false;
-                pEntry->pTexture->m_bScaledS = false;
             }
             
             TextureFmt dwType = pEntry->pTexture->GetSurfaceFormat();
@@ -767,12 +738,9 @@ TxtrCacheEntry * CTextureManager::GetTexture(TxtrInfo * pgti, bool fromTMEM, boo
                 {
                     LOG_TEXTURE(TRACE0("   Load new texture from RDRAM:\n"));
                     if (dwType == TEXTURE_FMT_A8R8G8B8)
-                    {
                         ConvertTexture(pEntry, fromTMEM);
-                    }
                     else
                         ConvertTexture_16(pEntry, fromTMEM);
-                    pEntry->FrameLastUpdated = status.gDlistCount;
                     SAFE_DELETE(pEntry->pEnhancedTexture);
                     pEntry->dwEnhancementFlag = TEXTURE_NO_ENHANCEMENT;
                 }
@@ -805,7 +773,6 @@ TxtrCacheEntry * CTextureManager::GetTexture(TxtrInfo * pgti, bool fromTMEM, boo
                 }
                 DebuggerAppendMsg("W:%d, H:%d, RealW:%d, RealH:%d, D3DW:%d, D3DH: %d", pEntry->ti.WidthToCreate, pEntry->ti.HeightToCreate,
                     pEntry->ti.WidthToLoad, pEntry->ti.HeightToLoad, pEntry->pTexture->m_dwCreatedTextureWidth, pEntry->pTexture->m_dwCreatedTextureHeight);
-                DebuggerAppendMsg("ScaledS:%s, ScaledT:%s, CRC=%08X", pEntry->pTexture->m_bScaledS?"T":"F", pEntry->pTexture->m_bScaledT?"T":"F", pEntry->dwCRC);
                 DebuggerPause();
                 CRender::g_pRender->SetCurrentTexture( 0, NULL, 64, 64, NULL);
             }
@@ -842,7 +809,9 @@ extern ConvertFunction  gConvertTlutFunctions_16[ 8 ][ 4 ];
 void CTextureManager::ConvertTexture(TxtrCacheEntry * pEntry, bool fromTMEM)
 {
     static uint32 dwCount = 0;
-    
+
+    // We first figure out which convert function to use in the various
+    // function pointer arrays.
     ConvertFunction pF;
     if( options.bUseFullTMEM && fromTMEM && status.bAllowLoadFromTMEM )
     {
@@ -866,6 +835,7 @@ void CTextureManager::ConvertTexture(TxtrCacheEntry * pEntry, bool fromTMEM)
         }
     }
 
+    // Once we found it we simply execute it on the texture.
     if( pF )
     {
         pF( pEntry->pTexture, pEntry->ti );
@@ -1364,123 +1334,6 @@ TxtrCacheEntry * CTextureManager::GetBlackTexture(void)
         updateColorTexture(m_blackTextureEntry.pTexture,0x00000000);
     }
     return &m_blackTextureEntry;
-}
-TxtrCacheEntry * CTextureManager::GetPrimColorTexture(uint32 color)
-{
-    static uint32 mcolor = 0;
-    if( m_PrimColorTextureEntry.pTexture == NULL )
-    {
-        m_PrimColorTextureEntry.pTexture = CDeviceBuilder::GetBuilder()->CreateTexture(4, 4);
-        m_PrimColorTextureEntry.ti.WidthToCreate = 4;
-        m_PrimColorTextureEntry.ti.HeightToCreate = 4;
-        updateColorTexture(m_PrimColorTextureEntry.pTexture,color);
-        gRDP.texturesAreReloaded = true;
-    }
-    else if( mcolor != color )
-    {
-        updateColorTexture(m_PrimColorTextureEntry.pTexture,color);
-        gRDP.texturesAreReloaded = true;
-    }
-
-    mcolor = color;
-    return &m_PrimColorTextureEntry;
-}
-TxtrCacheEntry * CTextureManager::GetEnvColorTexture(uint32 color)
-{
-    static uint32 mcolor = 0;
-    if( m_EnvColorTextureEntry.pTexture == NULL )
-    {
-        m_EnvColorTextureEntry.pTexture = CDeviceBuilder::GetBuilder()->CreateTexture(4, 4);
-        m_EnvColorTextureEntry.ti.WidthToCreate = 4;
-        m_EnvColorTextureEntry.ti.HeightToCreate = 4;
-        gRDP.texturesAreReloaded = true;
-
-        updateColorTexture(m_EnvColorTextureEntry.pTexture,color);
-    }
-    else if( mcolor != color )
-    {
-        updateColorTexture(m_EnvColorTextureEntry.pTexture,color);
-        gRDP.texturesAreReloaded = true;
-    }
-
-    mcolor = color;
-    return &m_EnvColorTextureEntry;
-}
-TxtrCacheEntry * CTextureManager::GetLODFracTexture(uint8 fac)
-{
-    static uint8 mfac = 0;
-    if( m_LODFracTextureEntry.pTexture == NULL )
-    {
-        m_LODFracTextureEntry.pTexture = CDeviceBuilder::GetBuilder()->CreateTexture(4, 4);
-        m_LODFracTextureEntry.ti.WidthToCreate = 4;
-        m_LODFracTextureEntry.ti.HeightToCreate = 4;
-        uint32 factor = fac;
-        uint32 color = fac;
-        color |= factor << 8;
-        color |= color << 16;
-        updateColorTexture(m_LODFracTextureEntry.pTexture,color);
-        gRDP.texturesAreReloaded = true;
-    }
-    else if( mfac != fac )
-    {
-        uint32 factor = fac;
-        uint32 color = fac;
-        color |= factor << 8;
-        color |= color << 16;
-        updateColorTexture(m_LODFracTextureEntry.pTexture,color);
-        gRDP.texturesAreReloaded = true;
-    }
-
-    mfac = fac;
-    return &m_LODFracTextureEntry;
-}
-
-TxtrCacheEntry * CTextureManager::GetPrimLODFracTexture(uint8 fac)
-{
-    static uint8 mfac = 0;
-    if( m_PrimLODFracTextureEntry.pTexture == NULL )
-    {
-        m_PrimLODFracTextureEntry.pTexture = CDeviceBuilder::GetBuilder()->CreateTexture(4, 4);
-        m_PrimLODFracTextureEntry.ti.WidthToCreate = 4;
-        m_PrimLODFracTextureEntry.ti.HeightToCreate = 4;
-        uint32 factor = fac;
-        uint32 color = fac;
-        color |= factor << 8;
-        color |= color << 16;
-        updateColorTexture(m_PrimLODFracTextureEntry.pTexture,color);
-        gRDP.texturesAreReloaded = true;
-    }
-    else if( mfac != fac )
-    {
-        uint32 factor = fac;
-        uint32 color = fac;
-        color |= factor << 8;
-        color |= color << 16;
-        updateColorTexture(m_PrimLODFracTextureEntry.pTexture,color);
-        gRDP.texturesAreReloaded = true;
-    }
-
-    mfac = fac;
-    return &m_PrimLODFracTextureEntry;
-}
-
-TxtrCacheEntry * CTextureManager::GetConstantColorTexture(uint32 constant)
-{
-    switch( constant )
-    {
-    case MUX_PRIM:
-        return GetPrimColorTexture(gRDP.primitiveColor);
-        break;
-    case MUX_ENV:
-        return GetEnvColorTexture(gRDP.envColor);
-        break;
-    case MUX_LODFRAC:
-        return GetLODFracTexture((uint8)gRDP.LODFrac);
-        break;
-    default:    // MUX_PRIMLODFRAC
-        return GetPrimLODFracTexture((uint8)gRDP.primLODFrac);
-        break;
-    }
 }
 
 void CTextureManager::updateColorTexture(CTexture *ptexture, uint32 color)

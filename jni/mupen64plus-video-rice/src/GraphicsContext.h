@@ -20,9 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef GFXCONTEXT_H
 #define GFXCONTEXT_H
 
-#include "CritSect.h"
-#include "osal_preproc.h"
 #include "typedefs.h"
+#include "CritSect.h"
 
 enum ClearFlag
 {
@@ -43,8 +42,10 @@ class CGraphicsContext : public CCritSect
     friend class CDeviceBuilder;
     
 public:
-    bool Ready() { return m_bReady; }
-    bool IsWindowed() {return m_bWindowed;}
+    static inline bool IsNull() { return m_pGraphicsContext == NULL; };
+    static inline CGraphicsContext* Get() { return m_pGraphicsContext; };
+    inline bool IsReady() const { return m_bReady; };
+    inline bool IsWindowed() const { return m_bWindowed; };
 
     virtual bool Initialize(uint32 dwWidth, uint32 dwHeight, BOOL bWindowed );
     virtual bool ResizeInitialize(uint32 dwWidth, uint32 dwHeight, BOOL bWindowed );
@@ -54,32 +55,17 @@ public:
     virtual void UpdateFrame(bool swaponly=false) = 0;
     virtual int ToggleFullscreen()=0;       // return 0 as the result is windowed
 
-    static void InitWindowInfo();
-    static void InitDeviceParameters();
+    static bool needCleanScene;
+
+    static CGraphicsContext* m_pGraphicsContext; // only the DeviceBuilder should modify this
 
 protected:
-    static  uint32      m_dwWindowStyle;       // Saved window style for mode switches
-    static  uint32      m_dwWindowExStyle;     // Saved window style for mode switches
-    static  uint32      m_dwStatusWindowStyle; // Saved window style for mode switches
-
-    static  bool        m_deviceCapsIsInitialized;
 
     bool                m_bReady;
-    bool                m_bActive;
-    
     bool                m_bWindowed;
-    RECT                m_rcWindowBounds;
-
-    char                m_strDeviceStats[256];
 
     virtual ~CGraphicsContext();
     CGraphicsContext();
-    
-public:
-    static CGraphicsContext *g_pGraphicsContext;
-    static CGraphicsContext * Get(void);
-    inline const char* GetDeviceStr() {return m_strDeviceStats;}
-    static bool needCleanScene;
 };
 
 #endif
