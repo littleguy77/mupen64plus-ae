@@ -27,9 +27,9 @@ import java.util.regex.Pattern;
 
 import org.mupen64plusae.v3.alpha.R;
 
-import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.support.v7.app.AlertDialog.Builder;
 import android.text.TextUtils;
 import android.util.SparseArray;
 

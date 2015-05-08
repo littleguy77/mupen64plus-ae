@@ -22,8 +22,8 @@ package paulscode.android.mupen64plusae.input.provider;
 
 import java.util.List;
 
-import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog.Builder;
 import android.view.KeyEvent;
 import android.view.View;
 

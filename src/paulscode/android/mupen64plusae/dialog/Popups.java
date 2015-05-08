@@ -26,9 +26,9 @@ import paulscode.android.mupen64plusae.ActivityHelper;
 import paulscode.android.mupen64plusae.persistent.AppData;
 import paulscode.android.mupen64plusae.util.DeviceUtil;
 import android.annotation.SuppressLint;
-import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog.Builder;
 
 public class Popups
 {

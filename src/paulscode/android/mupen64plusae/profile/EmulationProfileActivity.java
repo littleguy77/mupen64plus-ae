@@ -27,13 +27,13 @@ import paulscode.android.mupen64plusae.preference.PrefUtil;
 import paulscode.android.mupen64plusae.task.ExtractTexturesTask;
 import paulscode.android.mupen64plusae.task.ExtractTexturesTask.ExtractTexturesListener;
 import paulscode.android.mupen64plusae.util.Notifier;
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceGroup;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AlertDialog.Builder;
 import android.text.TextUtils;
 import android.util.Log;
 
