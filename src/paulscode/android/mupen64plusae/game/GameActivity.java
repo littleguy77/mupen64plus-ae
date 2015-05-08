@@ -22,14 +22,22 @@ package paulscode.android.mupen64plusae.game;
 
 import paulscode.android.mupen64plusae.jni.CoreInterface;
 import android.app.Activity;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatDelegate;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 
 public class GameActivity extends Activity
 {
     private GameLifecycleHandler mLifecycleHandler;
     private GameMenuHandler mMenuHandler;
+    private AppCompatDelegate mAppCompat;
     
     @Override
     public boolean onCreateOptionsMenu( Menu menu )
@@ -60,15 +68,33 @@ public class GameActivity extends Activity
     }
     
     @Override
+    public void onConfigurationChanged( Configuration newConfig )
+    {
+        super.onConfigurationChanged( newConfig );
+        getAppCompatDelegate().onConfigurationChanged( newConfig );
+    }
+    
+    @Override
+    protected void onTitleChanged( CharSequence title, int color )
+    {
+        super.onTitleChanged( title, color );
+        getAppCompatDelegate().setTitle( title );
+    }
+    
+    @Override
     protected void onCreate( Bundle savedInstanceState )
     {
-        mMenuHandler = new GameMenuHandler( this );
-        CoreInterface.addOnStateCallbackListener( mMenuHandler  );
-        
         mLifecycleHandler = new GameLifecycleHandler( this );
         mLifecycleHandler.onCreateBegin( savedInstanceState );
+        
+        getAppCompatDelegate().installViewFactory();
+        getAppCompatDelegate().onCreate( savedInstanceState );
+        
+        mMenuHandler = new GameMenuHandler( this );
+        CoreInterface.addOnStateCallbackListener( mMenuHandler );
+        
         super.onCreate( savedInstanceState );
-        mLifecycleHandler.onCreateEnd( savedInstanceState );
+        mLifecycleHandler.onCreateEnd( savedInstanceState, getSupportActionBar() );
     }
     
     @Override
@@ -79,10 +105,24 @@ public class GameActivity extends Activity
     }
     
     @Override
+    protected void onPostCreate( Bundle savedInstanceState )
+    {
+        super.onPostCreate( savedInstanceState );
+        getAppCompatDelegate().onPostCreate( savedInstanceState );
+    }
+    
+    @Override
     protected void onResume()
     {
         super.onResume();
         mLifecycleHandler.onResume();
+    }
+    
+    @Override
+    protected void onPostResume()
+    {
+        super.onPostResume();
+        getAppCompatDelegate().onPostResume();
     }
     
     @Override
@@ -97,14 +137,69 @@ public class GameActivity extends Activity
     {
         super.onStop();
         mLifecycleHandler.onStop();
+        getAppCompatDelegate().onStop();
     }
     
     @Override
     protected void onDestroy()
     {
-        CoreInterface.removeOnStateCallbackListener( mMenuHandler  );
+        CoreInterface.removeOnStateCallbackListener( mMenuHandler );
         
         super.onDestroy();
         mLifecycleHandler.onDestroy();
+        getAppCompatDelegate().onDestroy();
+    }
+    
+    @Override
+    public void setContentView( int layoutResID )
+    {
+        getAppCompatDelegate().setContentView( layoutResID );
+    }
+    
+    @Override
+    public void setContentView( View view )
+    {
+        getAppCompatDelegate().setContentView( view );
+    }
+    
+    @Override
+    public void setContentView( View view, LayoutParams params )
+    {
+        getAppCompatDelegate().setContentView( view, params );
+    }
+    
+    @Override
+    public void addContentView( View view, LayoutParams params )
+    {
+        getAppCompatDelegate().addContentView( view, params );
+    }
+    
+    @Override
+    public void invalidateOptionsMenu()
+    {
+        getAppCompatDelegate().invalidateOptionsMenu();
+    }
+    
+    @Override
+    public MenuInflater getMenuInflater()
+    {
+        return getAppCompatDelegate().getMenuInflater();
+    }
+    
+    public void setSupportActionBar( Toolbar toolbar )
+    {
+        getAppCompatDelegate().setSupportActionBar( toolbar );
+    }
+    
+    public ActionBar getSupportActionBar()
+    {
+        return getAppCompatDelegate().getSupportActionBar();
+    }
+    
+    public AppCompatDelegate getAppCompatDelegate()
+    {
+        if( mAppCompat == null )
+            mAppCompat = AppCompatDelegate.create( this, null );
+        return mAppCompat;
     }
 }

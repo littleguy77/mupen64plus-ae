@@ -182,13 +182,13 @@
             android:name="paulscode.android.mupen64plusae.game.GameActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/GameActivity_title"
-            android:theme="@style/appTheme.Black" >
+            android:theme="@style/Theme.AppCompat.Black.OverlayActionBar" >
         </activity>
         <activity
             android:name="paulscode.android.mupen64plusae.game.GameActivityXperiaPlay"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/GameActivity_title"
-            android:theme="@style/appTheme.Black" >
+            android:theme="@style/Theme.AppCompat.Black.OverlayActionBar" >
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="xperia-touchpad" />
