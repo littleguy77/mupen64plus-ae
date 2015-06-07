@@ -25,7 +25,6 @@ import java.util.Locale;
 
 import paulscode.android.mupen64plusae.util.DeviceUtil;
 import tv.ouya.console.api.OuyaFacade;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -76,9 +75,6 @@ import android.util.Log;
  */
 public class AppData
 {
-    /** True if device is running Gingerbread or later (9 - Android 2.3.x) */
-    public static final boolean IS_GINGERBREAD = Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD;
-    
     /** True if device is running Honeycomb or later (11 - Android 3.0.x) */
     public static final boolean IS_HONEYCOMB = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
     
@@ -197,7 +193,6 @@ public class AppData
      * 
      * @param context The application context.
      */
-    @TargetApi( 9 )
     public AppData( Context context )
     {
         hardwareInfo = new HardwareInfo();
@@ -231,10 +226,7 @@ public class AppData
             coreSharedDataDir = storageDir;
         }
         tempDir = coreSharedDataDir + "/tmp";
-        String _libsDir = context.getFilesDir().getParentFile().getAbsolutePath() + "/lib/";
-        if( !( new File( _libsDir ) ).exists() && IS_GINGERBREAD )
-            _libsDir = context.getApplicationInfo().nativeLibraryDir;
-        libsDir = _libsDir;
+        libsDir = context.getApplicationInfo().nativeLibraryDir;
         touchscreenSkinsDir = coreSharedDataDir + "/skins/touchscreen/";
         touchpadSkinsDir = coreSharedDataDir + "/skins/touchpad/";
         profilesDir = coreSharedDataDir + "/profiles";
@@ -342,7 +334,7 @@ public class AppData
     
     private boolean libraryExists( String undecoratedName )
     {
-        File library = new File( libsDir + "lib" + undecoratedName + ".so" );
+        File library = new File( libsDir + "/lib" + undecoratedName + ".so" );
         return library.exists();
     }
     

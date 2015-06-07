@@ -27,7 +27,6 @@ import paulscode.android.mupen64plusae.compat.AppCompatPreferenceActivity;
 import paulscode.android.mupen64plusae.dialog.Prompt;
 import paulscode.android.mupen64plusae.dialog.Prompt.PromptConfirmListener;
 import paulscode.android.mupen64plusae.preference.PrefUtil;
-import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
@@ -167,7 +166,6 @@ public class GlobalPrefsActivity extends AppCompatPreferenceActivity implements 
         }
     }
     
-    @TargetApi( 9 )
     private void refreshViews()
     {
         // Refresh the preferences object

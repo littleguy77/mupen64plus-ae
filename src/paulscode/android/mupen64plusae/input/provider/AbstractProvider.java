@@ -171,7 +171,6 @@ public abstract class AbstractProvider
      * 
      * @return True if the associated hardware is available or indeterminate.
      */
-    @TargetApi( 9 )
     public static boolean isHardwareAvailable( int id )
     {
         // This might be replaced by something else in the future... so we abstract it
@@ -179,14 +178,10 @@ public abstract class AbstractProvider
         {
             return true;
         }
-        else if( AppData.IS_GINGERBREAD )
+        else
         {
             InputDevice device = InputDevice.getDevice( id );
             return device != null;
-        }
-        else
-        {
-            return true;
         }
     }
     
@@ -197,21 +192,16 @@ public abstract class AbstractProvider
      * 
      * @return The name of the hardware, or null if hardware not found.
      */
-    @TargetApi( 9 )
     public static String getHardwareName( int id )
     {
         if( id > HARDWARE_ID_MOGA_OFFSET && id <= HARDWARE_ID_MOGA_MAX )
         {
             return "moga-" + ( id - HARDWARE_ID_MOGA_OFFSET );
         }
-        else if( AppData.IS_GINGERBREAD )
+        else
         {
             InputDevice device = InputDevice.getDevice( id );
             return device == null ? null : device.getName();
-        }
-        else
-        {
-            return null;
         }
     }
     

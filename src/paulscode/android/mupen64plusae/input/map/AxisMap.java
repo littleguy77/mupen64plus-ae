@@ -11,7 +11,6 @@ import android.view.InputDevice;
 import android.view.InputDevice.MotionRange;
 import android.view.MotionEvent;
 
-@TargetApi( 9 )
 public class AxisMap extends SerializableMap
 {
     public static final int AXIS_CLASS_UNKNOWN = 0;

@@ -165,23 +165,20 @@ public class DiagnosticActivity extends AppCompatActivity implements ControllerL
         message += "\nAction: " + DeviceUtil.getActionName( event.getAction(), true );
         message += "\n";
         
-        if( AppData.IS_GINGERBREAD )
+        for( MotionRange range : DeviceUtil.getPeripheralMotionRanges( event.getDevice() ) )
         {
-            for( MotionRange range : DeviceUtil.getPeripheralMotionRanges( event.getDevice() ) )
+            if( AppData.IS_HONEYCOMB_MR1 )
             {
-                if( AppData.IS_HONEYCOMB_MR1 )
-                {
-                    int axis = range.getAxis();
-                    String name = MotionEvent.axisToString( axis );
-                    String source = DeviceUtil.getSourceName( range.getSource() ).toLowerCase(
-                            Locale.US );
-                    float value = event.getAxisValue( axis );
-                    message += String.format( "\n%s (%s): %+.2f", name, source, value );
-                }
-                else
-                {
-                    // TODO Something for Gingerbread devices
-                }
+                int axis = range.getAxis();
+                String name = MotionEvent.axisToString( axis );
+                String source = DeviceUtil.getSourceName( range.getSource() ).toLowerCase(
+                        Locale.US );
+                float value = event.getAxisValue( axis );
+                message += String.format( "\n%s (%s): %+.2f", name, source, value );
+            }
+            else
+            {
+                // TODO Something for Gingerbread devices
             }
         }
         

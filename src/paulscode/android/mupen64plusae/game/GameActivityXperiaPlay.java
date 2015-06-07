@@ -21,13 +21,11 @@
 package paulscode.android.mupen64plusae.game;
 
 import paulscode.android.mupen64plusae.jni.CoreInterface;
-import android.annotation.TargetApi;
 import android.app.NativeActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-@TargetApi( 9 )
 public class GameActivityXperiaPlay extends NativeActivity
 {
     private GameLifecycleHandler mLifecycleHandler;
